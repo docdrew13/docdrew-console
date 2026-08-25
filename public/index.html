@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Docdrew Console</title>
+<meta name="description" content="A full-screen live console — weather, markets and world news plotted on a rotating globe.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305070C'/%3E%3Cpath d='M32 10 54 46H10Z' fill='none' stroke='%23FFA94D' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='36' r='4.5' fill='%2352D8DE'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --void:#05070C;
+    --panel:#0D1420;
+    --panel-2:#121C2C;
+    --grid-line:#1E2B3D;
+    --grid-soft:#16202E;
+    --text:#DCE7F2;
+    --text-dim:#7A93A8;
+    --amber:#FFA94D;
+    --amber-ink:#3A2408;
+    --amber-dim:#8A5A28;
+    --gold:#FFD166;
+    --gold-ink:#3A2C05;
+    --cyan:#52D8DE;
+    --cyan-ink:#052B2D;
+    --cyan-dim:#2B6E72;
+    --violet:#B98CE8;
+    --violet-ink:#241535;
+    --good:#4FD68C;
+    --bad:#FF6B5E;
+    color-scheme: dark;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{
+    height:100%;
+    margin:0;
+    overflow:hidden;
+    background:var(--void);
+    color:var(--text);
+    font-family:"Titillium Web", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  body{
+    background:
+      radial-gradient(1200px 700px at 18% -10%, rgba(82,216,222,0.06), transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, rgba(185,140,232,0.06), transparent 60%),
+      var(--void);
+  }
+  ::selection{ background:var(--amber); color:var(--amber-ink); }
+  a{ color:var(--cyan); }
+  button, select, input, textarea{ font-family:inherit; }
+  :focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+  }
+
+  /* thin sci-fi scrollbars */
+  .scroll{ scrollbar-width:thin; scrollbar-color: var(--cyan-dim) var(--panel-2); }
+  .scroll::-webkit-scrollbar{ width:6px; height:6px; }
+  .scroll::-webkit-scrollbar-track{ background:var(--panel-2); }
+  .scroll::-webkit-scrollbar-thumb{ background:var(--cyan-dim); border-radius:4px; }
+
+  /* ============ SHELL ============ */
+  .console{
+    height:100vh;
+    height:100dvh;
+    width:100vw;
+    padding:10px 12px 8px;
+    display:grid;
+    grid-template-rows: 60px 1fr 100px 26px;
+    gap:8px;
+  }
+
+  /* ============ TOPBAR ============ */
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:0 16px;
+    background:var(--panel);
+    border:1px solid var(--grid-line);
+    border-radius:30px 10px 30px 10px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+  .brand-mark{
+    width:26px; height:26px; flex:none;
+    background: conic-gradient(from 220deg, var(--amber), var(--gold), var(--amber));
+    clip-path: polygon(50% 6%, 94% 88%, 6% 88%);
+  }
+  .brand-name{
+    font-family:"Rajdhani", sans-serif; font-weight:700; letter-spacing:0.08em;
+    text-transform:uppercase; font-size:16px; color:var(--text);
+  }
+  .brand-name .dim{ color:var(--text-dim); font-weight:600; }
+
+  .stardate{
+    flex:0 0 auto;
+    font-family:"Share Tech Mono", monospace;
+    font-size:12px;
+    color:var(--cyan);
+    letter-spacing:0.04em;
+    border-left:1px solid var(--grid-line);
+    padding-left:16px;
+  }
+
+  .greeting-block{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; line-height:1.15; }
+  .greeting{
+    font-family:"Rajdhani", sans-serif; font-weight:700; font-size:16px;
+    letter-spacing:0.03em; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .greeting .status-dot{
+    display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--good);
+    margin-right:7px; box-shadow:0 0 8px var(--good);
+    animation: blink 2.4s ease-in-out infinite;
+  }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+  .subline{ font-family:"Share Tech Mono", monospace; font-size:11px; color:var(--text-dim); }
+
+  .clock{
+    flex:0 0 auto; text-align:right; font-family:"Share Tech Mono", monospace;
+    color:var(--amber); font-size:20px; letter-spacing:0.03em; line-height:1.1;
+  }
+  .clock .zone{ display:block; font-size:10px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; }
+
+  .search{ flex:0 0 auto; display:flex; align-items:center; gap:6px; }
+  .search select, .search input{
+    background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:20px; padding:7px 12px; font-size:12.5px;
+  }
+  .search select{ color:var(--text-dim); }
+  .search input{ width:170px; }
+  .search input::placeholder{ color:var(--text-dim); }
+  .search button{
+    background:var(--cyan); color:var(--cyan-ink); border:0; border-radius:20px;
+    padding:7px 14px; font-weight:700; font-size:12px; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
+  }
+  .search button:hover{ filter:brightness(1.1); }
+
+  /* ============ PANEL PRIMITIVES ============ */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid-line);
+    border-radius:10px 26px 10px 10px;
+    display:flex; flex-direction:column; overflow:hidden; min-height:0;
+  }
+  .panel.round-l{ border-radius:26px 10px 10px 10px; }
+  .panel-head{
+    flex:0 0 auto;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:6px 8px 6px 16px;
+    font-family:"Rajdhani", sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.09em; font-size:12.5px;
+    color:var(--amber-ink);
+    background:var(--amber);
+  }
+  .panel-head .n{ font-family:"Share Tech Mono", monospace; font-size:11px; opacity:0.75; text-transform:none; letter-spacing:0; }
+  .panel[data-accent="cyan"] .panel-head{ background:var(--cyan); color:var(--cyan-ink); }
+  .panel[data-accent="violet"] .panel-head{ background:var(--violet); color:var(--violet-ink); }
+  .panel[data-accent="gold"] .panel-head{ background:var(--gold); color:var(--gold-ink); }
+
+  .head-btn{
+    appearance:none; border:0; background:rgba(0,0,0,0.18); color:inherit;
+    border-radius:999px; font-size:10.5px; font-weight:700; letter-spacing:0.04em;
+    padding:4px 9px; cursor:pointer; text-transform:uppercase;
+  }
+  .head-btn:hover{ background:rgba(0,0,0,0.32); }
+
+  .panel-body{ flex:1; min-height:0; overflow-y:auto; padding:10px 14px; }
+  .panel-body.no-pad{ padding:0; }
+
+  .tabs{ display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; max-width:310px; }
+  .tab{
+    appearance:none; border:0; background:rgba(0,0,0,0.16); color:inherit; opacity:0.7;
+    border-radius:999px; font-size:10px; font-weight:700; padding:4px 8px; cursor:pointer; letter-spacing:0.02em;
+    white-space:nowrap;
+  }
+  .tab.active{ opacity:1; background:rgba(0,0,0,0.34); }
+
+  /* ============ DECK (main 3-col area) ============ */
+  .deck{ display:grid; grid-template-columns: 272px 1fr 460px; gap:8px; min-height:0; }
+  .rail{ display:flex; flex-direction:column; gap:8px; min-height:0; }
+  .rail-left .panel:nth-child(1){ flex:1.15; }
+  .rail-left .panel:nth-child(2){ flex:1; }
+  .rail-right .panel:nth-child(1){ flex:0 0 auto; max-height:24%; }
+  .rail-right .panel:nth-child(2){ flex:1; }
+
+  /* ---- stock list ---- */
+  .quote-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:7px 0; border-bottom:1px solid var(--grid-soft);
+  }
+  .quote-row:last-child{ border-bottom:0; }
+  .q-id{ min-width:0; }
+  .q-sym{ font-family:"Share Tech Mono", monospace; font-size:12.5px; color:var(--text); }
+  .q-name{ font-size:10.5px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+  .q-nums{ text-align:right; font-family:"Share Tech Mono", monospace; font-size:12px; font-variant-numeric:tabular-nums; }
+  .q-price{ color:var(--text); }
+  .q-chg.up{ color:var(--good); }
+  .q-chg.down{ color:var(--bad); }
+  .edit-row{ margin-top:6px; }
+  .edit-row input{
+    width:100%; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:6px; padding:6px 8px; font-family:"Share Tech Mono", monospace; font-size:11px;
+  }
+  .edit-hint{ font-size:10px; color:var(--text-dim); margin-top:4px; }
+
+  /* ---- currency ---- */
+  .fx-row{ display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+  .fx-row select, .fx-row input{
+    background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:6px; padding:6px 8px; font-size:12px;
+  }
+  .fx-row input{ width:76px; font-family:"Share Tech Mono", monospace; }
+  .fx-swap{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--cyan); border-radius:6px; width:28px; height:28px; cursor:pointer; }
+  .fx-swap:hover{ background:var(--panel-2); }
+  .fx-result{ font-family:"Share Tech Mono", monospace; font-size:22px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
+  .fx-meta{ text-align:center; font-size:10.5px; color:var(--text-dim); }
+
+  /* ---- weather compact ---- */
+  .wx-top{ display:flex; align-items:center; gap:10px; }
+  .wx-icon{ width:40px; height:40px; flex:none; }
+  .wx-temp{ font-family:"Share Tech Mono", monospace; font-size:26px; color:var(--text); }
+  .wx-place{ font-size:11px; color:var(--text-dim); }
+  .wx-cond{ font-size:11.5px; color:var(--cyan); }
+  .wx-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
+  .wx-stat{ text-align:center; font-family:"Share Tech Mono", monospace; font-size:11px; color:var(--text-dim); }
+  .wx-stat b{ display:block; color:var(--text); font-size:13px; }
+  .wx-city-edit{ display:flex; gap:6px; margin-top:8px; }
+  .wx-city-edit input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:11px; }
+
+  /* ---- news list (rail) ---- */
+  .news-item{
+    display:flex; gap:8px; padding:8px 0; border-bottom:1px solid var(--grid-soft); cursor:pointer;
+  }
+  .news-item:last-child{ border-bottom:0; }
+  .news-item:hover .news-title{ color:var(--cyan); }
+  .news-thumb{ width:56px; height:56px; border-radius:6px; object-fit:cover; flex:none; background:var(--panel-2); }
+  .news-thumb.empty{ display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:16px; }
+  .news-title{ font-size:12px; line-height:1.32; color:var(--text); }
+  .news-meta{ font-size:9.5px; color:var(--text-dim); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
+
+  /* ---- globe panel ---- */
+  .globe-panel{
+    background:radial-gradient(circle at 50% 38%, #0B1524 0%, var(--void) 72%);
+    border:1px solid var(--grid-line); border-radius:16px; display:flex; flex-direction:column; overflow:hidden; position:relative;
+  }
+  .globe-head{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+    padding:10px 16px; font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:12.5px; color:var(--cyan);
+  }
+  .globe-head .n{ font-family:"Share Tech Mono", monospace; font-size:10.5px; color:var(--text-dim); letter-spacing:0; text-transform:none; }
+  .globe-body{ flex:1; min-height:0; position:relative; }
+  .globe-body canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
+  .globe-body canvas:active{ cursor:grabbing; }
+  .globe-legend{
+    position:absolute; left:16px; bottom:14px; display:flex; gap:14px; font-size:10.5px; color:var(--text-dim);
+    font-family:"Share Tech Mono", monospace; pointer-events:none;
+  }
+  .globe-legend span{ display:flex; align-items:center; gap:5px; }
+  .legend-dot{ width:8px; height:8px; border-radius:50%; }
+  .legend-dot.cyan{ background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
+  .legend-dot.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .globe-hint{
+    position:absolute; right:16px; bottom:14px; font-size:10px; color:var(--text-dim);
+    font-family:"Share Tech Mono", monospace; pointer-events:none; text-align:right;
+  }
+  .globe-tooltip{
+    position:absolute; pointer-events:none; transform:translate(-50%,-130%);
+    background:var(--panel-2); border:1px solid var(--cyan-dim); border-radius:6px;
+    padding:5px 9px; font-size:11px; color:var(--text); white-space:nowrap; display:none;
+    font-family:"Rajdhani", sans-serif; font-weight:600; letter-spacing:0.02em;
+    box-shadow:0 8px 20px -8px rgba(0,0,0,0.7);
+  }
+
+  /* ============ STRIP (links + tasks) ============ */
+  .strip{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; min-height:0; }
+  .strip .panel-body{ display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; }
+
+  .tile{
+    display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--grid-line);
+    border-radius:8px; padding:6px 10px; font-size:11.5px; color:var(--text); text-decoration:none;
+    position:relative;
+  }
+  .tile:hover{ border-color:var(--amber); color:var(--amber); }
+  .tile .tile-x{
+    position:absolute; top:-6px; right:-6px; width:16px; height:16px; border-radius:50%;
+    background:var(--bad); color:#2A0A06; font-size:10px; line-height:16px; text-align:center; cursor:pointer; display:none;
+  }
+  .tile:hover .tile-x{ display:block; }
+  .tile-add{ display:flex; gap:6px; width:100%; margin-top:4px; }
+  .tile-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:11px; min-width:0; }
+  .tile-add button{ background:var(--amber); color:var(--amber-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:11px; cursor:pointer; }
+
+  .todo-row{ display:flex; align-items:center; gap:8px; width:100%; padding:5px 0; border-bottom:1px solid var(--grid-soft); }
+  .todo-row input[type="checkbox"]{ accent-color:var(--violet); width:15px; height:15px; flex:none; }
+  .todo-text{ flex:1; font-size:12px; color:var(--text); }
+  .todo-row.done .todo-text{ color:var(--text-dim); text-decoration:line-through; }
+  .todo-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:13px; }
+  .todo-del:hover{ color:var(--bad); }
+  .todo-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
+  .todo-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:11.5px; }
+  .todo-add button{ background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:11px; cursor:pointer; }
+
+  /* ============ TICKER ============ */
+  .ticker{
+    overflow:hidden; background:var(--panel); border:1px solid var(--grid-line); border-radius:14px;
+    display:flex; align-items:center;
+  }
+  .ticker-label{
+    flex:0 0 auto; background:var(--amber); color:var(--amber-ink); font-family:"Rajdhani",sans-serif;
+    font-weight:700; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; height:100%;
+    display:flex; align-items:center; padding:0 12px;
+  }
+  .ticker-viewport{ flex:1; overflow:hidden; height:100%; display:flex; align-items:center; }
+  .ticker-track{
+    display:flex; gap:44px; white-space:nowrap; padding-left:20px;
+    animation: ticker-scroll 90s linear infinite;
+    font-family:"Share Tech Mono", monospace; font-size:11.5px; color:var(--text-dim);
+  }
+  .ticker-track span b{ color:var(--cyan); font-weight:400; }
+  @keyframes ticker-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce){
+    .ticker-track{ animation:none; }
+    .ticker-viewport{ overflow-x:auto; }
+  }
+
+  /* ============ DETAIL OVERLAY ============ */
+  .overlay{
+    position:fixed; inset:0; background:rgba(3,5,9,0.72); backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center; z-index:50; padding:24px;
+  }
+  .overlay[hidden]{ display:none; }
+  .detail-panel{
+    width:min(640px, 100%); max-height:min(600px, 90vh); background:var(--panel-2);
+    border:1px solid var(--cyan-dim); border-radius:10px 30px 10px 10px; overflow:hidden;
+    display:flex; flex-direction:column; box-shadow:0 30px 80px -20px rgba(0,0,0,0.85);
+  }
+  .detail-topbar{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 10px 10px 18px; background:var(--cyan); color:var(--cyan-ink);
+  }
+  .detail-eyebrow{ font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:11.5px; }
+  .detail-close{
+    appearance:none; border:0; background:rgba(0,0,0,0.2); color:inherit; width:26px; height:26px;
+    border-radius:50%; cursor:pointer; font-size:13px; line-height:1;
+  }
+  .detail-close:hover{ background:rgba(0,0,0,0.36); }
+  .detail-body{ flex:1; min-height:0; overflow-y:auto; padding:18px 20px 22px; }
+  .detail-img{ width:100%; max-height:220px; object-fit:cover; border-radius:8px; margin-bottom:14px; background:var(--panel); }
+  .detail-title{ font-family:"Rajdhani", sans-serif; font-weight:700; font-size:21px; line-height:1.25; margin:0 0 8px; text-wrap:balance; }
+  .detail-meta{ font-family:"Share Tech Mono", monospace; font-size:11px; color:var(--text-dim); margin-bottom:12px; }
+  .detail-meta b{ color:var(--cyan); font-weight:400; }
+  .detail-snippet{ font-size:14px; line-height:1.6; color:var(--text); margin:0 0 16px; }
+  .detail-link{
+    display:inline-block; background:var(--amber); color:var(--amber-ink); text-decoration:none;
+    font-weight:700; font-size:12.5px; letter-spacing:0.03em; padding:9px 16px; border-radius:20px;
+  }
+  .detail-link:hover{ filter:brightness(1.08); }
+  .detail-list-item{
+    padding:10px 0; border-bottom:1px solid var(--grid-line); cursor:pointer;
+  }
+  .detail-list-item:hover .detail-title-sm{ color:var(--cyan); }
+  .detail-title-sm{ font-size:13px; color:var(--text); line-height:1.4; }
+  .detail-src{ font-size:10px; color:var(--text-dim); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
+
+  .empty-state, .error-state{ font-size:11.5px; color:var(--text-dim); padding:10px 0; }
+  .error-state{ color:var(--bad); }
+
+  /* ============ RESPONSIVE FALLBACK ============ */
+  @media (max-width: 980px), (max-height: 620px){
+    html,body{ overflow:auto; }
+    .console{ height:auto; min-height:100vh; min-height:100dvh; }
+    .deck{ grid-template-columns:1fr; }
+    .rail{ flex-direction:row; flex-wrap:wrap; }
+    .rail .panel{ flex:1 1 320px; max-height:none; }
+    .globe-body{ min-height:360px; }
+    .strip{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="console" id="console">
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">DOCDREW<span class="dim">.CA</span></span>
+      </div>
+      <span class="stardate" id="stardate">STARDATE —</span>
+      <div class="greeting-block">
+        <div class="greeting"><span class="status-dot" aria-hidden="true"></span><span id="greeting-text">Initializing console…</span></div>
+        <div class="subline" id="date-text">—</div>
+      </div>
+      <div class="clock" id="clock">
+        --:--:--
+        <span class="zone">Montreal</span>
+      </div>
+      <form class="search" id="search-form" role="search">
+        <select id="search-engine" aria-label="Search engine">
+          <option value="https://www.google.com/search?q=">Google</option>
+          <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+          <option value="https://www.bing.com/search?q=">Bing</option>
+        </select>
+        <input type="text" id="search-input" placeholder="Search…" autocomplete="off">
+        <button type="submit">Go</button>
+      </form>
+    </header>
+
+    <main class="deck">
+      <aside class="rail rail-left">
+        <section class="panel round-l" data-accent="amber" aria-label="Stock quotes">
+          <div class="panel-head">
+            <span>Markets</span>
+            <button class="head-btn" id="stocks-edit-btn" type="button">Edit</button>
+          </div>
+          <div class="panel-body scroll" id="stocks-body">
+            <div class="empty-state">Loading quotes…</div>
+          </div>
+        </section>
+        <section class="panel round-l" data-accent="gold" aria-label="Currency converter">
+          <div class="panel-head"><span>Currency</span></div>
+          <div class="panel-body scroll" id="fx-body"></div>
+        </section>
+      </aside>
+
+      <section class="globe-panel" aria-label="Live global feed">
+        <div class="globe-head">
+          <span>Live Global Feed</span>
+          <span class="n" id="globe-count">0 markers tracked</span>
+        </div>
+        <div class="globe-body" id="globe-body">
+          <canvas id="globe-canvas"></canvas>
+          <div class="globe-tooltip" id="globe-tooltip"></div>
+          <div class="globe-legend">
+            <span><i class="legend-dot cyan"></i>Weather station</span>
+            <span><i class="legend-dot amber"></i>News dateline</span>
+          </div>
+          <div class="globe-hint">drag to rotate · click a marker</div>
+        </div>
+      </section>
+
+      <aside class="rail rail-right">
+        <section class="panel" data-accent="cyan" aria-label="Weather">
+          <div class="panel-head"><span>Weather</span></div>
+          <div class="panel-body scroll" id="wx-body">
+            <div class="empty-state">Loading weather…</div>
+          </div>
+        </section>
+        <section class="panel" data-accent="violet" aria-label="News feed">
+          <div class="panel-head">
+            <span>Newswire</span>
+            <div class="tabs" id="news-tabs"></div>
+          </div>
+          <div class="panel-body no-pad scroll" id="news-body">
+            <div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <div class="strip">
+      <section class="panel round-l" data-accent="amber" aria-label="Quick links">
+        <div class="panel-head"><span>Quick Links</span><button class="head-btn" id="links-edit-btn" type="button">Edit</button></div>
+        <div class="panel-body scroll" id="links-body"></div>
+      </section>
+      <section class="panel" data-accent="violet" aria-label="Tasks">
+        <div class="panel-head"><span>Tasks</span></div>
+        <div class="panel-body scroll" id="todo-body"></div>
+      </section>
+    </div>
+
+    <div class="ticker">
+      <span class="ticker-label">Wire</span>
+      <div class="ticker-viewport">
+        <div class="ticker-track" id="ticker-track"><span>Standing by for headlines…</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="detail-overlay" hidden>
+    <div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-eyebrow">
+      <div class="detail-topbar">
+        <span class="detail-eyebrow" id="detail-eyebrow">Record</span>
+        <button class="detail-close" id="detail-close" aria-label="Close">✕</button>
+      </div>
+      <div class="detail-body scroll" id="detail-body"></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     CONSTANTS
+  ============================================================ */
+  var REDUCED_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var HOME_TZ = "America/Toronto";
+
+  var NEWS_SOURCES = [
+    { key: "us-politics", label: "US Politics" },
+    { key: "world-politics", label: "World Politics" },
+    { key: "economics", label: "Economics" },
+    { key: "apple-tech", label: "Apple Tech" },
+    { key: "ai-tech", label: "AI Tech" },
+    { key: "general-tech-science", label: "General Tech & Science" },
+    { key: "health-medicine", label: "Health & Medicine" }
+  ];
+
+  var STATIONS = [
+    { name: "Toronto", lat: 43.65, lon: -79.38 },
+    { name: "New York", lat: 40.71, lon: -74.01 },
+    { name: "London", lat: 51.51, lon: -0.13 },
+    { name: "Dubai", lat: 25.20, lon: 55.27 },
+    { name: "Tokyo", lat: 35.68, lon: 139.69 },
+    { name: "Sydney", lat: -33.87, lon: 151.21 },
+    { name: "Sao Paulo", lat: -23.55, lon: -46.63 },
+    { name: "Cape Town", lat: -33.92, lon: 18.42 }
+  ];
+
+  // [name, lat, lon, extra match keywords...]
+  var PLACES_RAW = [
+    ["New York", 40.71, -74.01, "nyc"],
+    ["Washington", 38.91, -77.04, "washington dc", "white house"],
+    ["Los Angeles", 34.05, -118.24],
+    ["San Francisco", 37.77, -122.42, "silicon valley"],
+    ["Chicago", 41.88, -87.63],
+    ["Miami", 25.76, -80.19],
+    ["Toronto", 43.65, -79.38],
+    ["Ottawa", 45.42, -75.70],
+    ["Vancouver", 49.28, -123.12],
+    ["Quebec", 46.81, -71.21],
+    ["Mexico City", 19.43, -99.13],
+    ["Sao Paulo", -23.55, -46.63],
+    ["Buenos Aires", -34.60, -58.38],
+    ["London", 51.51, -0.13],
+    ["Paris", 48.86, 2.35],
+    ["Berlin", 52.52, 13.40],
+    ["Brussels", 50.85, 4.35, "european union"],
+    ["Rome", 41.90, 12.50],
+    ["Madrid", 40.42, -3.70],
+    ["Amsterdam", 52.37, 4.90],
+    ["Vienna", 48.21, 16.37],
+    ["Warsaw", 52.23, 21.01],
+    ["Stockholm", 59.33, 18.07],
+    ["Oslo", 59.91, 10.75],
+    ["Helsinki", 60.17, 24.94],
+    ["Copenhagen", 55.68, 12.57],
+    ["Athens", 37.98, 23.73],
+    ["Lisbon", 38.72, -9.14],
+    ["Dublin", 53.35, -6.26],
+    ["Moscow", 55.76, 37.62],
+    ["Kyiv", 50.45, 30.52, "kiev"],
+    ["Ukraine", 49.0, 32.0],
+    ["Istanbul", 41.01, 28.98],
+    ["Beijing", 39.90, 116.41],
+    ["Shanghai", 31.23, 121.47],
+    ["Hong Kong", 22.32, 114.17],
+    ["Taiwan", 23.70, 120.96, "taipei"],
+    ["Tokyo", 35.68, 139.69],
+    ["Seoul", 37.57, 126.98],
+    ["North Korea", 39.04, 125.76, "pyongyang"],
+    ["Delhi", 28.61, 77.21, "new delhi"],
+    ["Mumbai", 19.08, 72.88],
+    ["Singapore", 1.35, 103.82],
+    ["Bangkok", 13.76, 100.50],
+    ["Jakarta", -6.21, 106.85],
+    ["Manila", 14.60, 120.98],
+    ["Sydney", -33.87, 151.21],
+    ["Melbourne", -37.81, 144.96],
+    ["New Zealand", -41.29, 174.78, "auckland", "wellington"],
+    ["Dubai", 25.20, 55.27],
+    ["Saudi Arabia", 24.71, 46.68, "riyadh"],
+    ["Tel Aviv", 32.08, 34.78, "israel"],
+    ["Jerusalem", 31.77, 35.21],
+    ["Gaza", 31.50, 34.47],
+    ["Iran", 35.69, 51.39, "tehran"],
+    ["Iraq", 33.31, 44.36, "baghdad"],
+    ["Egypt", 30.04, 31.24, "cairo"],
+    ["Nigeria", 9.08, 8.68, "lagos"],
+    ["Kenya", -1.29, 36.82, "nairobi"],
+    ["Johannesburg", -26.20, 28.05, "south africa"],
+    ["Cape Town", -33.92, 18.42],
+    ["California", 36.78, -119.42],
+    ["Texas", 31.97, -99.90],
+    ["Florida", 27.66, -81.52],
+    ["Canada", 56.13, -106.35],
+    ["China", 35.86, 104.20],
+    ["Japan", 36.20, 138.25],
+    ["India", 20.59, 78.96],
+    ["Australia", -25.27, 133.78],
+    ["Germany", 51.16, 10.45],
+    ["France", 46.60, 2.21],
+    ["Mexico", 23.63, -102.55],
+    ["Brazil", -14.24, -51.93]
+  ];
+
+  var PLACES = PLACES_RAW.map(function(row){
+    return { name: row[0], lat: row[1], lon: row[2], keys: [row[0].toLowerCase()].concat(row.slice(3)) };
+  });
+  // longer / more specific keys first so "hong kong" beats a looser later match
+  PLACES.sort(function(a,b){ return b.keys[0].length - a.keys[0].length; });
+
+  var DEFAULT_LINKS = [
+    { name: "Gmail", url: "https://mail.google.com" },
+    { name: "Netlify", url: "https://app.netlify.com" },
+    { name: "GitHub", url: "https://github.com" },
+    { name: "Calendar", url: "https://calendar.google.com" },
+    { name: "Drive", url: "https://drive.google.com" },
+    { name: "YouTube", url: "https://youtube.com" }
+  ];
+  var DEFAULT_TODOS = [
+    { id: "seed-1", text: "Point docdrew.ca at Netlify (DNS)", done: false }
+  ];
+
+  var LS = {
+    symbols: "dds-symbols",
+    fxFrom: "dds-fx-from",
+    fxTo: "dds-fx-to",
+    fxAmt: "dds-fx-amt",
+    wxCity: "dds-wx-city",
+    links: "dds-links",
+    todos: "dds-todos"
+  };
+
+  /* ============================================================
+     UTILITIES
+  ============================================================ */
+  function $(id){ return document.getElementById(id); }
+  function el(tag, cls){ var e = document.createElement(tag); if(cls) e.className = cls; return e; }
+  function debounce(fn, ms){ var t; return function(){ var a = arguments, ctx = this; clearTimeout(t); t = setTimeout(function(){ fn.apply(ctx, a); }, ms); }; }
+  function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function readLS(key, fallback){
+    try{ var v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); }
+    catch(e){ return fallback; }
+  }
+  function writeLS(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+  function timeAgo(iso){
+    if(!iso) return "";
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return "";
+    var diff = Math.max(0, Date.now() - d.getTime());
+    var m = Math.floor(diff/60000);
+    if(m < 1) return "just now";
+    if(m < 60) return m + "m ago";
+    var h = Math.floor(m/60);
+    if(h < 24) return h + "h ago";
+    return Math.floor(h/24) + "d ago";
+  }
+  function fmtMoney(n, ccy){
+    if(typeof n !== "number" || isNaN(n)) return "—";
+    try{ return new Intl.NumberFormat("en-US", { style: ccy ? "currency" : "decimal", currency: ccy || undefined, maximumFractionDigits: n < 5 ? 4 : 2 }).format(n); }
+    catch(e){ return n.toFixed(2); }
+  }
+
+  async function getJSON(url){
+    var res = await fetch(url);
+    var data = await res.json().catch(function(){ return {}; });
+    if(!res.ok || data.error) throw new Error((data && data.message) || "request failed");
+    return data;
+  }
+
+  /* ============================================================
+     CLOCK / GREETING / STARDATE
+  ============================================================ */
+  function updateClock(){
+    var now = new Date();
+    var timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    $("clock").childNodes[0].nodeValue = timeFmt.format(now) + " ";
+
+    var dateFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    $("date-text").textContent = dateFmt.format(now);
+
+    var hourFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "numeric", hour12: false });
+    var hour = parseInt(hourFmt.format(now), 10);
+    var part = hour < 5 ? "night watch" : hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+    var greetWord = hour < 5 ? "Systems nominal," : "Good " + part + ",";
+    $("greeting-text").textContent = greetWord + " Andrew";
+
+    // simple pseudo-stardate: YYYY.DDD.tenths-of-day
+    var start = new Date(Date.UTC(now.getUTCFullYear(), 0, 0));
+    var doy = Math.floor((now - start) / 86400000);
+    var frac = Math.floor(((now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds())/86400) * 10);
+    $("stardate").textContent = "STARDATE " + now.getUTCFullYear() + "." + String(doy).padStart(3,"0") + "." + frac;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  /* ============================================================
+     SEARCH
+  ============================================================ */
+  $("search-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    var q = $("search-input").value.trim();
+    if(!q) return;
+    var base = $("search-engine").value;
+    window.location.href = base + encodeURIComponent(q);
+  });
+
+  /* ============================================================
+     DETAIL OVERLAY
+  ============================================================ */
+  var overlay = $("detail-overlay");
+  var detailBody = $("detail-body");
+  var detailEyebrow = $("detail-eyebrow");
+
+  function openStoryDetail(item, contextLabel){
+    detailEyebrow.textContent = contextLabel || (item.sourceLabel || "Record");
+    var html = "";
+    if(item.image) html += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
+    html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
+    html += '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
+    if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
+    html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open Full Story ↗</a>';
+    detailBody.innerHTML = html;
+    overlay.hidden = false;
+  }
+
+  function openPlaceDetail(place, items, station, wx){
+    detailEyebrow.textContent = "Dateline — " + place;
+    var html = '<h2 class="detail-title">' + escapeHtml(place) + "</h2>";
+    if(station && wx){
+      html += '<div class="detail-meta"><b>Local conditions</b> · ' + Math.round(wx.current.temperature_2m) + "°C · " + wxLabel(wx.current.weather_code) + "</div>";
+    }
+    if(items && items.length){
+      html += '<div class="detail-meta" style="margin-top:10px;">' + items.length + " stor" + (items.length===1?"y":"ies") + " tagged to this location</div>";
+      items.forEach(function(it, idx){
+        html += '<div class="detail-list-item" data-idx="' + idx + '"><div class="detail-title-sm">' + escapeHtml(it.title) + '</div><div class="detail-src">' + escapeHtml(it.sourceLabel) + " · " + escapeHtml(timeAgo(it.pubDate)) + "</div></div>";
+      });
+    } else {
+      html += '<p class="detail-snippet">No active headlines tagged to ' + escapeHtml(place) + " right now — this marker is a live weather station.</p>";
+    }
+    detailBody.innerHTML = html;
+    overlay.hidden = false;
+    if(items && items.length){
+      Array.prototype.forEach.call(detailBody.querySelectorAll(".detail-list-item"), function(row){
+        row.addEventListener("click", function(){
+          var idx = parseInt(row.getAttribute("data-idx"), 10);
+          openStoryDetail(items[idx], "Dateline — " + place);
+        });
+      });
+    }
+  }
+
+  function closeDetail(){ overlay.hidden = true; }
+  $("detail-close").addEventListener("click", closeDetail);
+  overlay.addEventListener("click", function(e){ if(e.target === overlay) closeDetail(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !overlay.hidden) closeDetail(); });
+
+  /* ============================================================
+     MARKETS (stocks)
+  ============================================================ */
+  var stocksBody = $("stocks-body");
+  var currentSymbols = readLS(LS.symbols, ["AVXL","NWBO","CVM","NVDA","ETH-USD","BTC-USD"]);
+  var stocksEditing = false;
+
+  function renderQuotes(quotes){
+    stocksBody.innerHTML = "";
+    quotes.forEach(function(q){
+      var row = el("div", "quote-row");
+      var id = el("div", "q-id");
+      id.innerHTML = '<div class="q-sym">' + escapeHtml(q.symbol) + '</div><div class="q-name">' + escapeHtml(q.error ? "unavailable" : (q.name || q.symbol)) + "</div>";
+      var nums = el("div", "q-nums");
+      if(q.error || isNaN(q.price)){
+        nums.innerHTML = '<div class="q-price">—</div>';
+      } else {
+        var dir = q.change >= 0 ? "up" : "down";
+        var arrow = q.change >= 0 ? "▲" : "▼";
+        nums.innerHTML = '<div class="q-price">' + fmtMoney(q.price) + '</div><div class="q-chg ' + dir + '">' + arrow + " " + Math.abs(q.changePercent||0).toFixed(2) + "%</div>";
+      }
+      row.appendChild(id); row.appendChild(nums);
+      stocksBody.appendChild(row);
+    });
+    if(stocksEditing) renderStocksEditor();
+  }
+
+  function renderStocksEditor(){
+    var wrap = el("div", "edit-row");
+    wrap.innerHTML = '<input type="text" id="symbols-input" value="' + escapeHtml(currentSymbols.join(",")) + '"><div class="edit-hint">Comma-separated tickers · Enter to save</div>';
+    stocksBody.appendChild(wrap);
+    var input = $("symbols-input");
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        var list = input.value.split(",").map(function(s){ return s.trim().toUpperCase(); }).filter(Boolean).slice(0,12);
+        if(list.length){ currentSymbols = list; writeLS(LS.symbols, currentSymbols); stocksEditing = false; loadQuotes(); }
+      }
+    });
+  }
+
+  $("stocks-edit-btn").addEventListener("click", function(){
+    stocksEditing = !stocksEditing;
+    if(stocksEditing) renderStocksEditor(); else loadQuotes();
+  });
+
+  async function loadQuotes(){
+    try{
+      var data = await getJSON("/api/quotes?symbols=" + encodeURIComponent(currentSymbols.join(",")));
+      renderQuotes(data.quotes || []);
+    }catch(err){
+      stocksBody.innerHTML = '<div class="error-state">Market feed unavailable — try again shortly.</div>';
+    }
+  }
+
+  /* ============================================================
+     CURRENCY
+  ============================================================ */
+  var CURRENCIES = ["USD","CAD","EUR","GBP","JPY","AUD","CHF","CNY","INR","MXN"];
+  var fxBody = $("fx-body");
+  var fxState = {
+    from: readLS(LS.fxFrom, "USD"),
+    to: readLS(LS.fxTo, "CAD"),
+    amount: readLS(LS.fxAmt, 1)
+  };
+
+  function renderFx(){
+    var opts = function(sel){ return CURRENCIES.map(function(c){ return '<option value="' + c + '"' + (c===sel?" selected":"") + ">" + c + "</option>"; }).join(""); };
+    fxBody.innerHTML =
+      '<div class="fx-row">' +
+        '<input type="number" id="fx-amount" min="0" value="' + fxState.amount + '">' +
+        '<select id="fx-from">' + opts(fxState.from) + "</select>" +
+        '<button type="button" class="fx-swap" id="fx-swap" aria-label="Swap currencies">⇄</button>' +
+        '<select id="fx-to">' + opts(fxState.to) + "</select>" +
+      "</div>" +
+      '<div class="fx-result" id="fx-result">—</div>' +
+      '<div class="fx-meta" id="fx-meta">Loading rate…</div>';
+
+    $("fx-amount").addEventListener("input", debounce(function(){ fxState.amount = parseFloat($("fx-amount").value) || 0; writeLS(LS.fxAmt, fxState.amount); loadFx(); }, 350));
+    $("fx-from").addEventListener("change", function(){ fxState.from = $("fx-from").value; writeLS(LS.fxFrom, fxState.from); loadFx(); });
+    $("fx-to").addEventListener("change", function(){ fxState.to = $("fx-to").value; writeLS(LS.fxTo, fxState.to); loadFx(); });
+    $("fx-swap").addEventListener("click", function(){
+      var t = fxState.from; fxState.from = fxState.to; fxState.to = t;
+      writeLS(LS.fxFrom, fxState.from); writeLS(LS.fxTo, fxState.to);
+      renderFx(); loadFx();
+    });
+  }
+
+  async function loadFx(){
+    var resultEl = $("fx-result"), metaEl = $("fx-meta");
+    if(!resultEl) return;
+    try{
+      var data = await getJSON("/api/currency?from=" + fxState.from + "&to=" + fxState.to + "&amount=" + fxState.amount);
+      var rate = data.rates && data.rates[fxState.to];
+      resultEl.textContent = typeof rate === "number" ? fmtMoney(rate) + " " + fxState.to : "—";
+      metaEl.textContent = fxState.amount + " " + fxState.from + " · updated " + timeAgo(data.updated);
+    }catch(err){
+      resultEl.textContent = "—";
+      metaEl.textContent = "Rate feed unavailable";
+    }
+  }
+
+  /* ============================================================
+     WEATHER (home panel)
+  ============================================================ */
+  var wxBody = $("wx-body");
+  var DEFAULT_WX_PLACE = { name: "Granby, QC", lat: 45.4001, lon: -72.7280 };
+  var wxPlace = readLS(LS.wxCity, DEFAULT_WX_PLACE);
+  var wxEditing = false;
+
+  var WX_ICONS = {
+    clear: '<circle cx="20" cy="20" r="9" fill="var(--gold)"/>',
+    cloudy: '<circle cx="16" cy="18" r="7" fill="var(--text-dim)"/><rect x="10" y="22" width="20" height="8" rx="4" fill="var(--text-dim)"/>',
+    fog: '<rect x="6" y="14" width="28" height="3" rx="1.5" fill="var(--text-dim)"/><rect x="6" y="20" width="28" height="3" rx="1.5" fill="var(--text-dim)"/><rect x="6" y="26" width="28" height="3" rx="1.5" fill="var(--text-dim)"/>',
+    drizzle: '<rect x="10" y="10" width="20" height="10" rx="5" fill="var(--text-dim)"/><line x1="14" y1="24" x2="12" y2="32" stroke="var(--cyan)" stroke-width="2"/><line x1="22" y1="24" x2="20" y2="32" stroke="var(--cyan)" stroke-width="2"/>',
+    rain: '<rect x="8" y="8" width="24" height="12" rx="6" fill="var(--text-dim)"/><line x1="13" y1="24" x2="10" y2="34" stroke="var(--cyan)" stroke-width="2.4"/><line x1="21" y1="24" x2="18" y2="34" stroke="var(--cyan)" stroke-width="2.4"/><line x1="29" y1="24" x2="26" y2="34" stroke="var(--cyan)" stroke-width="2.4"/>',
+    snow: '<rect x="8" y="8" width="24" height="12" rx="6" fill="var(--text-dim)"/><circle cx="12" cy="30" r="2" fill="var(--text)"/><circle cx="20" cy="32" r="2" fill="var(--text)"/><circle cx="28" cy="30" r="2" fill="var(--text)"/>',
+    storm: '<rect x="8" y="6" width="24" height="12" rx="6" fill="var(--text-dim)"/><polygon points="20,20 14,32 19,32 16,40 26,26 20,26" fill="var(--gold)"/>'
+  };
+  function wxCategory(code){
+    if(code === 0) return "clear";
+    if(code >= 1 && code <= 3) return "cloudy";
+    if(code === 45 || code === 48) return "fog";
+    if(code >= 51 && code <= 57) return "drizzle";
+    if((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
+    if((code >= 71 && code <= 77) || code === 85 || code === 86) return "snow";
+    if(code >= 95) return "storm";
+    return "cloudy";
+  }
+  function wxLabel(code){
+    var map = { clear:"Clear", cloudy:"Cloudy", fog:"Fog", drizzle:"Drizzle", rain:"Rain", snow:"Snow", storm:"Storm" };
+    return map[wxCategory(code)];
+  }
+  function wxIconSvg(code, size){
+    size = size || 40;
+    return '<svg viewBox="0 0 40 40" width="' + size + '" height="' + size + '">' + (WX_ICONS[wxCategory(code)] || WX_ICONS.cloudy) + "</svg>";
+  }
+
+  function renderWx(data){
+    if(!data || !data.current){ wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>'; return; }
+    var c = data.current;
+    var html = '<div class="wx-top">' +
+      '<div class="wx-icon">' + wxIconSvg(c.weather_code, 40) + "</div>" +
+      '<div><div class="wx-temp">' + Math.round(c.temperature_2m) + "°C</div>" +
+      '<div class="wx-place">' + escapeHtml(data.place.name) + (data.place.country ? ", " + escapeHtml(data.place.country) : "") + "</div>" +
+      '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
+      '<div class="wx-grid">' +
+        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Feels</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidity</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h wind</div>" +
+      "</div>";
+    if(data.today && typeof data.today.max === "number"){
+      html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>High</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Low</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synced</div></div>";
+    }
+    wxBody.innerHTML = html;
+    if(wxEditing) renderWxEditor();
+  }
+
+  function renderWxEditor(){
+    var wrap = el("div", "wx-city-edit");
+    wrap.innerHTML = '<input type="text" id="wx-city-input" value="' + escapeHtml(wxPlace.name) + '" placeholder="City name">';
+    wxBody.appendChild(wrap);
+    $("wx-city-input").addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        var typed = e.target.value.trim();
+        // a manually-typed city has no known lat/lon yet — let the function geocode it
+        wxPlace = typed ? { name: typed, lat: null, lon: null } : DEFAULT_WX_PLACE;
+        writeLS(LS.wxCity, wxPlace);
+        wxEditing = false;
+        loadHomeWeather();
+      }
+    });
+  }
+  wxBody.addEventListener("dblclick", function(){ wxEditing = true; renderWxEditor(); });
+
+  async function loadHomeWeather(){
+    try{
+      var url = (typeof wxPlace.lat === "number" && typeof wxPlace.lon === "number")
+        ? "/api/weather?lat=" + wxPlace.lat + "&lon=" + wxPlace.lon + "&city=" + encodeURIComponent(wxPlace.name)
+        : "/api/weather?city=" + encodeURIComponent(wxPlace.name);
+      var data = await getJSON(url);
+      renderWx(data);
+    }catch(err){
+      wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>';
+    }
+  }
+
+  /* ============================================================
+     NEWS — fetch all sources, feed the rail list, ticker & globe
+  ============================================================ */
+  var newsCache = {};      // key -> items[]
+  var allItemsFlat = [];   // merged, deduped, for ticker + globe matching
+  var activeTab = "us-politics";
+
+  function buildTabs(){
+    var tabsEl = $("news-tabs");
+    tabsEl.innerHTML = "";
+    NEWS_SOURCES.forEach(function(src){
+      var b = el("button", "tab" + (src.key === activeTab ? " active" : ""));
+      b.type = "button";
+      b.textContent = src.label;
+      b.addEventListener("click", function(){
+        activeTab = src.key;
+        Array.prototype.forEach.call(tabsEl.querySelectorAll(".tab"), function(t){ t.classList.remove("active"); });
+        b.classList.add("active");
+        renderNewsList();
+      });
+      tabsEl.appendChild(b);
+    });
+  }
+
+  function renderNewsList(){
+    var body = $("news-body");
+    var items = newsCache[activeTab];
+    if(!items){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>'; return; }
+    if(!items.length){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">No headlines available.</div>'; return; }
+    var wrap = el("div");
+    wrap.style.padding = "6px 14px";
+    items.slice(0, 14).forEach(function(item){
+      var row = el("div", "news-item");
+      if(item.image){
+        row.innerHTML = '<img class="news-thumb" src="' + escapeHtml(item.image) + '" alt="" onerror="this.outerHTML=\'<div class=&quot;news-thumb empty&quot;>▮</div>\'">';
+      } else {
+        row.innerHTML = '<div class="news-thumb empty">▮</div>';
+      }
+      var meta = el("div");
+      meta.style.minWidth = "0";
+      meta.innerHTML = '<div class="news-title">' + escapeHtml(item.title) + '</div><div class="news-meta">' + escapeHtml(item.sourceLabel) + " · " + escapeHtml(timeAgo(item.pubDate)) + "</div>";
+      row.appendChild(meta);
+      row.addEventListener("click", function(){ openStoryDetail(item); });
+      wrap.appendChild(row);
+    });
+    body.innerHTML = "";
+    body.appendChild(wrap);
+  }
+
+  function buildTicker(){
+    var track = $("ticker-track");
+    if(!allItemsFlat.length){ return; }
+    var sorted = allItemsFlat.slice().sort(function(a,b){ return new Date(b.pubDate) - new Date(a.pubDate); }).slice(0, 24);
+    var frag = sorted.map(function(it){ return "<span><b>" + escapeHtml(it.sourceLabel.toUpperCase()) + "</b> " + escapeHtml(it.title) + "</span>"; }).join("");
+    track.innerHTML = frag + frag; // duplicate for seamless loop
+  }
+
+  function findPlace(text){
+    var lower = (" " + text + " ").toLowerCase();
+    for(var i=0; i<PLACES.length; i++){
+      var p = PLACES[i];
+      for(var j=0; j<p.keys.length; j++){
+        var k = p.keys[j];
+        var re = new RegExp("[^a-z]" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[^a-z]", "i");
+        if(re.test(lower)) return p;
+      }
+    }
+    return null;
+  }
+
+  async function loadAllNews(){
+    buildTabs();
+    var results = await Promise.allSettled(NEWS_SOURCES.map(function(src){
+      return getJSON("/api/news?source=" + src.key).then(function(data){
+        var items = (data.items || []).map(function(it){
+          it.sourceKey = src.key;
+          it.sourceLabel = data.name || src.label;
+          return it;
+        });
+        newsCache[src.key] = items;
+        return items;
+      }).catch(function(){ newsCache[src.key] = []; return []; });
+    }));
+
+    allItemsFlat = [];
+    var seen = {};
+    results.forEach(function(r){
+      if(r.status === "fulfilled"){
+        r.value.forEach(function(it){ if(!seen[it.link]){ seen[it.link] = true; allItemsFlat.push(it); } });
+      }
+    });
+
+    renderNewsList();
+    buildTicker();
+    populateNewsMarkers();
+  }
+
+  /* ============================================================
+     GLOBE — canvas wireframe sphere, weather blobs, news markers
+  ============================================================ */
+  var canvas = $("globe-canvas");
+  var ctx = canvas.getContext("2d");
+  var globeBody = $("globe-body");
+  var tooltip = $("globe-tooltip");
+
+  var G = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 20, dragging: false, dragDist: 0, lastX: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
+  var stationMarkers = [];  // {name,lat,lon,wx}
+  var newsMarkers = [];     // {place,lat,lon,items:[]}
+  var renderedMarkers = []; // this-frame screen positions for hit testing
+
+  // Rough, simplified continent silhouettes — [lon,lat] rings, good enough at globe scale
+  // to read as recognizable landmasses, not a survey-accurate coastline.
+  var CONTINENTS = [
+    // North America (+ Central America)
+    [[-165,68],[-155,71],[-125,70],[-95,68],[-80,62],[-65,60],[-52,47],[-65,45],[-70,41],
+     [-75,35],[-80,26],[-81,25],[-97,26],[-105,20],[-92,15],[-83,9],[-83,8],[-88,13],
+     [-105,20],[-115,30],[-124,40],[-125,49],[-135,58],[-155,60],[-165,68]],
+    // Greenland
+    [[-45,60],[-20,65],[-20,75],[-40,83],[-60,82],[-70,75],[-60,65],[-45,60]],
+    // South America
+    [[-80,10],[-77,4],[-80,-5],[-70,-18],[-71,-30],[-73,-42],[-68,-55],[-65,-53],
+     [-58,-38],[-48,-25],[-35,-8],[-50,2],[-60,8],[-72,10],[-80,10]],
+    // Europe
+    [[-10,36],[-9,43],[-5,48],[2,51],[5,53],[10,55],[20,60],[30,60],[30,46],
+     [20,42],[15,38],[10,44],[3,43],[-10,36]],
+    // Asia
+    [[60,77],[100,77],[140,73],[180,68],[160,55],[140,45],[130,35],[122,25],
+     [105,10],[100,5],[95,15],[80,8],[70,20],[60,25],[48,30],[35,35],[30,45],
+     [45,50],[60,55],[60,77]],
+    // Indian subcontinent
+    [[68,24],[70,20],[73,15],[77,8],[80,13],[83,17],[88,22],[92,26],[88,27],[80,30],[75,32],[68,24]],
+    // Africa
+    [[-17,15],[-10,6],[9,4],[9,-1],[12,-6],[18,-18],[18,-34],[32,-29],[40,-15],
+     [43,-2],[51,12],[43,12],[38,15],[33,31],[10,37],[-6,35],[-17,21],[-17,15]],
+    // Australia
+    [[113,-22],[122,-18],[129,-15],[136,-12],[142,-11],[148,-20],[153,-28],
+     [150,-37],[140,-38],[131,-32],[114,-30],[113,-22]]
+  ];
+
+  function pointInPolygon(lon, lat, ring){
+    var inside = false;
+    for(var i = 0, j = ring.length - 1; i < ring.length; j = i++){
+      var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      var intersect = ((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+      if(intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  function isLand(lon, lat){
+    for(var i = 0; i < CONTINENTS.length; i++){
+      if(pointInPolygon(lon, lat, CONTINENTS[i])) return true;
+    }
+    return false;
+  }
+
+  var landPoints = (function buildLandPoints(){
+    var pts = [];
+    for(var lat = -84; lat <= 84; lat += 3.2){
+      for(var lon = -180; lon < 180; lon += 3.2){
+        if(isLand(lon, lat)) pts.push({ lat: lat, lon: lon });
+      }
+    }
+    return pts;
+  })();
+
+  function resizeCanvas(){
+    var rect = globeBody.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    G.w = rect.width; G.h = rect.height;
+    G.cx = rect.width / 2; G.cy = rect.height / 2;
+    G.radius = Math.max(40, Math.min(rect.width, rect.height) * 0.42);
+  }
+
+  function project(lat, lon, rotationDeg){
+    var latRad = lat * Math.PI / 180;
+    var lonRad = (lon + rotationDeg) * Math.PI / 180;
+    var x3 = Math.cos(latRad) * Math.sin(lonRad);
+    var y3 = Math.sin(latRad);
+    var z3 = Math.cos(latRad) * Math.cos(lonRad);
+    if(z3 < -0.06) return null;
+    return { x: G.cx + x3 * G.radius, y: G.cy - y3 * G.radius, z: z3 };
+  }
+
+  function drawGlobe(){
+    ctx.clearRect(0, 0, G.w, G.h);
+    if(G.radius < 10) return;
+
+    // sphere shading
+    var grad = ctx.createRadialGradient(G.cx - G.radius*0.35, G.cy - G.radius*0.4, G.radius*0.1, G.cx, G.cy, G.radius*1.05);
+    grad.addColorStop(0, "rgba(82,216,222,0.16)");
+    grad.addColorStop(0.7, "rgba(20,40,55,0.35)");
+    grad.addColorStop(1, "rgba(5,7,12,0.05)");
+    ctx.beginPath();
+    ctx.arc(G.cx, G.cy, G.radius, 0, Math.PI*2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(82,216,222,0.5)";
+    ctx.stroke();
+
+    // wireframe meridians
+    ctx.strokeStyle = "rgba(82,216,222,0.22)";
+    ctx.lineWidth = 1;
+    for(var lon = 0; lon < 360; lon += 30){
+      ctx.beginPath();
+      var started = false;
+      for(var lat = -90; lat <= 90; lat += 4){
+        var p = project(lat, lon, G.rotation);
+        if(!p){ started = false; continue; }
+        if(!started){ ctx.moveTo(p.x, p.y); started = true; } else { ctx.lineTo(p.x, p.y); }
+      }
+      ctx.stroke();
+    }
+    // wireframe parallels
+    for(var lat2 = -60; lat2 <= 60; lat2 += 30){
+      ctx.beginPath();
+      var started2 = false;
+      for(var lon2 = 0; lon2 <= 360; lon2 += 4){
+        var p2 = project(lat2, lon2, G.rotation);
+        if(!p2){ started2 = false; continue; }
+        if(!started2){ ctx.moveTo(p2.x, p2.y); started2 = true; } else { ctx.lineTo(p2.x, p2.y); }
+      }
+      ctx.stroke();
+    }
+    // equator, emphasized
+    ctx.strokeStyle = "rgba(82,216,222,0.4)";
+    ctx.beginPath();
+    var started3 = false;
+    for(var lon3 = 0; lon3 <= 360; lon3 += 3){
+      var p3 = project(0, lon3, G.rotation);
+      if(!p3){ started3 = false; continue; }
+      if(!started3){ ctx.moveTo(p3.x, p3.y); started3 = true; } else { ctx.lineTo(p3.x, p3.y); }
+    }
+    ctx.stroke();
+
+    // landmasses — stippled dot terrain so continents read at a glance
+    for(var li = 0; li < landPoints.length; li++){
+      var lp = landPoints[li];
+      var lpp = project(lp.lat, lp.lon, G.rotation);
+      if(!lpp) continue;
+      var lpScale = 0.5 + lpp.z * 0.5;
+      ctx.beginPath();
+      ctx.arc(lpp.x, lpp.y, 1.15 * lpScale, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(180,228,228," + (0.4 * lpScale + 0.08) + ")";
+      ctx.fill();
+    }
+
+    renderedMarkers = [];
+
+    // weather blobs (stations)
+    stationMarkers.forEach(function(st){
+      var p = project(st.lat, st.lon, G.rotation);
+      if(!p) return;
+      var scale = 0.55 + p.z * 0.45;
+      var cloud = st.wx ? (st.wx.cloud_cover || 0) / 100 : 0.3;
+      var r = G.radius * (0.10 + cloud * 0.09) * scale;
+      var blobGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+      blobGrad.addColorStop(0, "rgba(82,216,222," + (0.30 * scale) + ")");
+      blobGrad.addColorStop(1, "rgba(82,216,222,0)");
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI*2);
+      ctx.fillStyle = blobGrad;
+      ctx.fill();
+
+      var dotR = 3.2 * scale;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, dotR, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(82,216,222," + (0.85*scale) + ")";
+      ctx.fill();
+
+      renderedMarkers.push({ x: p.x, y: p.y, r: Math.max(9, dotR + 6), type: "station", ref: st });
+    });
+
+    // news star markers
+    var pulse = 0.5 + 0.5 * Math.sin(Date.now() / 500);
+    newsMarkers.forEach(function(nm){
+      var p = project(nm.lat, nm.lon, G.rotation);
+      if(!p) return;
+      var scale = 0.6 + p.z * 0.4;
+      var baseR = 3.4 * scale;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, baseR + pulse*3.2*scale, 0, Math.PI*2);
+      ctx.strokeStyle = "rgba(255,169,77," + (0.55*scale) + ")";
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, baseR, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(255,169,77," + (0.95*scale) + ")";
+      ctx.fill();
+
+      renderedMarkers.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "news", ref: nm });
+    });
+  }
+
+  function tick(){
+    if(G.autoRotate && !G.dragging) G.rotation += REDUCED_MOTION ? 0 : 0.045;
+    drawGlobe();
+    requestAnimationFrame(tick);
+  }
+
+  function hitTest(x, y){
+    var best = null, bestDist = Infinity;
+    renderedMarkers.forEach(function(m){
+      var dx = m.x - x, dy = m.y - y, d = Math.sqrt(dx*dx + dy*dy);
+      if(d <= m.r && d < bestDist){ best = m; bestDist = d; }
+    });
+    return best;
+  }
+
+  canvas.addEventListener("pointerdown", function(e){
+    G.dragging = true; G.dragDist = 0; G.lastX = e.clientX;
+    G.autoRotate = false;
+    try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  canvas.addEventListener("pointermove", function(e){
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    var hit = hitTest(mx, my);
+    if(hit && !G.dragging){
+      canvas.style.cursor = "pointer";
+      tooltip.style.display = "block";
+      tooltip.style.left = hit.x + "px";
+      tooltip.style.top = hit.y + "px";
+      tooltip.textContent = hit.type === "station" ? hit.ref.name : hit.ref.place;
+    } else {
+      if(!G.dragging) canvas.style.cursor = "grab";
+      tooltip.style.display = "none";
+    }
+    if(G.dragging){
+      var dx = e.clientX - G.lastX; G.lastX = e.clientX;
+      G.dragDist += Math.abs(dx);
+      G.rotation += dx * 0.4;
+    }
+  });
+  function endDrag(){
+    if(!G.dragging) return;
+    G.dragging = false;
+    clearTimeout(G.idleTimer);
+    G.idleTimer = setTimeout(function(){ G.autoRotate = true; }, 5000);
+  }
+  canvas.addEventListener("pointerup", function(e){
+    var wasClick = G.dragDist < 6;
+    endDrag();
+    if(wasClick){
+      var rect = canvas.getBoundingClientRect();
+      var hit = hitTest(e.clientX - rect.left, e.clientY - rect.top);
+      if(hit) handleMarkerClick(hit);
+    }
+  });
+  canvas.addEventListener("pointercancel", endDrag);
+  canvas.addEventListener("pointerleave", function(){ tooltip.style.display = "none"; });
+
+  function handleMarkerClick(hit){
+    if(hit.type === "station"){
+      var st = hit.ref;
+      var relatedItems = newsMarkers.filter(function(nm){ return nm.place === st.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
+      openPlaceDetail(st.name, relatedItems, true, st.wx);
+    } else {
+      openPlaceDetail(hit.ref.place, hit.ref.items, false, null);
+    }
+  }
+
+  function populateNewsMarkers(){
+    var grouped = {};
+    allItemsFlat.forEach(function(item){
+      var text = item.title + " " + (item.snippet || "");
+      var place = findPlace(text);
+      if(!place) return;
+      item.place = place.name;
+      var key = place.name;
+      if(!grouped[key]) grouped[key] = { place: place.name, lat: place.lat, lon: place.lon, items: [] };
+      if(grouped[key].items.length < 6) grouped[key].items.push(item);
+    });
+    newsMarkers = Object.keys(grouped).slice(0, 30).map(function(k){ return grouped[k]; });
+    $("globe-count").textContent = (stationMarkers.length + newsMarkers.length) + " markers tracked";
+  }
+
+  async function loadStations(){
+    var results = await Promise.allSettled(STATIONS.map(function(st){
+      return getJSON("/api/weather?lat=" + st.lat + "&lon=" + st.lon + "&city=" + encodeURIComponent(st.name)).then(function(data){
+        return { name: st.name, lat: st.lat, lon: st.lon, wx: data.current };
+      });
+    }));
+    stationMarkers = results.filter(function(r){ return r.status === "fulfilled"; }).map(function(r){ return r.value; });
+    $("globe-count").textContent = (stationMarkers.length + newsMarkers.length) + " markers tracked";
+  }
+
+  /* ============================================================
+     QUICK LINKS
+  ============================================================ */
+  var linksBody = $("links-body");
+  var links = readLS(LS.links, DEFAULT_LINKS);
+  var linksEditing = false;
+
+  function renderLinks(){
+    linksBody.innerHTML = "";
+    links.forEach(function(l, idx){
+      var a = el("a", "tile");
+      a.href = l.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.innerHTML = escapeHtml(l.name) + (linksEditing ? '<span class="tile-x" data-idx="' + idx + '">✕</span>' : "");
+      linksBody.appendChild(a);
+    });
+    if(linksEditing){
+      var addRow = el("div", "tile-add");
+      addRow.innerHTML = '<input type="text" id="link-name" placeholder="Name"><input type="text" id="link-url" placeholder="https://…"><button type="button" id="link-add">Add</button>';
+      linksBody.appendChild(addRow);
+      $("link-add").addEventListener("click", function(){
+        var name = $("link-name").value.trim();
+        var url = $("link-url").value.trim();
+        if(!name || !url) return;
+        if(!/^https?:\/\//i.test(url)) url = "https://" + url;
+        links.push({ name: name, url: url });
+        writeLS(LS.links, links);
+        renderLinks();
+      });
+      Array.prototype.forEach.call(linksBody.querySelectorAll(".tile-x"), function(x){
+        x.addEventListener("click", function(e){
+          e.preventDefault(); e.stopPropagation();
+          links.splice(parseInt(x.getAttribute("data-idx"),10), 1);
+          writeLS(LS.links, links);
+          renderLinks();
+        });
+      });
+    }
+  }
+  $("links-edit-btn").addEventListener("click", function(){ linksEditing = !linksEditing; renderLinks(); });
+
+  /* ============================================================
+     TASKS
+  ============================================================ */
+  var todoBody = $("todo-body");
+  var todos = readLS(LS.todos, DEFAULT_TODOS);
+
+  function renderTodos(){
+    todoBody.innerHTML = "";
+    todos.forEach(function(t){
+      var row = el("div", "todo-row" + (t.done ? " done" : ""));
+      row.innerHTML = '<input type="checkbox" ' + (t.done ? "checked" : "") + '><span class="todo-text">' + escapeHtml(t.text) + '</span><button type="button" class="todo-del">✕</button>';
+      row.querySelector("input").addEventListener("change", function(){
+        t.done = !t.done; writeLS(LS.todos, todos); renderTodos();
+      });
+      row.querySelector(".todo-del").addEventListener("click", function(){
+        todos = todos.filter(function(x){ return x.id !== t.id; });
+        writeLS(LS.todos, todos); renderTodos();
+      });
+      todoBody.appendChild(row);
+    });
+    var addRow = el("div", "todo-add");
+    addRow.innerHTML = '<input type="text" id="todo-input" placeholder="Add a task…"><button type="button" id="todo-add-btn">Add</button>';
+    todoBody.appendChild(addRow);
+    function addTodo(){
+      var input = $("todo-input");
+      var text = input.value.trim();
+      if(!text) return;
+      todos.push({ id: "t" + Date.now(), text: text, done: false });
+      writeLS(LS.todos, todos);
+      renderTodos();
+    }
+    $("todo-add-btn").addEventListener("click", addTodo);
+    $("todo-input").addEventListener("keydown", function(e){ if(e.key === "Enter") addTodo(); });
+  }
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  function init(){
+    renderFx();
+    renderLinks();
+    renderTodos();
+
+    resizeCanvas();
+    if(window.ResizeObserver){ new ResizeObserver(debounce(resizeCanvas, 120)).observe(globeBody); }
+    window.addEventListener("resize", debounce(resizeCanvas, 120));
+    requestAnimationFrame(function(){ resizeCanvas(); });
+    tick();
+
+    loadQuotes();
+    loadFx();
+    loadHomeWeather();
+    loadStations();
+    loadAllNews();
+
+    setInterval(loadQuotes, 90000);
+    setInterval(loadFx, 300000);
+    setInterval(loadHomeWeather, 600000);
+    setInterval(loadAllNews, 300000);
+    setInterval(loadStations, 900000);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

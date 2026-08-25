@@ -1,0 +1,9 @@
+{
+  "name": "docdrew-start",
+  "private": true,
+  "version": "1.0.0",
+  "devDependencies": {
+    "@netlify/functions": "^2.8.2",
+    "typescript": "^5.5.4"
+  }
+}
