@@ -1425,17 +1425,22 @@
     v += Math.sin((x + warpX) * 1.6 + t * 0.12) * 0.5;
     v += Math.sin((y + warpY) * 2.1 - t * 0.09) * 0.32;
     v += Math.sin((x + y) * 0.9 + warpX * 0.5 + t * 0.07) * 0.18;
-    return v; // roughly -1..1
+    // higher-frequency detail layer — breaks up smooth blob edges into more fractal-looking wisps
+    v += Math.sin((x - warpY) * 4.4 + t * 0.2) * 0.12;
+    v += Math.sin((y + warpX) * 3.7 - t * 0.17) * 0.09;
+    return v / 1.21; // back to roughly -1..1
   }
 
-  // a fine sample lattice across the whole sphere (not just land) that the noise + real
-  // regional cloud% get evaluated against every frame, so cover reads as continuous swirling
-  // bands rather than isolated puffs stuck to the 60 real data points.
+  // a fine, JITTERED (not grid-aligned) sample scatter across the whole sphere — a regular
+  // lattice reads as a mechanical dot-grid once most points get pruned by the noise threshold,
+  // so points are scattered in lat/lon space itself, not just nudged a pixel or two on screen.
   var cloudSamplePoints = (function buildCloudSamplePoints(){
     var pts = [];
-    for(var lat = -84; lat <= 84; lat += 4){
-      for(var lon = -180; lon < 180; lon += 4){
-        pts.push({ lat: lat, lon: lon, jx: (Math.random()-0.5)*2, jy: (Math.random()-0.5)*2, coverage: 0 });
+    for(var lat = -84; lat <= 84; lat += 3){
+      for(var lon = -180; lon < 180; lon += 3){
+        var jlat = Math.max(-89, Math.min(89, lat + (Math.random()-0.5)*2.8));
+        var jlon = lon + (Math.random()-0.5)*2.8;
+        pts.push({ lat: jlat, lon: jlon, coverage: 0 });
       }
     }
     return pts;
@@ -1592,7 +1597,7 @@
       var cScale = 0.55 + cpp.z * 0.45;
       var rC = (0.9 + edge * 1.5) * cScale;
       ctx2.beginPath();
-      ctx2.arc(cpp.x + cp.jx, cpp.y + cp.jy, rC, 0, Math.PI*2);
+      ctx2.arc(cpp.x, cpp.y, rC, 0, Math.PI*2);
       ctx2.fillStyle = "rgba(232,240,245," + (0.1 + edge * 0.5 * (0.3 + covCurve * 0.7)) + ")";
       ctx2.fill();
     }
