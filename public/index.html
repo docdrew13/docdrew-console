@@ -93,14 +93,14 @@
   }
   .brand-name{
     font-family:"Rajdhani", sans-serif; font-weight:700; letter-spacing:0.08em;
-    text-transform:uppercase; font-size:16px; color:var(--text);
+    text-transform:uppercase; font-size:18.5px; color:var(--text);
   }
   .brand-name .dim{ color:var(--text-dim); font-weight:600; }
 
   .stardate{
     flex:0 0 auto;
     font-family:"Share Tech Mono", monospace;
-    font-size:12px;
+    font-size:14px;
     color:var(--cyan);
     letter-spacing:0.04em;
     border-left:1px solid var(--grid-line);
@@ -109,7 +109,7 @@
 
   .greeting-block{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; line-height:1.15; }
   .greeting{
-    font-family:"Rajdhani", sans-serif; font-weight:700; font-size:16px;
+    font-family:"Rajdhani", sans-serif; font-weight:700; font-size:18.5px;
     letter-spacing:0.03em; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .greeting .status-dot{
@@ -118,25 +118,25 @@
     animation: blink 2.4s ease-in-out infinite;
   }
   @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
-  .subline{ font-family:"Share Tech Mono", monospace; font-size:11px; color:var(--text-dim); }
+  .subline{ font-family:"Share Tech Mono", monospace; font-size:12.5px; color:var(--text-dim); }
 
   .clock{
     flex:0 0 auto; text-align:right; font-family:"Share Tech Mono", monospace;
-    color:var(--amber); font-size:20px; letter-spacing:0.03em; line-height:1.1;
+    color:var(--amber); font-size:23px; letter-spacing:0.03em; line-height:1.1;
   }
-  .clock .zone{ display:block; font-size:10px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; }
+  .clock .zone{ display:block; font-size:11.5px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; }
 
   .search{ flex:0 0 auto; display:flex; align-items:center; gap:6px; }
   .search select, .search input{
     background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
-    border-radius:20px; padding:7px 12px; font-size:12.5px;
+    border-radius:20px; padding:7px 12px; font-size:14.5px;
   }
   .search select{ color:var(--text-dim); }
   .search input{ width:170px; }
   .search input::placeholder{ color:var(--text-dim); }
   .search button{
     background:var(--cyan); color:var(--cyan-ink); border:0; border-radius:20px;
-    padding:7px 14px; font-weight:700; font-size:12px; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
+    padding:7px 14px; font-weight:700; font-size:14px; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
   }
   .search button:hover{ filter:brightness(1.1); }
 
@@ -152,18 +152,18 @@
     flex:0 0 auto;
     display:flex; align-items:center; justify-content:space-between; gap:8px;
     padding:6px 8px 6px 16px;
-    font-family:"Rajdhani", sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.09em; font-size:12.5px;
+    font-family:"Rajdhani", sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.09em; font-size:14.5px;
     color:var(--amber-ink);
     background:var(--amber);
   }
-  .panel-head .n{ font-family:"Share Tech Mono", monospace; font-size:11px; opacity:0.75; text-transform:none; letter-spacing:0; }
+  .panel-head .n{ font-family:"Share Tech Mono", monospace; font-size:12.5px; opacity:0.75; text-transform:none; letter-spacing:0; }
   .panel[data-accent="cyan"] .panel-head{ background:var(--cyan); color:var(--cyan-ink); }
   .panel[data-accent="violet"] .panel-head{ background:var(--violet); color:var(--violet-ink); }
   .panel[data-accent="gold"] .panel-head{ background:var(--gold); color:var(--gold-ink); }
 
   .head-btn{
     appearance:none; border:0; background:rgba(0,0,0,0.18); color:inherit;
-    border-radius:999px; font-size:10.5px; font-weight:700; letter-spacing:0.04em;
+    border-radius:999px; font-size:12px; font-weight:700; letter-spacing:0.04em;
     padding:4px 9px; cursor:pointer; text-transform:uppercase;
   }
   .head-btn:hover{ background:rgba(0,0,0,0.32); }
@@ -174,18 +174,18 @@
   .tabs{ display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; max-width:310px; }
   .tab{
     appearance:none; border:0; background:rgba(0,0,0,0.16); color:inherit; opacity:0.7;
-    border-radius:999px; font-size:10px; font-weight:700; padding:4px 8px; cursor:pointer; letter-spacing:0.02em;
+    border-radius:999px; font-size:11.5px; font-weight:700; padding:4px 8px; cursor:pointer; letter-spacing:0.02em;
     white-space:nowrap;
   }
   .tab.active{ opacity:1; background:rgba(0,0,0,0.34); }
 
   /* ============ DECK (main 3-col area) ============ */
-  .deck{ display:grid; grid-template-columns: 272px 1fr 460px; gap:8px; min-height:0; }
+  .deck{ display:grid; grid-template-columns: 320px 1fr 1fr 260px; gap:8px; min-height:0; }
   .rail{ display:flex; flex-direction:column; gap:8px; min-height:0; }
-  .rail-left .panel:nth-child(1){ flex:1.15; }
-  .rail-left .panel:nth-child(2){ flex:1; }
-  .rail-right .panel:nth-child(1){ flex:0 0 auto; max-height:24%; }
-  .rail-right .panel:nth-child(2){ flex:1; }
+  .rail-left .panel:nth-child(1){ flex:1; }
+  .rail-right .panel:nth-child(1){ flex:1.3; }
+  .rail-right .panel:nth-child(2){ flex:0 0 auto; max-height:27%; }
+  .rail-right .panel:nth-child(3){ flex:0 0 auto; max-height:27%; }
 
   /* ---- stock list ---- */
   .quote-row{
@@ -194,42 +194,42 @@
   }
   .quote-row:last-child{ border-bottom:0; }
   .q-id{ min-width:0; }
-  .q-sym{ font-family:"Share Tech Mono", monospace; font-size:12.5px; color:var(--text); }
-  .q-name{ font-size:10.5px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
-  .q-nums{ text-align:right; font-family:"Share Tech Mono", monospace; font-size:12px; font-variant-numeric:tabular-nums; }
+  .q-sym{ font-family:"Share Tech Mono", monospace; font-size:14.5px; color:var(--text); }
+  .q-name{ font-size:12px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+  .q-nums{ text-align:right; font-family:"Share Tech Mono", monospace; font-size:14px; font-variant-numeric:tabular-nums; }
   .q-price{ color:var(--text); }
   .q-chg.up{ color:var(--good); }
   .q-chg.down{ color:var(--bad); }
   .edit-row{ margin-top:6px; }
   .edit-row input{
     width:100%; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
-    border-radius:6px; padding:6px 8px; font-family:"Share Tech Mono", monospace; font-size:11px;
+    border-radius:6px; padding:6px 8px; font-family:"Share Tech Mono", monospace; font-size:12.5px;
   }
-  .edit-hint{ font-size:10px; color:var(--text-dim); margin-top:4px; }
+  .edit-hint{ font-size:11.5px; color:var(--text-dim); margin-top:4px; }
 
   /* ---- currency ---- */
   .fx-row{ display:flex; align-items:center; gap:6px; margin-bottom:8px; }
   .fx-row select, .fx-row input{
     background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
-    border-radius:6px; padding:6px 8px; font-size:12px;
+    border-radius:6px; padding:6px 8px; font-size:14px;
   }
   .fx-row input{ width:76px; font-family:"Share Tech Mono", monospace; }
   .fx-swap{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--cyan); border-radius:6px; width:28px; height:28px; cursor:pointer; }
   .fx-swap:hover{ background:var(--panel-2); }
-  .fx-result{ font-family:"Share Tech Mono", monospace; font-size:22px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
-  .fx-meta{ text-align:center; font-size:10.5px; color:var(--text-dim); }
+  .fx-result{ font-family:"Share Tech Mono", monospace; font-size:25.5px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
+  .fx-meta{ text-align:center; font-size:12px; color:var(--text-dim); }
 
   /* ---- weather compact ---- */
   .wx-top{ display:flex; align-items:center; gap:10px; }
   .wx-icon{ width:40px; height:40px; flex:none; }
-  .wx-temp{ font-family:"Share Tech Mono", monospace; font-size:26px; color:var(--text); }
-  .wx-place{ font-size:11px; color:var(--text-dim); }
-  .wx-cond{ font-size:11.5px; color:var(--cyan); }
+  .wx-temp{ font-family:"Share Tech Mono", monospace; font-size:30px; color:var(--text); }
+  .wx-place{ font-size:12.5px; color:var(--text-dim); }
+  .wx-cond{ font-size:13px; color:var(--cyan); }
   .wx-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
-  .wx-stat{ text-align:center; font-family:"Share Tech Mono", monospace; font-size:11px; color:var(--text-dim); }
-  .wx-stat b{ display:block; color:var(--text); font-size:13px; }
+  .wx-stat{ text-align:center; font-family:"Share Tech Mono", monospace; font-size:12.5px; color:var(--text-dim); }
+  .wx-stat b{ display:block; color:var(--text); font-size:15px; }
   .wx-city-edit{ display:flex; gap:6px; margin-top:8px; }
-  .wx-city-edit input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:11px; }
+  .wx-city-edit input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:12.5px; }
 
   /* ---- news list (rail) ---- */
   .news-item{
@@ -238,9 +238,9 @@
   .news-item:last-child{ border-bottom:0; }
   .news-item:hover .news-title{ color:var(--cyan); }
   .news-thumb{ width:56px; height:56px; border-radius:6px; object-fit:cover; flex:none; background:var(--panel-2); }
-  .news-thumb.empty{ display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:16px; }
-  .news-title{ font-size:12px; line-height:1.32; color:var(--text); }
-  .news-meta{ font-size:9.5px; color:var(--text-dim); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
+  .news-thumb.empty{ display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:18.5px; }
+  .news-title{ font-size:14px; line-height:1.32; color:var(--text); }
+  .news-meta{ font-size:11px; color:var(--text-dim); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
 
   /* ---- globe panel ---- */
   .globe-panel{
@@ -249,28 +249,29 @@
   }
   .globe-head{
     flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
-    padding:10px 16px; font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:12.5px; color:var(--cyan);
+    padding:10px 16px; font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:14.5px; color:var(--cyan);
   }
-  .globe-head .n{ font-family:"Share Tech Mono", monospace; font-size:10.5px; color:var(--text-dim); letter-spacing:0; text-transform:none; }
+  .globe-head .n{ font-family:"Share Tech Mono", monospace; font-size:12px; color:var(--text-dim); letter-spacing:0; text-transform:none; }
   .globe-body{ flex:1; min-height:0; position:relative; }
   .globe-body canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
   .globe-body canvas:active{ cursor:grabbing; }
   .globe-legend{
-    position:absolute; left:16px; bottom:14px; display:flex; gap:14px; font-size:10.5px; color:var(--text-dim);
+    position:absolute; left:16px; bottom:14px; display:flex; gap:14px; font-size:12px; color:var(--text-dim);
     font-family:"Share Tech Mono", monospace; pointer-events:none;
   }
   .globe-legend span{ display:flex; align-items:center; gap:5px; }
   .legend-dot{ width:8px; height:8px; border-radius:50%; }
   .legend-dot.cyan{ background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
   .legend-dot.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .legend-dot.blue{ background:#5AA7E8; box-shadow:0 0 6px #5AA7E8; }
   .globe-hint{
-    position:absolute; right:16px; bottom:14px; font-size:10px; color:var(--text-dim);
+    position:absolute; right:16px; bottom:14px; font-size:11.5px; color:var(--text-dim);
     font-family:"Share Tech Mono", monospace; pointer-events:none; text-align:right;
   }
   .globe-tooltip{
     position:absolute; pointer-events:none; transform:translate(-50%,-130%);
     background:var(--panel-2); border:1px solid var(--cyan-dim); border-radius:6px;
-    padding:5px 9px; font-size:11px; color:var(--text); white-space:nowrap; display:none;
+    padding:5px 9px; font-size:12.5px; color:var(--text); white-space:nowrap; display:none;
     font-family:"Rajdhani", sans-serif; font-weight:600; letter-spacing:0.02em;
     box-shadow:0 8px 20px -8px rgba(0,0,0,0.7);
   }
@@ -281,28 +282,28 @@
 
   .tile{
     display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--grid-line);
-    border-radius:8px; padding:6px 10px; font-size:11.5px; color:var(--text); text-decoration:none;
+    border-radius:8px; padding:6px 10px; font-size:13px; color:var(--text); text-decoration:none;
     position:relative;
   }
   .tile:hover{ border-color:var(--amber); color:var(--amber); }
   .tile .tile-x{
     position:absolute; top:-6px; right:-6px; width:16px; height:16px; border-radius:50%;
-    background:var(--bad); color:#2A0A06; font-size:10px; line-height:16px; text-align:center; cursor:pointer; display:none;
+    background:var(--bad); color:#2A0A06; font-size:11.5px; line-height:16px; text-align:center; cursor:pointer; display:none;
   }
   .tile:hover .tile-x{ display:block; }
   .tile-add{ display:flex; gap:6px; width:100%; margin-top:4px; }
-  .tile-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:11px; min-width:0; }
-  .tile-add button{ background:var(--amber); color:var(--amber-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:11px; cursor:pointer; }
+  .tile-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:12.5px; min-width:0; }
+  .tile-add button{ background:var(--amber); color:var(--amber-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:12.5px; cursor:pointer; }
 
   .todo-row{ display:flex; align-items:center; gap:8px; width:100%; padding:5px 0; border-bottom:1px solid var(--grid-soft); }
   .todo-row input[type="checkbox"]{ accent-color:var(--violet); width:15px; height:15px; flex:none; }
-  .todo-text{ flex:1; font-size:12px; color:var(--text); }
+  .todo-text{ flex:1; font-size:14px; color:var(--text); }
   .todo-row.done .todo-text{ color:var(--text-dim); text-decoration:line-through; }
-  .todo-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:13px; }
+  .todo-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:15px; }
   .todo-del:hover{ color:var(--bad); }
   .todo-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
-  .todo-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:11.5px; }
-  .todo-add button{ background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:11px; cursor:pointer; }
+  .todo-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:13px; }
+  .todo-add button{ background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:12.5px; cursor:pointer; }
 
   /* ============ TICKER ============ */
   .ticker{
@@ -311,14 +312,14 @@
   }
   .ticker-label{
     flex:0 0 auto; background:var(--amber); color:var(--amber-ink); font-family:"Rajdhani",sans-serif;
-    font-weight:700; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; height:100%;
+    font-weight:700; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; height:100%;
     display:flex; align-items:center; padding:0 12px;
   }
   .ticker-viewport{ flex:1; overflow:hidden; height:100%; display:flex; align-items:center; }
   .ticker-track{
     display:flex; gap:44px; white-space:nowrap; padding-left:20px;
     animation: ticker-scroll 90s linear infinite;
-    font-family:"Share Tech Mono", monospace; font-size:11.5px; color:var(--text-dim);
+    font-family:"Share Tech Mono", monospace; font-size:13px; color:var(--text-dim);
   }
   .ticker-track span b{ color:var(--cyan); font-weight:400; }
   @keyframes ticker-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
@@ -342,31 +343,31 @@
     flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:10px 10px 10px 18px; background:var(--cyan); color:var(--cyan-ink);
   }
-  .detail-eyebrow{ font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:11.5px; }
+  .detail-eyebrow{ font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:13px; }
   .detail-close{
     appearance:none; border:0; background:rgba(0,0,0,0.2); color:inherit; width:26px; height:26px;
-    border-radius:50%; cursor:pointer; font-size:13px; line-height:1;
+    border-radius:50%; cursor:pointer; font-size:15px; line-height:1;
   }
   .detail-close:hover{ background:rgba(0,0,0,0.36); }
   .detail-body{ flex:1; min-height:0; overflow-y:auto; padding:18px 20px 22px; }
   .detail-img{ width:100%; max-height:220px; object-fit:cover; border-radius:8px; margin-bottom:14px; background:var(--panel); }
-  .detail-title{ font-family:"Rajdhani", sans-serif; font-weight:700; font-size:21px; line-height:1.25; margin:0 0 8px; text-wrap:balance; }
-  .detail-meta{ font-family:"Share Tech Mono", monospace; font-size:11px; color:var(--text-dim); margin-bottom:12px; }
+  .detail-title{ font-family:"Rajdhani", sans-serif; font-weight:700; font-size:24px; line-height:1.25; margin:0 0 8px; text-wrap:balance; }
+  .detail-meta{ font-family:"Share Tech Mono", monospace; font-size:12.5px; color:var(--text-dim); margin-bottom:12px; }
   .detail-meta b{ color:var(--cyan); font-weight:400; }
-  .detail-snippet{ font-size:14px; line-height:1.6; color:var(--text); margin:0 0 16px; }
+  .detail-snippet{ font-size:16px; line-height:1.6; color:var(--text); margin:0 0 16px; }
   .detail-link{
     display:inline-block; background:var(--amber); color:var(--amber-ink); text-decoration:none;
-    font-weight:700; font-size:12.5px; letter-spacing:0.03em; padding:9px 16px; border-radius:20px;
+    font-weight:700; font-size:14.5px; letter-spacing:0.03em; padding:9px 16px; border-radius:20px;
   }
   .detail-link:hover{ filter:brightness(1.08); }
   .detail-list-item{
     padding:10px 0; border-bottom:1px solid var(--grid-line); cursor:pointer;
   }
   .detail-list-item:hover .detail-title-sm{ color:var(--cyan); }
-  .detail-title-sm{ font-size:13px; color:var(--text); line-height:1.4; }
-  .detail-src{ font-size:10px; color:var(--text-dim); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
+  .detail-title-sm{ font-size:15px; color:var(--text); line-height:1.4; }
+  .detail-src{ font-size:11.5px; color:var(--text-dim); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
 
-  .empty-state, .error-state{ font-size:11.5px; color:var(--text-dim); padding:10px 0; }
+  .empty-state, .error-state{ font-size:13px; color:var(--text-dim); padding:10px 0; }
   .error-state{ color:var(--bad); }
 
   /* ============ RESPONSIVE FALLBACK ============ */
@@ -411,18 +412,14 @@
 
     <main class="deck">
       <aside class="rail rail-left">
-        <section class="panel round-l" data-accent="amber" aria-label="Stock quotes">
+        <section class="panel round-l" data-accent="violet" aria-label="News feed">
           <div class="panel-head">
-            <span>Markets</span>
-            <button class="head-btn" id="stocks-edit-btn" type="button">Edit</button>
+            <span>Newswire</span>
+            <div class="tabs" id="news-tabs"></div>
           </div>
-          <div class="panel-body scroll" id="stocks-body">
-            <div class="empty-state">Loading quotes…</div>
+          <div class="panel-body no-pad scroll" id="news-body">
+            <div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>
           </div>
-        </section>
-        <section class="panel round-l" data-accent="gold" aria-label="Currency converter">
-          <div class="panel-head"><span>Currency</span></div>
-          <div class="panel-body scroll" id="fx-body"></div>
         </section>
       </aside>
 
@@ -442,20 +439,40 @@
         </div>
       </section>
 
+      <section class="globe-panel" aria-label="Live weather systems" data-accent="weather">
+        <div class="globe-head">
+          <span>Weather Systems</span>
+          <span class="n" id="weather-globe-count">syncing…</span>
+        </div>
+        <div class="globe-body" id="weather-globe-body">
+          <canvas id="weather-globe-canvas"></canvas>
+          <div class="globe-tooltip" id="weather-globe-tooltip"></div>
+          <div class="globe-legend">
+            <span><i class="legend-dot cyan"></i>Cloud cover</span>
+            <span><i class="legend-dot blue"></i>Precipitation</span>
+          </div>
+          <div class="globe-hint">drag to rotate · live cloud cover</div>
+        </div>
+      </section>
+
       <aside class="rail rail-right">
+        <section class="panel round-l" data-accent="amber" aria-label="Stock quotes">
+          <div class="panel-head">
+            <span>Markets</span>
+            <button class="head-btn" id="stocks-edit-btn" type="button">Edit</button>
+          </div>
+          <div class="panel-body scroll" id="stocks-body">
+            <div class="empty-state">Loading quotes…</div>
+          </div>
+        </section>
+        <section class="panel round-l" data-accent="gold" aria-label="Currency converter">
+          <div class="panel-head"><span>Currency</span></div>
+          <div class="panel-body scroll" id="fx-body"></div>
+        </section>
         <section class="panel" data-accent="cyan" aria-label="Weather">
           <div class="panel-head"><span>Weather</span></div>
           <div class="panel-body scroll" id="wx-body">
             <div class="empty-state">Loading weather…</div>
-          </div>
-        </section>
-        <section class="panel" data-accent="violet" aria-label="News feed">
-          <div class="panel-head">
-            <span>Newswire</span>
-            <div class="tabs" id="news-tabs"></div>
-          </div>
-          <div class="panel-body no-pad scroll" id="news-body">
-            <div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>
           </div>
         </section>
       </aside>
@@ -1094,12 +1111,21 @@
 
   var landPoints = (function buildLandPoints(){
     var pts = [];
-    for(var lat = -84; lat <= 84; lat += 3.2){
-      for(var lon = -180; lon < 180; lon += 3.2){
-        if(isLand(lon, lat)) pts.push({ lat: lat, lon: lon });
+    for(var lat = -84; lat <= 84; lat += 2.5){
+      for(var lon = -180; lon < 180; lon += 2.5){
+        if(isLand(lon, lat)) pts.push({ lat: lat, lon: lon, jx: (Math.random()-0.5)*1.4, jy: (Math.random()-0.5)*1.4, tint: Math.random() });
       }
     }
     return pts;
+  })();
+
+  // fixed background starfield (deep-space ambience behind the sphere)
+  var STARS = (function buildStars(){
+    var s = [];
+    for(var i = 0; i < 140; i++){
+      s.push({ x: Math.random(), y: Math.random(), r: 0.4 + Math.random()*1.3, phase: Math.random()*Math.PI*2, speed: 0.6 + Math.random()*1.1 });
+    }
+    return s;
   })();
 
   function resizeCanvas(){
@@ -1127,17 +1153,46 @@
     ctx.clearRect(0, 0, G.w, G.h);
     if(G.radius < 10) return;
 
-    // sphere shading
-    var grad = ctx.createRadialGradient(G.cx - G.radius*0.35, G.cy - G.radius*0.4, G.radius*0.1, G.cx, G.cy, G.radius*1.05);
-    grad.addColorStop(0, "rgba(82,216,222,0.16)");
-    grad.addColorStop(0.7, "rgba(20,40,55,0.35)");
-    grad.addColorStop(1, "rgba(5,7,12,0.05)");
+    // starfield — fixed points behind the sphere, gentle twinkle
+    var t = Date.now() / 1000;
+    for(var si = 0; si < STARS.length; si++){
+      var st2 = STARS[si];
+      var sx = st2.x * G.w, sy = st2.y * G.h;
+      var dxs = sx - G.cx, dys = sy - G.cy;
+      if(dxs*dxs + dys*dys < G.radius*G.radius*1.06) continue; // don't draw stars over the sphere
+      var tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * st2.speed + st2.phase));
+      ctx.beginPath();
+      ctx.arc(sx, sy, st2.r, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(210,230,240," + (tw*0.85) + ")";
+      ctx.fill();
+    }
+
+    // sphere shading — deep lit-ocean look, brighter upper-left "sunlit" limb, dark falloff at the rim
+    var grad = ctx.createRadialGradient(G.cx - G.radius*0.4, G.cy - G.radius*0.45, G.radius*0.05, G.cx, G.cy, G.radius*1.04);
+    grad.addColorStop(0, "rgba(120,196,214,0.42)");
+    grad.addColorStop(0.35, "rgba(48,120,150,0.4)");
+    grad.addColorStop(0.72, "rgba(14,46,64,0.55)");
+    grad.addColorStop(1, "rgba(3,8,14,0.75)");
     ctx.beginPath();
     ctx.arc(G.cx, G.cy, G.radius, 0, Math.PI*2);
     ctx.fillStyle = grad;
     ctx.fill();
+
+    // atmosphere rim glow
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(G.cx, G.cy, G.radius + 1.5, 0, Math.PI*2);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(120,220,235,0.35)";
+    ctx.shadowColor = "rgba(82,216,222,0.9)";
+    ctx.shadowBlur = 14;
+    ctx.stroke();
+    ctx.restore();
+
     ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(82,216,222,0.5)";
+    ctx.beginPath();
+    ctx.arc(G.cx, G.cy, G.radius, 0, Math.PI*2);
     ctx.stroke();
 
     // wireframe meridians
@@ -1175,15 +1230,20 @@
     }
     ctx.stroke();
 
-    // landmasses — stippled dot terrain so continents read at a glance
+    // landmasses — stippled dot terrain, warm green/tan tint reads distinctly from the blue ocean
     for(var li = 0; li < landPoints.length; li++){
       var lp = landPoints[li];
       var lpp = project(lp.lat, lp.lon, G.rotation);
       if(!lpp) continue;
       var lpScale = 0.5 + lpp.z * 0.5;
+      var r = (0.85 + lp.tint * 0.6) * lpScale;
+      var terrainMix = lp.tint; // 0..1 — blend between deep green (forest/plains) and tan (arid)
+      var rr = Math.round(150 + terrainMix * 60);
+      var gg = Math.round(196 - terrainMix * 40);
+      var bb = Math.round(120 - terrainMix * 50);
       ctx.beginPath();
-      ctx.arc(lpp.x, lpp.y, 1.15 * lpScale, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(180,228,228," + (0.4 * lpScale + 0.08) + ")";
+      ctx.arc(lpp.x + lp.jx, lpp.y + lp.jy, r, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(" + rr + "," + gg + "," + bb + "," + (0.62 * lpScale + 0.1) + ")";
       ctx.fill();
     }
 
@@ -1329,6 +1389,227 @@
   }
 
   /* ============================================================
+     WEATHER GLOBE — second sphere, live cloud cover + precipitation
+     painted across a coarse world grid instead of news markers.
+  ============================================================ */
+  var canvas2 = $("weather-globe-canvas");
+  var ctx2 = canvas2.getContext("2d");
+  var weatherGlobeBody = $("weather-globe-body");
+  var tooltip2 = $("weather-globe-tooltip");
+
+  var G2 = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 200, dragging: false, dragDist: 0, lastX: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
+  var weatherGridPoints = []; // {lat,lon,cloud,precip,temp,wind}
+  var renderedMarkers2 = [];
+
+  function resizeCanvas2(){
+    var rect = weatherGlobeBody.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas2.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas2.height = Math.max(1, Math.floor(rect.height * dpr));
+    ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+    G2.w = rect.width; G2.h = rect.height;
+    G2.cx = rect.width / 2; G2.cy = rect.height / 2;
+    G2.radius = Math.max(40, Math.min(rect.width, rect.height) * 0.42);
+  }
+
+  function project2(lat, lon, rotationDeg){
+    var latRad = lat * Math.PI / 180;
+    var lonRad = (lon + rotationDeg) * Math.PI / 180;
+    var x3 = Math.cos(latRad) * Math.sin(lonRad);
+    var y3 = Math.sin(latRad);
+    var z3 = Math.cos(latRad) * Math.cos(lonRad);
+    if(z3 < -0.06) return null;
+    return { x: G2.cx + x3 * G2.radius, y: G2.cy - y3 * G2.radius, z: z3 };
+  }
+
+  function drawWeatherGlobe(){
+    ctx2.clearRect(0, 0, G2.w, G2.h);
+    if(G2.radius < 10) return;
+
+    var t = Date.now() / 1000;
+    for(var si = 0; si < STARS.length; si++){
+      var st3 = STARS[si];
+      var sx = st3.x * G2.w, sy = st3.y * G2.h;
+      var dxs = sx - G2.cx, dys = sy - G2.cy;
+      if(dxs*dxs + dys*dys < G2.radius*G2.radius*1.06) continue;
+      var tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * st3.speed + st3.phase + 1.7));
+      ctx2.beginPath();
+      ctx2.arc(sx, sy, st3.r, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(210,230,240," + (tw*0.85) + ")";
+      ctx2.fill();
+    }
+
+    var grad2 = ctx2.createRadialGradient(G2.cx - G2.radius*0.4, G2.cy - G2.radius*0.45, G2.radius*0.05, G2.cx, G2.cy, G2.radius*1.04);
+    grad2.addColorStop(0, "rgba(120,196,214,0.42)");
+    grad2.addColorStop(0.35, "rgba(48,120,150,0.4)");
+    grad2.addColorStop(0.72, "rgba(14,46,64,0.55)");
+    grad2.addColorStop(1, "rgba(3,8,14,0.75)");
+    ctx2.beginPath();
+    ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
+    ctx2.fillStyle = grad2;
+    ctx2.fill();
+
+    ctx2.save();
+    ctx2.beginPath();
+    ctx2.arc(G2.cx, G2.cy, G2.radius + 1.5, 0, Math.PI*2);
+    ctx2.lineWidth = 3;
+    ctx2.strokeStyle = "rgba(120,220,235,0.35)";
+    ctx2.shadowColor = "rgba(82,216,222,0.9)";
+    ctx2.shadowBlur = 14;
+    ctx2.stroke();
+    ctx2.restore();
+
+    ctx2.lineWidth = 1;
+    ctx2.strokeStyle = "rgba(82,216,222,0.5)";
+    ctx2.beginPath();
+    ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
+    ctx2.stroke();
+
+    ctx2.strokeStyle = "rgba(82,216,222,0.22)";
+    ctx2.lineWidth = 1;
+    for(var lon = 0; lon < 360; lon += 30){
+      ctx2.beginPath();
+      var started = false;
+      for(var lat = -90; lat <= 90; lat += 4){
+        var p = project2(lat, lon, G2.rotation);
+        if(!p){ started = false; continue; }
+        if(!started){ ctx2.moveTo(p.x, p.y); started = true; } else { ctx2.lineTo(p.x, p.y); }
+      }
+      ctx2.stroke();
+    }
+    for(var lat2 = -60; lat2 <= 60; lat2 += 30){
+      ctx2.beginPath();
+      var started2 = false;
+      for(var lon2 = 0; lon2 <= 360; lon2 += 4){
+        var p2 = project2(lat2, lon2, G2.rotation);
+        if(!p2){ started2 = false; continue; }
+        if(!started2){ ctx2.moveTo(p2.x, p2.y); started2 = true; } else { ctx2.lineTo(p2.x, p2.y); }
+      }
+      ctx2.stroke();
+    }
+    ctx2.strokeStyle = "rgba(82,216,222,0.4)";
+    ctx2.beginPath();
+    var started3 = false;
+    for(var lon3 = 0; lon3 <= 360; lon3 += 3){
+      var p3 = project2(0, lon3, G2.rotation);
+      if(!p3){ started3 = false; continue; }
+      if(!started3){ ctx2.moveTo(p3.x, p3.y); started3 = true; } else { ctx2.lineTo(p3.x, p3.y); }
+    }
+    ctx2.stroke();
+
+    // landmasses for geographic context — same coastline dots, dimmer than the news globe
+    for(var li = 0; li < landPoints.length; li++){
+      var lp = landPoints[li];
+      var lpp = project2(lp.lat, lp.lon, G2.rotation);
+      if(!lpp) continue;
+      var lpScale = 0.5 + lpp.z * 0.5;
+      var r0 = (0.8 + lp.tint * 0.5) * lpScale;
+      var terrainMix = lp.tint;
+      var rr = Math.round(150 + terrainMix * 60);
+      var gg = Math.round(196 - terrainMix * 40);
+      var bb = Math.round(120 - terrainMix * 50);
+      ctx2.beginPath();
+      ctx2.arc(lpp.x + lp.jx, lpp.y + lp.jy, r0, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(" + rr + "," + gg + "," + bb + "," + (0.4 * lpScale + 0.06) + ")";
+      ctx2.fill();
+    }
+
+    renderedMarkers2 = [];
+
+    // live weather layer — cloud cover blobs sized/lit by percentage, precipitation as a blue core
+    weatherGridPoints.forEach(function(gp){
+      var p = project2(gp.lat, gp.lon, G2.rotation);
+      if(!p) return;
+      var scale = 0.55 + p.z * 0.45;
+      var cloud = typeof gp.cloud === "number" ? gp.cloud : 0;
+      if(cloud > 4){
+        var r = G2.radius * (0.09 + (cloud/100) * 0.16) * scale;
+        var cGrad = ctx2.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+        cGrad.addColorStop(0, "rgba(225,235,240," + (0.05 + (cloud/100) * 0.4 * scale) + ")");
+        cGrad.addColorStop(1, "rgba(225,235,240,0)");
+        ctx2.beginPath();
+        ctx2.arc(p.x, p.y, r, 0, Math.PI*2);
+        ctx2.fillStyle = cGrad;
+        ctx2.fill();
+      }
+      var precip = typeof gp.precip === "number" ? gp.precip : 0;
+      if(precip > 0.05){
+        var pr = G2.radius * 0.05 * scale * Math.min(2, 1 + precip);
+        ctx2.beginPath();
+        ctx2.arc(p.x, p.y, pr, 0, Math.PI*2);
+        ctx2.fillStyle = "rgba(90,167,232," + (0.5 * scale) + ")";
+        ctx2.fill();
+      }
+      renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, G2.radius*0.09*scale + 6), type: "cell", ref: gp });
+    });
+  }
+
+  function tick2(){
+    if(G2.autoRotate && !G2.dragging) G2.rotation += REDUCED_MOTION ? 0 : 0.037;
+    drawWeatherGlobe();
+    requestAnimationFrame(tick2);
+  }
+
+  function hitTest2(x, y){
+    var best = null, bestDist = Infinity;
+    renderedMarkers2.forEach(function(m){
+      var dx = m.x - x, dy = m.y - y, d = Math.sqrt(dx*dx + dy*dy);
+      if(d <= m.r && d < bestDist){ best = m; bestDist = d; }
+    });
+    return best;
+  }
+
+  canvas2.addEventListener("pointerdown", function(e){
+    G2.dragging = true; G2.dragDist = 0; G2.lastX = e.clientX;
+    G2.autoRotate = false;
+    try{ canvas2.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  canvas2.addEventListener("pointermove", function(e){
+    var rect = canvas2.getBoundingClientRect();
+    var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    var hit = hitTest2(mx, my);
+    if(hit && !G2.dragging){
+      canvas2.style.cursor = "pointer";
+      tooltip2.style.display = "block";
+      tooltip2.style.left = hit.x + "px";
+      tooltip2.style.top = hit.y + "px";
+      var gp = hit.ref;
+      var parts = [];
+      if(typeof gp.cloud === "number") parts.push(Math.round(gp.cloud) + "% cloud");
+      if(typeof gp.temp === "number") parts.push(Math.round(gp.temp) + "°C");
+      if(typeof gp.precip === "number" && gp.precip > 0.05) parts.push(gp.precip.toFixed(1) + "mm precip");
+      tooltip2.textContent = parts.join(" · ") || "no data";
+    } else {
+      if(!G2.dragging) canvas2.style.cursor = "grab";
+      tooltip2.style.display = "none";
+    }
+    if(G2.dragging){
+      var dx = e.clientX - G2.lastX; G2.lastX = e.clientX;
+      G2.dragDist += Math.abs(dx);
+      G2.rotation += dx * 0.4;
+    }
+  });
+  function endDrag2(){
+    if(!G2.dragging) return;
+    G2.dragging = false;
+    clearTimeout(G2.idleTimer);
+    G2.idleTimer = setTimeout(function(){ G2.autoRotate = true; }, 5000);
+  }
+  canvas2.addEventListener("pointerup", endDrag2);
+  canvas2.addEventListener("pointercancel", endDrag2);
+  canvas2.addEventListener("pointerleave", function(){ tooltip2.style.display = "none"; });
+
+  async function loadWeatherGrid(){
+    try{
+      var data = await getJSON("/api/weather-grid");
+      weatherGridPoints = data.points || [];
+      $("weather-globe-count").textContent = weatherGridPoints.length + " cells · updated " + timeAgo(data.updated);
+    }catch(err){
+      $("weather-globe-count").textContent = "weather layer unavailable";
+    }
+  }
+
+  /* ============================================================
      QUICK LINKS
   ============================================================ */
   var linksBody = $("links-body");
@@ -1417,17 +1698,25 @@
     requestAnimationFrame(function(){ resizeCanvas(); });
     tick();
 
+    resizeCanvas2();
+    if(window.ResizeObserver){ new ResizeObserver(debounce(resizeCanvas2, 120)).observe(weatherGlobeBody); }
+    window.addEventListener("resize", debounce(resizeCanvas2, 120));
+    requestAnimationFrame(function(){ resizeCanvas2(); });
+    tick2();
+
     loadQuotes();
     loadFx();
     loadHomeWeather();
     loadStations();
     loadAllNews();
+    loadWeatherGrid();
 
     setInterval(loadQuotes, 90000);
     setInterval(loadFx, 300000);
     setInterval(loadHomeWeather, 600000);
     setInterval(loadAllNews, 300000);
     setInterval(loadStations, 900000);
+    setInterval(loadWeatherGrid, 600000);
   }
 
   init();
