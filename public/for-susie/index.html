@@ -10,36 +10,39 @@
 <style>
   /* ============ TOKENS ============ */
   :root{
-    /* Warm "reading lamp" palette for Susie — same tokens, same panels, same functions
-       as the main console, just retuned from the cool cyan "starship bridge" look to a
-       warm copper/amber/sage one. --frost is deliberately left blue: it's the "cold" cue
-       for the snow report and ISS marker, and stays legible as "cold" even in a warm page. */
-    --void:#0B0805;
-    --panel:#1C140F;
-    --panel-2:#241A12;
-    --grid-line:#3C2D1E;
-    --grid-soft:#2A2015;
-    --text:#F0E6D8;
-    --text-dim:#A6927A;
-    --amber:#FFA94D;
+    /* Warm "reading lamp" palette for Susie, flipped to a light/white page per her request
+       (easier to read than a dark screen) — same tokens, same panels, same functions as the
+       main console, just light backgrounds with dark warm-brown text instead of the reverse.
+       Accent hues are pulled to a medium depth so they stay legible both as text on the white
+       page AND as the bright little colored bands behind panel headers/badges. --frost is
+       deliberately kept blue: it's the "cold" cue for the snow report and ISS marker, and
+       stays legible as "cold" even in a warm page. */
+    --void:#FFFFFF;
+    --panel:#FFF7EC;
+    --panel-2:#FCEDD6;
+    --grid-line:#E6D3B4;
+    --grid-soft:#F3E7D2;
+    --text:#2A1C10;
+    --text-dim:#7C6852;
+    --amber:#D98A2B;
     --amber-ink:#3A2408;
     --amber-dim:#8A5A28;
-    --gold:#FFD166;
+    --gold:#C79A2E;
     --gold-ink:#3A2C05;
-    --cyan:#FF8A5C;
+    --cyan:#C85F35;
     --cyan-ink:#3A1810;
     --cyan-dim:#8A4A32;
-    --violet:#D89AC2;
+    --violet:#B0578C;
     --violet-ink:#331828;
-    --good:#8FCB6F;
-    --bad:#FF6B5E;
-    --teal:#C99A4A;
+    --good:#5A9E3E;
+    --bad:#D14A38;
+    --teal:#A67B35;
     --teal-ink:#2E2408;
-    --frost:#8EC9FF;
+    --frost:#3F84C9;
     --frost-ink:#0B2A44;
-    --crimson:#FF6F91;
+    --crimson:#D14A72;
     --crimson-ink:#3A0A18;
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   *{ box-sizing:border-box; }
@@ -54,8 +57,8 @@
   }
   body{
     background:
-      radial-gradient(1200px 700px at 18% -10%, rgba(255,138,92,0.06), transparent 60%),
-      radial-gradient(900px 600px at 100% 110%, rgba(216,154,194,0.06), transparent 60%),
+      radial-gradient(1200px 700px at 18% -10%, rgba(255,138,92,0.10), transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, rgba(216,154,194,0.10), transparent 60%),
       var(--void);
   }
   ::selection{ background:var(--amber); color:var(--amber-ink); }
@@ -1186,7 +1189,7 @@
   ============================================================ */
   function updateClock(){
     var now = new Date();
-    var timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    var timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true });
     $("clock").childNodes[0].nodeValue = timeFmt.format(now) + " ";
 
     var dateFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
