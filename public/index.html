@@ -198,6 +198,10 @@
   .rail-right{ overflow-y:auto; }
   .rail-right .panel{ flex:0 0 auto; order:1; }
   .rail-right .panel.collapsed{ order:2; }
+  /* first child of each rail-right column: sits between the expanded group (order:1) and
+     collapsed group (order:2) and eats any leftover vertical space, so the collapsed tabs
+     land flush against the bottom edge instead of just trailing whatever's open above them. */
+  .rail-spacer{ order:2; flex:1 1 0; min-height:0; }
   .rail-right .panel-head{ cursor:pointer; user-select:none; }
   .rail-right .panel-body{ overflow-y:visible; max-height:none; }
   .rail-right .panel.collapsed .panel-body{ display:none; }
@@ -315,6 +319,8 @@
     cursor:pointer; padding:8px 0 0; text-align:left; width:100%;
   }
   .wx-more-link:hover{ color:var(--text); }
+  .snow-report{ margin-top:10px; padding-top:9px; border-top:1px solid var(--grid-line); }
+  .snow-report-head{ font-size:14px; color:var(--frost); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px; }
   .wx-forecast{ display:flex; justify-content:space-between; gap:4px; margin-top:10px; padding-top:8px; border-top:1px solid var(--grid-line); }
   .wx-fday{ flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   .wx-fday-label{ font-size:13px; color:var(--text-dim); text-transform:uppercase; }
@@ -384,7 +390,7 @@
   }
 
   /* ============ STRIP (links + tasks + captain's log) ============ */
-  .strip{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; min-height:0; }
+  .strip{ display:grid; grid-template-columns: 1fr; gap:8px; min-height:0; }
   .strip .panel-body{ display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; }
 
   /* ---- captain's log ---- */
@@ -396,7 +402,7 @@
   .log-text{ font-size:15.5px; color:var(--text); line-height:1.25; }
   .log-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
   .log-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:15px; min-width:0; }
-  .log-add button{ background:var(--teal); color:var(--teal-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
+  .log-add button{ flex:0 0 auto; background:var(--teal); color:var(--teal-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
 
   /* ============ FOOTER STRIP (ship status + market ticker) ============ */
   .footer-strip{ display:flex; align-items:center; gap:14px; padding:0 6px; overflow:hidden; }
@@ -440,8 +446,8 @@
   .todo-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:19px; }
   .todo-del:hover{ color:var(--bad); }
   .todo-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
-  .todo-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:16px; }
-  .todo-add button{ background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
+  .todo-add input{ flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:16px; }
+  .todo-add button{ flex:0 0 auto; background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
 
   /* ============ TICKER ============ */
   /* ============ DETAIL OVERLAY ============ */
@@ -575,6 +581,7 @@
       </div>
 
       <aside class="rail rail-right" aria-label="Weather and conditions">
+        <div class="rail-spacer" aria-hidden="true"></div>
         <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
           <div class="panel-head"><span>Weather</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="wx-body">
@@ -587,12 +594,6 @@
             <div class="empty-state">Loading sky data…</div>
           </div>
         </section>
-        <section class="panel" data-accent="frost" data-panel-key="bromont" aria-label="Bromont conditions">
-          <div class="panel-head"><span>Bromont</span><i class="panel-chevron">▾</i></div>
-          <div class="panel-body scroll" id="bromont-body">
-            <div class="empty-state">Loading conditions…</div>
-          </div>
-        </section>
         <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Sports scores">
           <div class="panel-head"><span>Sports</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="sports-body">
@@ -602,6 +603,7 @@
       </aside>
 
       <aside class="rail rail-right" aria-label="Media and finance">
+        <div class="rail-spacer" aria-hidden="true"></div>
         <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
           <div class="panel-head"><span>Podcasts</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body" id="podcasts-body">
@@ -621,9 +623,17 @@
             <div class="empty-state">Loading quotes…</div>
           </div>
         </section>
-        <section class="panel round-l" data-accent="gold" data-panel-key="currency" aria-label="Currency converter">
+        <section class="panel" data-accent="gold" data-panel-key="currency" aria-label="Currency converter">
           <div class="panel-head"><span>Currency</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="fx-body"></div>
+        </section>
+        <section class="panel" data-accent="violet" data-panel-key="tasks" aria-label="Tasks">
+          <div class="panel-head"><span>Tasks</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="todo-body"></div>
+        </section>
+        <section class="panel round-l" data-accent="teal" data-panel-key="log" aria-label="Captain's log">
+          <div class="panel-head"><span>Captain's Log</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="log-body"></div>
         </section>
       </aside>
     </main>
@@ -632,14 +642,6 @@
       <section class="panel round-l" data-accent="amber" aria-label="Quick links">
         <div class="panel-head"><span>Quick Links</span><button class="head-btn" id="links-edit-btn" type="button">Edit</button></div>
         <div class="panel-body scroll" id="links-body"></div>
-      </section>
-      <section class="panel" data-accent="violet" aria-label="Tasks">
-        <div class="panel-head"><span>Tasks</span></div>
-        <div class="panel-body scroll" id="todo-body"></div>
-      </section>
-      <section class="panel round-l" data-accent="teal" aria-label="Captain's log">
-        <div class="panel-head"><span>Captain's Log</span></div>
-        <div class="panel-body scroll" id="log-body"></div>
       </section>
     </div>
 
@@ -1203,6 +1205,7 @@
     if(data.today && typeof data.today.max === "number"){
       html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>High</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Low</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synced</div></div>";
     }
+    html += buildSnowReportHtml(lastBromontData);
     html += '<button type="button" class="wx-more-link" id="wx-more-btn">Full forecast &amp; nearby news →</button>';
     wxBody.innerHTML = html;
     if(wxEditing) renderWxEditor();
@@ -1535,43 +1538,41 @@
   }
 
   /* ============================================================
-     BROMONT — ski hill conditions, via the same weather backend
-     (there's no reliable public trail-status feed, so this is
-     honestly a weather/snowfall proxy for the mountain, not an
-     official piste report).
+     SNOW REPORT — Bromont ski hill conditions, nested inside the
+     Weather panel rather than its own tab. Via the same weather
+     backend (there's no reliable public trail-status feed, so
+     this is honestly a weather/snowfall proxy, not an official
+     piste report — said plainly in the caption below).
   ============================================================ */
   var BROMONT = { name: "Bromont", lat: 45.3086, lon: -72.6423 };
+  var lastBromontData = null;
 
-  function renderBromont(data){
-    var body = $("bromont-body");
-    if(!body) return;
+  function buildSnowReportHtml(data){
     if(!data || !data.current){
-      body.innerHTML = '<div class="error-state">Conditions unavailable.</div>';
-      return;
+      return '<div class="snow-report"><div class="snow-report-head">❄ Snow Report — Bromont</div><div class="error-state">Conditions unavailable.</div></div>';
     }
     var c = data.current;
     var snow = typeof c.snowfall === "number" ? c.snowfall : 0;
-    var html = '<div class="wx-top">' +
-      '<div class="wx-icon">' + wxIconSvg(c.weather_code, 36) + "</div>" +
-      '<div><div class="wx-temp">' + Math.round(c.temperature_2m) + "°C</div>" +
-      '<div class="wx-place">Bromont</div>' +
-      '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
-      '<div class="wx-grid">' +
-        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m || 0) + "</b>km/h wind</div>" +
-        '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm snow</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.cloud_cover || 0) + "%</b>Cloud</div>" +
-      "</div>";
+    var html = '<div class="snow-report">';
+    html += '<div class="snow-report-head">❄ Snow Report — Bromont</div>';
+    html += '<div class="wx-grid">' +
+      '<div class="wx-stat"><b>' + Math.round(c.temperature_2m) + "°</b>Temp</div>" +
+      '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m || 0) + "</b>km/h wind</div>" +
+      '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm snow</div>" +
+    "</div>";
     html += '<div class="bromont-caption">Weather-based proxy — not an official trail report.</div>';
-    body.innerHTML = html;
+    html += "</div>";
+    return html;
   }
 
   async function loadBromont(){
     try{
-      var data = await getJSON("/api/weather?lat=" + BROMONT.lat + "&lon=" + BROMONT.lon + "&city=Bromont");
-      renderBromont(data);
+      lastBromontData = await getJSON("/api/weather?lat=" + BROMONT.lat + "&lon=" + BROMONT.lon + "&city=Bromont");
     }catch(err){
-      renderBromont(null);
+      lastBromontData = null;
     }
+    // refresh the Weather panel in place if we're showing the home view already
+    if(wxViewMode === "home" && lastHomeWxData) renderWx(lastHomeWxData);
   }
 
   /* ============================================================
@@ -2778,7 +2779,7 @@
   // new widgets default to collapsed regardless of prior stored state — keeps the console
   // compact by default per the "must fit without scrolling" constraint; once a user
   // explicitly opens/closes one, that choice persists like the original four panels.
-  ["skywatch", "bromont", "sports"].forEach(function(k){
+  ["skywatch", "sports"].forEach(function(k){
     if(!(k in railCollapse)) railCollapse[k] = true;
   });
 
