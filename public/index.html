@@ -177,13 +177,20 @@
   .panel-body{ flex:1; min-height:0; overflow-y:auto; padding:10px 14px; }
   .panel-body.no-pad{ padding:0; }
 
-  .tabs{ display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; max-width:310px; }
+  /* full-width tab bar under the panel-head — a proper row of its own instead of
+     squeezed/right-aligned next to the title, so it reads as an organized, professional
+     category picker instead of a bunched pile of buttons. */
+  .news-tabs-bar{
+    flex:0 0 auto; display:flex; flex-wrap:wrap; gap:6px;
+    padding:9px 16px; background:var(--panel-2); border-bottom:1px solid var(--grid-line);
+  }
   .tab{
-    appearance:none; border:0; background:rgba(0,0,0,0.16); color:inherit; opacity:0.7;
-    border-radius:999px; font-size:14.5px; font-weight:700; padding:4px 8px; cursor:pointer; letter-spacing:0.02em;
+    appearance:none; border:1px solid var(--grid-line); background:transparent; color:var(--text-dim);
+    border-radius:999px; font-size:14px; font-weight:600; padding:5px 12px; cursor:pointer; letter-spacing:0.02em;
     white-space:nowrap;
   }
-  .tab.active{ opacity:1; background:rgba(0,0,0,0.34); }
+  .tab:hover{ border-color:var(--violet); color:var(--text); }
+  .tab.active{ background:var(--violet); border-color:var(--violet); color:var(--violet-ink); font-weight:700; }
 
   /* ============ DECK (main 3-col area) ============ */
   .deck{ display:grid; grid-template-columns: 1fr 440px 260px 260px; gap:8px; min-height:0; }
@@ -537,8 +544,8 @@
         <section class="panel round-l" data-accent="violet" aria-label="News feed">
           <div class="panel-head">
             <span>Newswire</span>
-            <div class="tabs" id="news-tabs"></div>
           </div>
+          <div class="news-tabs-bar" id="news-tabs"></div>
           <div class="panel-body no-pad scroll" id="news-body">
             <div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>
           </div>
@@ -604,6 +611,14 @@
 
       <aside class="rail rail-right" aria-label="Media and finance">
         <div class="rail-spacer" aria-hidden="true"></div>
+        <section class="panel" data-accent="violet" data-panel-key="tasks" aria-label="Tasks">
+          <div class="panel-head"><span>Tasks</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="todo-body"></div>
+        </section>
+        <section class="panel" data-accent="teal" data-panel-key="log" aria-label="Captain's log">
+          <div class="panel-head"><span>Captain's Log</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="log-body"></div>
+        </section>
         <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
           <div class="panel-head"><span>Podcasts</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body" id="podcasts-body">
@@ -613,7 +628,7 @@
             </div>
           </div>
         </section>
-        <section class="panel round-l" data-accent="amber" data-panel-key="markets" aria-label="Stock quotes">
+        <section class="panel" data-accent="amber" data-panel-key="markets" aria-label="Stock quotes">
           <div class="panel-head">
             <span>Markets</span>
             <button class="head-btn" id="stocks-edit-btn" type="button">Edit</button>
@@ -623,17 +638,9 @@
             <div class="empty-state">Loading quotes…</div>
           </div>
         </section>
-        <section class="panel" data-accent="gold" data-panel-key="currency" aria-label="Currency converter">
+        <section class="panel round-l" data-accent="gold" data-panel-key="currency" aria-label="Currency converter">
           <div class="panel-head"><span>Currency</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="fx-body"></div>
-        </section>
-        <section class="panel" data-accent="violet" data-panel-key="tasks" aria-label="Tasks">
-          <div class="panel-head"><span>Tasks</span><i class="panel-chevron">▾</i></div>
-          <div class="panel-body scroll" id="todo-body"></div>
-        </section>
-        <section class="panel round-l" data-accent="teal" data-panel-key="log" aria-label="Captain's log">
-          <div class="panel-head"><span>Captain's Log</span><i class="panel-chevron">▾</i></div>
-          <div class="panel-body scroll" id="log-body"></div>
         </section>
       </aside>
     </main>
@@ -682,17 +689,20 @@
   var REDUCED_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var HOME_TZ = "America/Toronto";
 
+  // "Top Stories" is pinned first (the default/home tab, catching general news that
+  // doesn't fit any narrower category below); the rest are kept in alphabetical order.
   var NEWS_SOURCES = [
-    { key: "us-politics", label: "US Politics" },
-    { key: "world-politics", label: "World Politics" },
-    { key: "economics", label: "Economics" },
-    { key: "apple-tech", label: "Apple Tech" },
+    { key: "top-stories", label: "Top Stories" },
     { key: "ai-tech", label: "AI Tech" },
+    { key: "apple-tech", label: "Apple Tech" },
+    { key: "canada", label: "Canadian News" },
+    { key: "economics", label: "Economics" },
+    { key: "entertainment", label: "Entertainment" },
     { key: "general-tech-science", label: "General Tech & Science" },
     { key: "health-medicine", label: "Health & Medicine" },
-    { key: "canada", label: "Canadian News" },
     { key: "quebec", label: "Quebec News" },
-    { key: "entertainment", label: "Entertainment" }
+    { key: "us-politics", label: "US Politics" },
+    { key: "world-politics", label: "World Politics" }
   ];
 
   var STATIONS = [
@@ -1365,54 +1375,9 @@
     content.innerHTML = html;
     wrap.appendChild(content);
 
-    if(items && items.length){
-      var newsWrap = el("div");
-      newsWrap.style.padding = "2px 2px 2px";
-      var head = el("div", "detail-meta");
-      head.style.marginTop = "2px";
-      head.textContent = "Nearby headlines";
-      newsWrap.appendChild(head);
-      items.slice(0, 6).forEach(function(it){
-        var row = el("div", "wx-news-row");
-        row.textContent = it.title;
-        row.addEventListener("click", function(){ renderLocationArticle(name, data, items, it); });
-        newsWrap.appendChild(row);
-      });
-      wrap.appendChild(newsWrap);
-    }
-
     wxBody.innerHTML = "";
     wxBody.appendChild(wrap);
     wxBody.scrollTop = 0;
-  }
-
-  function renderLocationArticle(name, data, items, item){
-    wxViewMode = "location";
-    var wrap = el("div");
-    wrap.appendChild(wxBackButton(function(){ renderLocationDetail(name, data, items); }));
-
-    var content = el("div");
-    content.style.padding = "4px 2px 10px";
-    content.innerHTML = '<h2 class="detail-title" style="font-size:20.5px;">' + escapeHtml(item.title) + "</h2>" +
-      '<div class="detail-meta">' + escapeHtml(item.sourceLabel || "") + " · " + escapeHtml(timeAgo(item.pubDate)) + "</div>" +
-      '<p class="detail-snippet" style="font-size:16px;">Loading full story…</p>';
-    wrap.appendChild(content);
-    wxBody.innerHTML = "";
-    wxBody.appendChild(wrap);
-    wxBody.scrollTop = 0;
-
-    getJSON("/api/article?url=" + encodeURIComponent(item.link)).then(function(articleData){
-      var html = "";
-      html += '<h2 class="detail-title" style="font-size:20.5px;">' + escapeHtml(articleData.title || item.title) + "</h2>";
-      html += '<div class="detail-meta">' + escapeHtml(item.sourceLabel || "") + " · " + escapeHtml(timeAgo(item.pubDate)) + "</div>";
-      var paras = articleData.paragraphs && articleData.paragraphs.length ? articleData.paragraphs : (item.snippet ? [item.snippet] : []);
-      paras.forEach(function(p){ html += '<p class="detail-snippet" style="font-size:16px;">' + escapeHtml(p) + "</p>"; });
-      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">View original source ↗</a>';
-      content.innerHTML = html;
-    }).catch(function(){
-      content.innerHTML = '<p class="detail-snippet" style="font-size:16px;">Couldn\'t load the full article.</p>' +
-        '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open on original site ↗</a>';
-    });
   }
 
   function renderWxEditor(){
@@ -1685,7 +1650,7 @@
   ============================================================ */
   var newsCache = {};      // key -> items[]
   var allItemsFlat = [];   // merged, deduped, for globe matching
-  var activeTab = "us-politics";
+  var activeTab = "top-stories";
 
   function buildTabs(){
     var tabsEl = $("news-tabs");

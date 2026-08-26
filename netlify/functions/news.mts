@@ -9,6 +9,7 @@ interface NewsItem {
 }
 
 const SOURCES: Record<string, { name: string; url: string }> = {
+  "top-stories": { name: "BBC Top Stories", url: "http://feeds.bbci.co.uk/news/rss.xml" },
   "us-politics": { name: "HuffPost Politics", url: "https://www.huffpost.com/section/politics/feed" },
   "world-politics": { name: "BBC World", url: "http://feeds.bbci.co.uk/news/world/rss.xml" },
   economics: { name: "BBC Business", url: "http://feeds.bbci.co.uk/news/business/rss.xml" },
