@@ -37,6 +37,38 @@
     color-scheme: dark;
   }
 
+  /* Light look — same tokens, warm "reading lamp" values instead of the cool cyan
+     "starship bridge" defaults above. Toggled via the sun/moon button next to the FR/EN
+     switch; the choice is remembered per browser (see LS.theme in the script below). */
+  :root[data-theme="light"]{
+    --void:#FFFFFF;
+    --panel:#FFF7EC;
+    --panel-2:#FCEDD6;
+    --grid-line:#E6D3B4;
+    --grid-soft:#F3E7D2;
+    --text:#2A1C10;
+    --text-dim:#7C6852;
+    --amber:#D98A2B;
+    --amber-ink:#3A2408;
+    --amber-dim:#8A5A28;
+    --gold:#C79A2E;
+    --gold-ink:#3A2C05;
+    --cyan:#C85F35;
+    --cyan-ink:#3A1810;
+    --cyan-dim:#8A4A32;
+    --violet:#B0578C;
+    --violet-ink:#331828;
+    --good:#5A9E3E;
+    --bad:#D14A38;
+    --teal:#A67B35;
+    --teal-ink:#2E2408;
+    --frost:#3F84C9;
+    --frost-ink:#0B2A44;
+    --crimson:#D14A72;
+    --crimson-ink:#3A0A18;
+    color-scheme: light;
+  }
+
   *{ box-sizing:border-box; }
   html,body{
     height:100%;
@@ -51,6 +83,12 @@
     background:
       radial-gradient(1200px 700px at 18% -10%, rgba(82,216,222,0.06), transparent 60%),
       radial-gradient(900px 600px at 100% 110%, rgba(185,140,232,0.06), transparent 60%),
+      var(--void);
+  }
+  :root[data-theme="light"] body{
+    background:
+      radial-gradient(1200px 700px at 18% -10%, rgba(255,138,92,0.10), transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, rgba(216,154,194,0.10), transparent 60%),
       var(--void);
   }
   ::selection{ background:var(--amber); color:var(--amber-ink); }
@@ -168,6 +206,12 @@
     font-size:13px; font-weight:700; letter-spacing:0.04em; text-decoration:none; text-transform:uppercase;
   }
   .lang-switch:hover{ color:var(--text); border-color:var(--cyan); }
+  .theme-switch{
+    flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:31px; border-radius:8px; background:var(--panel-2); border:1px solid var(--grid-line);
+    color:var(--text-dim); font-size:16px; cursor:pointer; padding:0;
+  }
+  .theme-switch:hover{ color:var(--text); border-color:var(--cyan); }
   .search button{
     background:var(--cyan); color:var(--cyan-ink); border:0; border-radius:20px;
     padding:7px 14px; font-weight:700; font-size:17.5px; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
@@ -653,6 +697,7 @@
     .search input{ font-size:14px; padding:6px 8px; width:130px; }
     .search button{ font-size:13px; padding:6px 10px; }
     .lang-switch{ width:28px; height:26px; font-size:11px; }
+    .theme-switch{ width:28px; height:26px; font-size:14px; }
   }
   @media (max-width: 900px){
     .stardate{ display:none; }
@@ -669,6 +714,7 @@
     .search input{ width:76px; padding:5px 6px; }
     .search button{ padding:5px 7px; font-size:12px; }
     .lang-switch{ width:22px; height:20px; font-size:9.5px; }
+    .theme-switch{ width:22px; height:20px; font-size:12px; }
   }
   /* Sous ~1020px, même la mise en page réduite sur une seule ligne a trop d'éléments
      rigides pour tenir sans forcer une barre de défilement horizontale (sous ~680px)
@@ -679,7 +725,8 @@
     .topbar{ flex-wrap:wrap; row-gap:6px; padding:8px; }
     .brand-block{ order:1; }
     .stardate-block{ order:2; }
-    .lang-switch{ order:3; margin-left:auto; }
+    .theme-switch{ order:3; margin-left:auto; }
+    .lang-switch{ order:3; }
     .greeting-block{ order:4; flex-basis:100%; }
     .greeting{ font-size:16px; }
     .clock{ order:5; font-size:22px; }
@@ -714,6 +761,7 @@
         <input type="text" id="search-input" placeholder="Recherche…" autocomplete="off">
         <button type="submit">Aller</button>
       </form>
+      <button class="theme-switch" id="theme-toggle-btn" type="button" title="Basculer clair / sombre">☀</button>
       <a class="lang-switch" href="/" title="Switch to English">EN</a>
     </header>
 
@@ -913,8 +961,16 @@
     snowRegion: "dds-snow-region",
     sportsTeams: "dds-sports-teams",
     podcasts: "dds-podcasts",
-    wxUnit: "dds-wx-unit"
+    wxUnit: "dds-wx-unit",
+    theme: "dds-theme"
   };
+
+  // Look toggle — flips between the cool cyan "starship" look and the warm "reading lamp"
+  // look. Applied to <html> as early as possible (right after LS, before any rendering) so
+  // there's no flash of the wrong look on load. See toggleTheme() further down for the
+  // button wiring, and the globe drawing code for how the canvas colors follow along too.
+  var pageTheme = readLS(LS.theme, "dark"); // "dark" | "light"
+  document.documentElement.setAttribute("data-theme", pageTheme);
 
   // "Top Stories" is pinned first (the default/home tab, catching general news that
   // doesn't fit any narrower category below); the rest are kept in alphabetical order.
@@ -1332,6 +1388,27 @@
       if(wxViewMode === "home") loadHomeWeather();
     });
   }
+
+  /* ============================================================
+     LOOK TOGGLE — light / dark (see pageTheme near the top of the script,
+     and the globe-drawing code below for how the canvas colors follow along)
+  ============================================================ */
+  function renderThemeToggleBtn(){
+    var btn = $("theme-toggle-btn");
+    if(btn) btn.textContent = pageTheme === "light" ? "☾" : "☀";
+  }
+  function toggleTheme(){
+    pageTheme = pageTheme === "light" ? "dark" : "light";
+    writeLS(LS.theme, pageTheme);
+    document.documentElement.setAttribute("data-theme", pageTheme);
+    renderThemeToggleBtn();
+  }
+  renderThemeToggleBtn();
+  var themeToggleBtn = $("theme-toggle-btn");
+  if(themeToggleBtn) themeToggleBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    toggleTheme();
+  });
 
   /* ============================================================
      SEARCH
@@ -3135,6 +3212,18 @@
     return best ? { place: best, distKm: bestDist } : null;
   }
 
+  // Globe sphere/atmosphere/wireframe colors — these are canvas literals, not CSS
+  // variables, so they can't just inherit from the page's :root theme. Keyed by pageTheme
+  // instead; since drawGlobe()/drawGlobe2() redraw every animation frame, flipping pageTheme
+  // (see toggleTheme() above) recolors the globes on the very next frame with no extra work.
+  // Markers/legend dots (home, ISS, flights, news) stay theme-independent on purpose — those
+  // are semantic data colors, not part of the "look".
+  var GLOBE_PALETTES = {
+    dark: { sphereStops:["120,196,214,0.42","48,120,150,0.4","14,46,64,0.55","3,8,14,0.75"], glowStroke:"120,220,235,0.35", glowShadow:"82,216,222,0.9", rim:"82,216,222,0.5", wire:"82,216,222,0.09", equator:"82,216,222,0.16" },
+    light: { sphereStops:["224,150,90,0.42","120,72,40,0.4","48,28,16,0.55","10,6,4,0.75"], glowStroke:"255,168,130,0.35", glowShadow:"255,138,92,0.9", rim:"255,138,92,0.5", wire:"255,138,92,0.09", equator:"255,138,92,0.16" }
+  };
+  function gp(){ return GLOBE_PALETTES[pageTheme] || GLOBE_PALETTES.dark; }
+
   function drawGlobe(){
     ctx.clearRect(0, 0, G.w, G.h);
     if(G.radius < 10) return;
@@ -3155,10 +3244,10 @@
 
     // sphere shading — deep lit-ocean look, brighter upper-left "sunlit" limb, dark falloff at the rim
     var grad = ctx.createRadialGradient(G.cx - G.radius*0.4, G.cy - G.radius*0.45, G.radius*0.05, G.cx, G.cy, G.radius*1.04);
-    grad.addColorStop(0, "rgba(120,196,214,0.42)");
-    grad.addColorStop(0.35, "rgba(48,120,150,0.4)");
-    grad.addColorStop(0.72, "rgba(14,46,64,0.55)");
-    grad.addColorStop(1, "rgba(3,8,14,0.75)");
+    grad.addColorStop(0, "rgba(" + gp().sphereStops[0] + ")");
+    grad.addColorStop(0.35, "rgba(" + gp().sphereStops[1] + ")");
+    grad.addColorStop(0.72, "rgba(" + gp().sphereStops[2] + ")");
+    grad.addColorStop(1, "rgba(" + gp().sphereStops[3] + ")");
     ctx.beginPath();
     ctx.arc(G.cx, G.cy, G.radius, 0, Math.PI*2);
     ctx.fillStyle = grad;
@@ -3169,20 +3258,20 @@
     ctx.beginPath();
     ctx.arc(G.cx, G.cy, G.radius + 1.5, 0, Math.PI*2);
     ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(120,220,235,0.35)";
-    ctx.shadowColor = "rgba(82,216,222,0.9)";
+    ctx.strokeStyle = "rgba(" + gp().glowStroke + ")";
+    ctx.shadowColor = "rgba(" + gp().glowShadow + ")";
     ctx.shadowBlur = 14;
     ctx.stroke();
     ctx.restore();
 
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(82,216,222,0.5)";
+    ctx.strokeStyle = "rgba(" + gp().rim + ")";
     ctx.beginPath();
     ctx.arc(G.cx, G.cy, G.radius, 0, Math.PI*2);
     ctx.stroke();
 
     // wireframe meridians
-    ctx.strokeStyle = "rgba(82,216,222,0.09)";
+    ctx.strokeStyle = "rgba(" + gp().wire + ")";
     ctx.lineWidth = 1;
     for(var lon = 0; lon < 360; lon += 30){
       ctx.beginPath();
@@ -3206,7 +3295,7 @@
       ctx.stroke();
     }
     // equator, emphasized
-    ctx.strokeStyle = "rgba(82,216,222,0.16)";
+    ctx.strokeStyle = "rgba(" + gp().equator + ")";
     ctx.beginPath();
     var started3 = false;
     for(var lon3 = 0; lon3 <= 360; lon3 += 3){
@@ -3615,10 +3704,10 @@
     }
 
     var grad2 = ctx2.createRadialGradient(G2.cx - G2.radius*0.4, G2.cy - G2.radius*0.45, G2.radius*0.05, G2.cx, G2.cy, G2.radius*1.04);
-    grad2.addColorStop(0, "rgba(120,196,214,0.42)");
-    grad2.addColorStop(0.35, "rgba(48,120,150,0.4)");
-    grad2.addColorStop(0.72, "rgba(14,46,64,0.55)");
-    grad2.addColorStop(1, "rgba(3,8,14,0.75)");
+    grad2.addColorStop(0, "rgba(" + gp().sphereStops[0] + ")");
+    grad2.addColorStop(0.35, "rgba(" + gp().sphereStops[1] + ")");
+    grad2.addColorStop(0.72, "rgba(" + gp().sphereStops[2] + ")");
+    grad2.addColorStop(1, "rgba(" + gp().sphereStops[3] + ")");
     ctx2.beginPath();
     ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
     ctx2.fillStyle = grad2;
@@ -3628,19 +3717,19 @@
     ctx2.beginPath();
     ctx2.arc(G2.cx, G2.cy, G2.radius + 1.5, 0, Math.PI*2);
     ctx2.lineWidth = 3;
-    ctx2.strokeStyle = "rgba(120,220,235,0.35)";
-    ctx2.shadowColor = "rgba(82,216,222,0.9)";
+    ctx2.strokeStyle = "rgba(" + gp().glowStroke + ")";
+    ctx2.shadowColor = "rgba(" + gp().glowShadow + ")";
     ctx2.shadowBlur = 14;
     ctx2.stroke();
     ctx2.restore();
 
     ctx2.lineWidth = 1;
-    ctx2.strokeStyle = "rgba(82,216,222,0.5)";
+    ctx2.strokeStyle = "rgba(" + gp().rim + ")";
     ctx2.beginPath();
     ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
     ctx2.stroke();
 
-    ctx2.strokeStyle = "rgba(82,216,222,0.09)";
+    ctx2.strokeStyle = "rgba(" + gp().wire + ")";
     ctx2.lineWidth = 1;
     for(var lon = 0; lon < 360; lon += 30){
       ctx2.beginPath();
@@ -3662,7 +3751,7 @@
       }
       ctx2.stroke();
     }
-    ctx2.strokeStyle = "rgba(82,216,222,0.16)";
+    ctx2.strokeStyle = "rgba(" + gp().equator + ")";
     ctx2.beginPath();
     var started3 = false;
     for(var lon3 = 0; lon3 <= 360; lon3 += 3){
