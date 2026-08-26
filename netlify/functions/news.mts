@@ -20,6 +20,21 @@ const SOURCES: Record<string, { name: string; url: string }> = {
   canada: { name: "Global News", url: "https://globalnews.ca/feed/" },
   quebec: { name: "Global News Montreal", url: "https://globalnews.ca/montreal/feed/" },
   entertainment: { name: "BBC Entertainment", url: "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml" },
+
+  // French Canadian console (/fr/) — same 11 categories, Quebec + France sources.
+  // La Presse (Quebec) covers most categories directly; Le Monde and MacGeneration
+  // (both France-based) fill in world politics and Apple-specific tech.
+  "fr-top-stories": { name: "La Presse — Actualités", url: "https://www.lapresse.ca/actualites/rss" },
+  "fr-us-politics": { name: "La Presse — États-Unis", url: "https://www.lapresse.ca/international/etats-unis/rss" },
+  "fr-world-politics": { name: "Le Monde — International", url: "https://www.lemonde.fr/international/rss_full.xml" },
+  "fr-economics": { name: "La Presse — Économie", url: "https://www.lapresse.ca/affaires/economie/rss" },
+  "fr-apple-tech": { name: "MacGeneration", url: "https://www.macg.co/rss" },
+  "fr-ai-tech": { name: "Numerama", url: "https://www.numerama.com/feed/" },
+  "fr-general-tech-science": { name: "La Presse — Sciences", url: "https://www.lapresse.ca/actualites/sciences/rss" },
+  "fr-health-medicine": { name: "La Presse — Santé", url: "https://www.lapresse.ca/actualites/sante/rss" },
+  "fr-canada": { name: "La Presse — National", url: "https://www.lapresse.ca/actualites/national/rss" },
+  "fr-quebec": { name: "La Presse — Régional", url: "https://www.lapresse.ca/actualites/regional/rss" },
+  "fr-entertainment": { name: "La Presse — Cinéma", url: "https://www.lapresse.ca/cinema/rss" },
 };
 
 function extractTag(block: string, tag: string): string {

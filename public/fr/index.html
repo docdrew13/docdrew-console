@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Docdrew Console</title>
-<meta name="description" content="A full-screen live console — weather, markets and world news plotted on a rotating globe.">
+<title>Console Docdrew</title>
+<meta name="description" content="Une console en direct plein écran — météo, marchés et actualités mondiales sur un globe rotatif.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305070C'/%3E%3Cpath d='M32 10 54 46H10Z' fill='none' stroke='%23FFA94D' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='36' r='4.5' fill='%2352D8DE'/%3E%3C/svg%3E">
 <style>
   /* ============ TOKENS ============ */
@@ -568,151 +568,151 @@
         <span class="brand-mark" aria-hidden="true"></span>
         <span class="brand-name" id="brand-name">DOCDREW<span class="dim">.CA</span></span>
       </div>
-      <span class="stardate" id="stardate">STARDATE —</span>
+      <span class="stardate" id="stardate">DATE STELLAIRE —</span>
       <div class="greeting-block">
-        <div class="greeting"><span class="status-dot" aria-hidden="true"></span><span id="greeting-text">Initializing console…</span></div>
+        <div class="greeting"><span class="status-dot" aria-hidden="true"></span><span id="greeting-text">Initialisation de la console…</span></div>
         <div class="subline" id="date-text">—</div>
       </div>
       <div class="clock" id="clock">
         --:--:--
-        <select class="zone" id="home-city-select" aria-label="Home city"></select>
+        <select class="zone" id="home-city-select" aria-label="Ville de résidence"></select>
       </div>
       <form class="search" id="search-form" role="search">
-        <select id="search-engine" aria-label="Search engine">
+        <select id="search-engine" aria-label="Moteur de recherche">
           <option value="https://www.google.com/search?q=">Google</option>
           <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
           <option value="https://www.bing.com/search?q=">Bing</option>
         </select>
-        <input type="text" id="search-input" placeholder="Search…" autocomplete="off">
-        <button type="submit">Go</button>
+        <input type="text" id="search-input" placeholder="Recherche…" autocomplete="off">
+        <button type="submit">Aller</button>
       </form>
-      <a class="lang-switch" href="/fr/" title="Passer en français">FR</a>
+      <a class="lang-switch" href="/" title="Switch to English">EN</a>
     </header>
 
     <main class="deck">
       <aside class="rail rail-left">
-        <section class="panel round-l" data-accent="violet" aria-label="News feed">
+        <section class="panel round-l" data-accent="violet" aria-label="Fil de presse">
           <div class="panel-head">
-            <span>Newswire</span>
+            <span>Fil de presse</span>
           </div>
           <div class="news-tabs-bar" id="news-tabs"></div>
           <div class="panel-body no-pad scroll" id="news-body">
-            <div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>
+            <div class="empty-state" style="padding:12px 14px;">Chargement des manchettes…</div>
           </div>
         </section>
       </aside>
 
       <div class="globes-stack">
-        <section class="globe-panel" aria-label="Live weather systems" data-accent="weather">
+        <section class="globe-panel" aria-label="Systèmes météo en direct" data-accent="weather">
           <div class="globe-head">
-            <span>Weather Systems</span>
-            <span class="n" id="weather-globe-count">syncing…</span>
+            <span>Systèmes météo</span>
+            <span class="n" id="weather-globe-count">synchronisation…</span>
           </div>
           <div class="globe-body" id="weather-globe-body">
             <canvas id="weather-globe-canvas"></canvas>
             <div class="globe-tooltip" id="weather-globe-tooltip"></div>
             <div class="globe-legend">
-              <span><i class="legend-dot haze"></i>Cloud cover</span>
-              <span><i class="legend-dot precip-grad"></i>Precip (light→heavy)</span>
-              <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montreal</span></span>
+              <span><i class="legend-dot haze"></i>Couverture nuageuse</span>
+              <span><i class="legend-dot precip-grad"></i>Précip. (léger→fort)</span>
+              <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montréal</span></span>
             </div>
-            <div class="globe-hint">drag to rotate &amp; tilt · live cloud cover</div>
+            <div class="globe-hint">glisser pour pivoter et incliner · couverture nuageuse en direct</div>
           </div>
         </section>
 
-        <section class="globe-panel" aria-label="Live global feed">
+        <section class="globe-panel" aria-label="Flux mondial en direct">
           <div class="globe-head">
-            <span>Live Global Feed</span>
-            <span class="n" id="globe-count">0 markers tracked</span>
+            <span>Flux mondial en direct</span>
+            <span class="n" id="globe-count">0 repères suivis</span>
           </div>
           <div class="globe-body" id="globe-body">
             <canvas id="globe-canvas"></canvas>
             <div class="globe-tooltip" id="globe-tooltip"></div>
             <div class="globe-legend">
-              <span><i class="legend-dot amber"></i>News dateline</span>
-              <span><i class="legend-dot red"></i><span id="globe-home-label">Montreal</span></span>
+              <span><i class="legend-dot amber"></i>Origine de la nouvelle</span>
+              <span><i class="legend-dot red"></i><span id="globe-home-label">Montréal</span></span>
             </div>
-            <div class="globe-hint">drag to rotate &amp; tilt · click a marker</div>
+            <div class="globe-hint">glisser pour pivoter et incliner · cliquer sur un repère</div>
           </div>
         </section>
       </div>
 
-      <aside class="rail rail-right" aria-label="Weather and conditions">
+      <aside class="rail rail-right" aria-label="Météo et conditions">
         <div class="rail-spacer" aria-hidden="true"></div>
-        <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
-          <div class="panel-head"><span>Weather</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Météo">
+          <div class="panel-head"><span>Météo</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="wx-body">
-            <div class="empty-state">Loading weather…</div>
+            <div class="empty-state">Chargement de la météo…</div>
           </div>
         </section>
-        <section class="panel" data-accent="teal" data-panel-key="skywatch" aria-label="Sky watch">
-          <div class="panel-head"><span>Sky Watch</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="teal" data-panel-key="skywatch" aria-label="Veille du ciel">
+          <div class="panel-head"><span>Veille du ciel</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="skywatch-body">
-            <div class="empty-state">Loading sky data…</div>
+            <div class="empty-state">Chargement des données célestes…</div>
           </div>
         </section>
-        <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Sports scores">
+        <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Résultats sportifs">
           <div class="panel-head">
             <span>Sports</span>
-            <button class="head-btn" id="sports-edit-btn" type="button">Edit</button>
+            <button class="head-btn" id="sports-edit-btn" type="button">Modifier</button>
             <i class="panel-chevron">▾</i>
           </div>
           <div class="panel-body scroll" id="sports-body">
-            <div class="empty-state">Loading scores…</div>
+            <div class="empty-state">Chargement des résultats…</div>
           </div>
         </section>
       </aside>
 
-      <aside class="rail rail-right" aria-label="Media and finance">
+      <aside class="rail rail-right" aria-label="Médias et finance">
         <div class="rail-spacer" aria-hidden="true"></div>
-        <section class="panel" data-accent="violet" data-panel-key="tasks" aria-label="Tasks">
-          <div class="panel-head"><span>Tasks</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="violet" data-panel-key="tasks" aria-label="Tâches">
+          <div class="panel-head"><span>Tâches</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="todo-body"></div>
         </section>
-        <section class="panel" data-accent="teal" data-panel-key="log" aria-label="Captain's log">
-          <div class="panel-head"><span>Captain's Log</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="teal" data-panel-key="log" aria-label="Journal de bord">
+          <div class="panel-head"><span>Journal de bord</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="log-body"></div>
         </section>
-        <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
+        <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Balados">
           <div class="panel-head">
-            <span>Podcasts</span>
-            <button class="head-btn" id="podcasts-edit-btn" type="button">Edit</button>
+            <span>Balados</span>
+            <button class="head-btn" id="podcasts-edit-btn" type="button">Modifier</button>
             <i class="panel-chevron">▾</i>
           </div>
           <div class="panel-body" id="podcasts-body">
             <div class="video-tiles" id="video-tiles">
-              <div class="video-tile unavailable"><div class="video-tile-title">Loading…</div></div>
-              <div class="video-tile unavailable"><div class="video-tile-title">Loading…</div></div>
+              <div class="video-tile unavailable"><div class="video-tile-title">Chargement…</div></div>
+              <div class="video-tile unavailable"><div class="video-tile-title">Chargement…</div></div>
             </div>
           </div>
         </section>
-        <section class="panel" data-accent="amber" data-panel-key="markets" aria-label="Stock quotes">
+        <section class="panel" data-accent="amber" data-panel-key="markets" aria-label="Cours boursiers">
           <div class="panel-head">
-            <span>Markets</span>
-            <button class="head-btn" id="stocks-edit-btn" type="button">Edit</button>
+            <span>Marchés</span>
+            <button class="head-btn" id="stocks-edit-btn" type="button">Modifier</button>
             <i class="panel-chevron">▾</i>
           </div>
           <div class="panel-body scroll" id="stocks-body">
-            <div class="empty-state">Loading quotes…</div>
+            <div class="empty-state">Chargement des cours…</div>
           </div>
         </section>
-        <section class="panel round-l" data-accent="gold" data-panel-key="currency" aria-label="Currency converter">
-          <div class="panel-head"><span>Currency</span><i class="panel-chevron">▾</i></div>
+        <section class="panel round-l" data-accent="gold" data-panel-key="currency" aria-label="Convertisseur de devises">
+          <div class="panel-head"><span>Devises</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="fx-body"></div>
         </section>
       </aside>
     </main>
 
     <div class="strip">
-      <section class="panel round-l" data-accent="amber" aria-label="Quick links">
+      <section class="panel round-l" data-accent="amber" aria-label="Liens rapides">
         <div class="panel-head">
-          <span>Quick Links</span>
+          <span>Liens rapides</span>
           <div class="head-btn-group">
             <span class="settings-io-status" id="settings-io-status"></span>
-            <button class="head-btn" id="settings-export-btn" type="button" title="Download all your console settings as one file">Export Settings</button>
-            <button class="head-btn" id="settings-import-btn" type="button" title="Restore settings from a previously exported file">Import Settings</button>
+            <button class="head-btn" id="settings-export-btn" type="button" title="Télécharger tous les réglages de la console dans un seul fichier">Exporter</button>
+            <button class="head-btn" id="settings-import-btn" type="button" title="Restaurer les réglages à partir d'un fichier exporté">Importer</button>
             <input type="file" id="settings-import-file" accept="application/json" hidden>
-            <button class="head-btn" id="links-edit-btn" type="button">Edit</button>
+            <button class="head-btn" id="links-edit-btn" type="button">Modifier</button>
           </div>
         </div>
         <div class="panel-body scroll" id="links-body"></div>
@@ -720,7 +720,7 @@
     </div>
 
     <div class="footer-strip">
-      <div class="ship-status" id="ship-status">Systems nominal</div>
+      <div class="ship-status" id="ship-status">Systèmes nominaux</div>
       <div class="footer-sep"></div>
       <div class="market-ticker"><div class="market-ticker-track" id="market-ticker-track"></div></div>
     </div>
@@ -729,18 +729,18 @@
   <div class="overlay" id="detail-overlay" hidden>
     <div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-eyebrow">
       <div class="detail-topbar">
-        <span class="detail-eyebrow" id="detail-eyebrow">Record</span>
-        <button class="detail-close" id="detail-close" aria-label="Close">✕</button>
+        <span class="detail-eyebrow" id="detail-eyebrow">Fiche</span>
+        <button class="detail-close" id="detail-close" aria-label="Fermer">✕</button>
       </div>
       <div class="detail-body scroll" id="detail-body"></div>
     </div>
   </div>
 
   <div class="overlay" id="video-overlay" hidden>
-    <div class="video-panel" role="dialog" aria-modal="true" aria-label="Video player">
-      <button class="detail-close" id="video-close" aria-label="Close">✕</button>
+    <div class="video-panel" role="dialog" aria-modal="true" aria-label="Lecteur vidéo">
+      <button class="detail-close" id="video-close" aria-label="Fermer">✕</button>
       <div class="video-frame-wrap">
-        <iframe id="video-frame" src="" title="Video player" frameborder="0"
+        <iframe id="video-frame" src="" title="Lecteur vidéo" frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
     </div>
@@ -778,28 +778,28 @@
   // "Top Stories" is pinned first (the default/home tab, catching general news that
   // doesn't fit any narrower category below); the rest are kept in alphabetical order.
   var NEWS_SOURCES = [
-    { key: "top-stories", label: "Top Stories" },
-    { key: "ai-tech", label: "AI Tech" },
-    { key: "apple-tech", label: "Apple Tech" },
-    { key: "canada", label: "Canadian News" },
-    { key: "economics", label: "Economics" },
-    { key: "entertainment", label: "Entertainment" },
-    { key: "general-tech-science", label: "General Tech & Science" },
-    { key: "health-medicine", label: "Health & Medicine" },
-    { key: "quebec", label: "Quebec News" },
-    { key: "us-politics", label: "US Politics" },
-    { key: "world-politics", label: "World Politics" }
+    { key: "fr-top-stories", label: "Manchettes" },
+    { key: "fr-ai-tech", label: "Techno IA" },
+    { key: "fr-apple-tech", label: "Techno Apple" },
+    { key: "fr-canada", label: "Nouvelles canadiennes" },
+    { key: "fr-economics", label: "Économie" },
+    { key: "fr-entertainment", label: "Divertissement" },
+    { key: "fr-general-tech-science", label: "Techno et sciences" },
+    { key: "fr-health-medicine", label: "Santé" },
+    { key: "fr-quebec", label: "Nouvelles du Québec" },
+    { key: "fr-us-politics", label: "Politique américaine" },
+    { key: "fr-world-politics", label: "Politique internationale" }
   ];
 
   var STATIONS = [
     { name: "Toronto", lat: 43.65, lon: -79.38 },
     { name: "New York", lat: 40.71, lon: -74.01 },
-    { name: "London", lat: 51.51, lon: -0.13 },
-    { name: "Dubai", lat: 25.20, lon: 55.27 },
+    { name: "Londres", lat: 51.51, lon: -0.13 },
+    { name: "Dubaï", lat: 25.20, lon: 55.27 },
     { name: "Tokyo", lat: 35.68, lon: 139.69 },
     { name: "Sydney", lat: -33.87, lon: 151.21 },
-    { name: "Sao Paulo", lat: -23.55, lon: -46.63 },
-    { name: "Cape Town", lat: -33.92, lon: 18.42 }
+    { name: "São Paulo", lat: -23.55, lon: -46.63 },
+    { name: "Le Cap", lat: -33.92, lon: 18.42 }
   ];
 
   // Major world cities with international airport hubs — the pool for the "Home" picker in
@@ -807,69 +807,69 @@
   // panel, and the header clock's timezone all at once, so this console can be handed to
   // anyone and set up for their own city in a few seconds instead of staying hardcoded here.
   var WORLD_CITIES = [
-    { name: "Montreal", region: "North America", lat: 45.5017, lon: -73.5673, tz: "America/Toronto" },
-    { name: "New York", region: "North America", lat: 40.7128, lon: -74.0060, tz: "America/New_York" },
-    { name: "Providence", region: "North America", lat: 41.8240, lon: -71.4128, tz: "America/New_York" },
-    { name: "Washington, DC", region: "North America", lat: 38.9072, lon: -77.0369, tz: "America/New_York" },
-    { name: "Miami", region: "North America", lat: 25.7617, lon: -80.1918, tz: "America/New_York" },
-    { name: "Atlanta", region: "North America", lat: 33.7490, lon: -84.3880, tz: "America/New_York" },
-    { name: "Chicago", region: "North America", lat: 41.8781, lon: -87.6298, tz: "America/Chicago" },
-    { name: "Dallas", region: "North America", lat: 32.7767, lon: -96.7970, tz: "America/Chicago" },
-    { name: "Denver", region: "North America", lat: 39.7392, lon: -104.9903, tz: "America/Denver" },
-    { name: "Los Angeles", region: "North America", lat: 34.0522, lon: -118.2437, tz: "America/Los_Angeles" },
-    { name: "San Francisco", region: "North America", lat: 37.7749, lon: -122.4194, tz: "America/Los_Angeles" },
-    { name: "Seattle", region: "North America", lat: 47.6062, lon: -122.3321, tz: "America/Los_Angeles" },
-    { name: "Honolulu", region: "North America", lat: 21.3069, lon: -157.8583, tz: "Pacific/Honolulu" },
-    { name: "Toronto", region: "North America", lat: 43.6532, lon: -79.3832, tz: "America/Toronto" },
-    { name: "Vancouver", region: "North America", lat: 49.2827, lon: -123.1207, tz: "America/Vancouver" },
-    { name: "Calgary", region: "North America", lat: 51.0447, lon: -114.0719, tz: "America/Edmonton" },
-    { name: "Mexico City", region: "North America", lat: 19.4326, lon: -99.1332, tz: "America/Mexico_City" },
-    { name: "Sao Paulo", region: "South America", lat: -23.5505, lon: -46.6333, tz: "America/Sao_Paulo" },
-    { name: "Buenos Aires", region: "South America", lat: -34.6037, lon: -58.3816, tz: "America/Argentina/Buenos_Aires" },
-    { name: "London", region: "Europe", lat: 51.5074, lon: -0.1278, tz: "Europe/London" },
+    { name: "Montréal", region: "Amérique du Nord", lat: 45.5017, lon: -73.5673, tz: "America/Toronto" },
+    { name: "New York", region: "Amérique du Nord", lat: 40.7128, lon: -74.0060, tz: "America/New_York" },
+    { name: "Providence", region: "Amérique du Nord", lat: 41.8240, lon: -71.4128, tz: "America/New_York" },
+    { name: "Washington, DC", region: "Amérique du Nord", lat: 38.9072, lon: -77.0369, tz: "America/New_York" },
+    { name: "Miami", region: "Amérique du Nord", lat: 25.7617, lon: -80.1918, tz: "America/New_York" },
+    { name: "Atlanta", region: "Amérique du Nord", lat: 33.7490, lon: -84.3880, tz: "America/New_York" },
+    { name: "Chicago", region: "Amérique du Nord", lat: 41.8781, lon: -87.6298, tz: "America/Chicago" },
+    { name: "Dallas", region: "Amérique du Nord", lat: 32.7767, lon: -96.7970, tz: "America/Chicago" },
+    { name: "Denver", region: "Amérique du Nord", lat: 39.7392, lon: -104.9903, tz: "America/Denver" },
+    { name: "Los Angeles", region: "Amérique du Nord", lat: 34.0522, lon: -118.2437, tz: "America/Los_Angeles" },
+    { name: "San Francisco", region: "Amérique du Nord", lat: 37.7749, lon: -122.4194, tz: "America/Los_Angeles" },
+    { name: "Seattle", region: "Amérique du Nord", lat: 47.6062, lon: -122.3321, tz: "America/Los_Angeles" },
+    { name: "Honolulu", region: "Amérique du Nord", lat: 21.3069, lon: -157.8583, tz: "Pacific/Honolulu" },
+    { name: "Toronto", region: "Amérique du Nord", lat: 43.6532, lon: -79.3832, tz: "America/Toronto" },
+    { name: "Vancouver", region: "Amérique du Nord", lat: 49.2827, lon: -123.1207, tz: "America/Vancouver" },
+    { name: "Calgary", region: "Amérique du Nord", lat: 51.0447, lon: -114.0719, tz: "America/Edmonton" },
+    { name: "Mexico", region: "Amérique du Nord", lat: 19.4326, lon: -99.1332, tz: "America/Mexico_City" },
+    { name: "Sao Paulo", region: "Amérique du Sud", lat: -23.5505, lon: -46.6333, tz: "America/Sao_Paulo" },
+    { name: "Buenos Aires", region: "Amérique du Sud", lat: -34.6037, lon: -58.3816, tz: "America/Argentina/Buenos_Aires" },
+    { name: "Londres", region: "Europe", lat: 51.5074, lon: -0.1278, tz: "Europe/London" },
     { name: "Dublin", region: "Europe", lat: 53.3498, lon: -6.2603, tz: "Europe/Dublin" },
     { name: "Paris", region: "Europe", lat: 48.8566, lon: 2.3522, tz: "Europe/Paris" },
-    { name: "Brussels", region: "Europe", lat: 50.8503, lon: 4.3517, tz: "Europe/Brussels" },
+    { name: "Bruxelles", region: "Europe", lat: 50.8503, lon: 4.3517, tz: "Europe/Brussels" },
     { name: "Amsterdam", region: "Europe", lat: 52.3676, lon: 4.9041, tz: "Europe/Amsterdam" },
     { name: "Berlin", region: "Europe", lat: 52.5200, lon: 13.4050, tz: "Europe/Berlin" },
     { name: "Zurich", region: "Europe", lat: 47.3769, lon: 8.5417, tz: "Europe/Zurich" },
-    { name: "Vienna", region: "Europe", lat: 48.2082, lon: 16.3738, tz: "Europe/Vienna" },
+    { name: "Vienne", region: "Europe", lat: 48.2082, lon: 16.3738, tz: "Europe/Vienna" },
     { name: "Madrid", region: "Europe", lat: 40.4168, lon: -3.7038, tz: "Europe/Madrid" },
-    { name: "Lisbon", region: "Europe", lat: 38.7223, lon: -9.1393, tz: "Europe/Lisbon" },
+    { name: "Lisbonne", region: "Europe", lat: 38.7223, lon: -9.1393, tz: "Europe/Lisbon" },
     { name: "Rome", region: "Europe", lat: 41.9028, lon: 12.4964, tz: "Europe/Rome" },
-    { name: "Copenhagen", region: "Europe", lat: 55.6761, lon: 12.5683, tz: "Europe/Copenhagen" },
+    { name: "Copenhague", region: "Europe", lat: 55.6761, lon: 12.5683, tz: "Europe/Copenhagen" },
     { name: "Stockholm", region: "Europe", lat: 59.3293, lon: 18.0686, tz: "Europe/Stockholm" },
     { name: "Oslo", region: "Europe", lat: 59.9139, lon: 10.7522, tz: "Europe/Oslo" },
     { name: "Helsinki", region: "Europe", lat: 60.1699, lon: 24.9384, tz: "Europe/Helsinki" },
-    { name: "Warsaw", region: "Europe", lat: 52.2297, lon: 21.0122, tz: "Europe/Warsaw" },
-    { name: "Athens", region: "Europe", lat: 37.9838, lon: 23.7275, tz: "Europe/Athens" },
+    { name: "Varsovie", region: "Europe", lat: 52.2297, lon: 21.0122, tz: "Europe/Warsaw" },
+    { name: "Athènes", region: "Europe", lat: 37.9838, lon: 23.7275, tz: "Europe/Athens" },
     { name: "Istanbul", region: "Europe", lat: 41.0082, lon: 28.9784, tz: "Europe/Istanbul" },
-    { name: "Moscow", region: "Europe", lat: 55.7558, lon: 37.6173, tz: "Europe/Moscow" },
-    { name: "Dubai", region: "Middle East & Africa", lat: 25.2048, lon: 55.2708, tz: "Asia/Dubai" },
-    { name: "Doha", region: "Middle East & Africa", lat: 25.2854, lon: 51.5310, tz: "Asia/Qatar" },
-    { name: "Riyadh", region: "Middle East & Africa", lat: 24.7136, lon: 46.6753, tz: "Asia/Riyadh" },
-    { name: "Tel Aviv", region: "Middle East & Africa", lat: 32.0853, lon: 34.7818, tz: "Asia/Jerusalem" },
-    { name: "Cairo", region: "Middle East & Africa", lat: 30.0444, lon: 31.2357, tz: "Africa/Cairo" },
-    { name: "Nairobi", region: "Middle East & Africa", lat: -1.2921, lon: 36.8219, tz: "Africa/Nairobi" },
-    { name: "Johannesburg", region: "Middle East & Africa", lat: -26.2041, lon: 28.0473, tz: "Africa/Johannesburg" },
-    { name: "Mumbai", region: "Asia", lat: 19.0760, lon: 72.8777, tz: "Asia/Kolkata" },
-    { name: "Delhi", region: "Asia", lat: 28.7041, lon: 77.1025, tz: "Asia/Kolkata" },
-    { name: "Bangkok", region: "Asia", lat: 13.7563, lon: 100.5018, tz: "Asia/Bangkok" },
-    { name: "Singapore", region: "Asia", lat: 1.3521, lon: 103.8198, tz: "Asia/Singapore" },
-    { name: "Kuala Lumpur", region: "Asia", lat: 3.1390, lon: 101.6869, tz: "Asia/Kuala_Lumpur" },
-    { name: "Jakarta", region: "Asia", lat: -6.2088, lon: 106.8456, tz: "Asia/Jakarta" },
-    { name: "Manila", region: "Asia", lat: 14.5995, lon: 120.9842, tz: "Asia/Manila" },
-    { name: "Hong Kong", region: "Asia", lat: 22.3193, lon: 114.1694, tz: "Asia/Hong_Kong" },
-    { name: "Shanghai", region: "Asia", lat: 31.2304, lon: 121.4737, tz: "Asia/Shanghai" },
-    { name: "Beijing", region: "Asia", lat: 39.9042, lon: 116.4074, tz: "Asia/Shanghai" },
-    { name: "Taipei", region: "Asia", lat: 25.0330, lon: 121.5654, tz: "Asia/Taipei" },
-    { name: "Seoul", region: "Asia", lat: 37.5665, lon: 126.9780, tz: "Asia/Seoul" },
-    { name: "Tokyo", region: "Asia", lat: 35.6762, lon: 139.6503, tz: "Asia/Tokyo" },
-    { name: "Sydney", region: "Oceania", lat: -33.8688, lon: 151.2093, tz: "Australia/Sydney" },
-    { name: "Melbourne", region: "Oceania", lat: -37.8136, lon: 144.9631, tz: "Australia/Melbourne" },
-    { name: "Auckland", region: "Oceania", lat: -36.8485, lon: 174.7633, tz: "Pacific/Auckland" }
+    { name: "Moscou", region: "Europe", lat: 55.7558, lon: 37.6173, tz: "Europe/Moscow" },
+    { name: "Dubai", region: "Moyen-Orient et Afrique", lat: 25.2048, lon: 55.2708, tz: "Asia/Dubai" },
+    { name: "Doha", region: "Moyen-Orient et Afrique", lat: 25.2854, lon: 51.5310, tz: "Asia/Qatar" },
+    { name: "Riyad", region: "Moyen-Orient et Afrique", lat: 24.7136, lon: 46.6753, tz: "Asia/Riyadh" },
+    { name: "Tel Aviv", region: "Moyen-Orient et Afrique", lat: 32.0853, lon: 34.7818, tz: "Asia/Jerusalem" },
+    { name: "Le Caire", region: "Moyen-Orient et Afrique", lat: 30.0444, lon: 31.2357, tz: "Africa/Cairo" },
+    { name: "Nairobi", region: "Moyen-Orient et Afrique", lat: -1.2921, lon: 36.8219, tz: "Africa/Nairobi" },
+    { name: "Johannesburg", region: "Moyen-Orient et Afrique", lat: -26.2041, lon: 28.0473, tz: "Africa/Johannesburg" },
+    { name: "Mumbai", region: "Asie", lat: 19.0760, lon: 72.8777, tz: "Asia/Kolkata" },
+    { name: "Delhi", region: "Asie", lat: 28.7041, lon: 77.1025, tz: "Asia/Kolkata" },
+    { name: "Bangkok", region: "Asie", lat: 13.7563, lon: 100.5018, tz: "Asia/Bangkok" },
+    { name: "Singapore", region: "Asie", lat: 1.3521, lon: 103.8198, tz: "Asia/Singapore" },
+    { name: "Kuala Lumpur", region: "Asie", lat: 3.1390, lon: 101.6869, tz: "Asia/Kuala_Lumpur" },
+    { name: "Jakarta", region: "Asie", lat: -6.2088, lon: 106.8456, tz: "Asia/Jakarta" },
+    { name: "Manille", region: "Asie", lat: 14.5995, lon: 120.9842, tz: "Asia/Manila" },
+    { name: "Hong Kong", region: "Asie", lat: 22.3193, lon: 114.1694, tz: "Asia/Hong_Kong" },
+    { name: "Shanghai", region: "Asie", lat: 31.2304, lon: 121.4737, tz: "Asia/Shanghai" },
+    { name: "Pékin", region: "Asie", lat: 39.9042, lon: 116.4074, tz: "Asia/Shanghai" },
+    { name: "Taipei", region: "Asie", lat: 25.0330, lon: 121.5654, tz: "Asia/Taipei" },
+    { name: "Séoul", region: "Asie", lat: 37.5665, lon: 126.9780, tz: "Asia/Seoul" },
+    { name: "Tokyo", region: "Asie", lat: 35.6762, lon: 139.6503, tz: "Asia/Tokyo" },
+    { name: "Sydney", region: "Océanie", lat: -33.8688, lon: 151.2093, tz: "Australia/Sydney" },
+    { name: "Melbourne", region: "Océanie", lat: -37.8136, lon: 144.9631, tz: "Australia/Melbourne" },
+    { name: "Auckland", region: "Océanie", lat: -36.8485, lon: 174.7633, tz: "Pacific/Auckland" }
   ];
-  var DEFAULT_HOME_CITY = WORLD_CITIES[0]; // Montreal — preserves current behavior until changed
+  var DEFAULT_HOME_CITY = WORLD_CITIES[0]; // Montréal — preserves current behavior until changed
   var homeCity = readLS(LS.homeCity, DEFAULT_HOME_CITY);
   var HOME = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
   var HOME_TZ = homeCity.tz;
@@ -878,7 +878,7 @@
   // [name, lat, lon, extra match keywords...]
   var PLACES_RAW = [
     ["New York", 40.71, -74.01, "nyc"],
-    ["Washington", 38.91, -77.04, "washington dc", "white house"],
+    ["Washington", 38.91, -77.04, "washington dc", "white house", "maison blanche", "maison-blanche"],
     ["Los Angeles", 34.05, -118.24],
     ["San Francisco", 37.77, -122.42, "silicon valley"],
     ["Chicago", 41.88, -87.63],
@@ -886,70 +886,70 @@
     ["Toronto", 43.65, -79.38],
     ["Ottawa", 45.42, -75.70],
     ["Vancouver", 49.28, -123.12],
-    ["Quebec", 46.81, -71.21],
-    ["Mexico City", 19.43, -99.13],
-    ["Sao Paulo", -23.55, -46.63],
+    ["Québec", 46.81, -71.21],
+    ["Mexico", 19.43, -99.13, "mexico city"],
+    ["São Paulo", -23.55, -46.63, "sao paulo"],
     ["Buenos Aires", -34.60, -58.38],
-    ["London", 51.51, -0.13],
+    ["Londres", 51.51, -0.13, "london"],
     ["Paris", 48.86, 2.35],
     ["Berlin", 52.52, 13.40],
-    ["Brussels", 50.85, 4.35, "european union"],
+    ["Bruxelles", 50.85, 4.35, "european union", "union européenne", "brussels"],
     ["Rome", 41.90, 12.50],
     ["Madrid", 40.42, -3.70],
     ["Amsterdam", 52.37, 4.90],
-    ["Vienna", 48.21, 16.37],
-    ["Warsaw", 52.23, 21.01],
+    ["Vienne", 48.21, 16.37, "vienna"],
+    ["Varsovie", 52.23, 21.01, "warsaw"],
     ["Stockholm", 59.33, 18.07],
     ["Oslo", 59.91, 10.75],
     ["Helsinki", 60.17, 24.94],
-    ["Copenhagen", 55.68, 12.57],
-    ["Athens", 37.98, 23.73],
-    ["Lisbon", 38.72, -9.14],
+    ["Copenhague", 55.68, 12.57, "copenhagen"],
+    ["Athènes", 37.98, 23.73, "athens"],
+    ["Lisbonne", 38.72, -9.14, "lisbon"],
     ["Dublin", 53.35, -6.26],
-    ["Moscow", 55.76, 37.62],
+    ["Moscou", 55.76, 37.62, "moscow"],
     ["Kyiv", 50.45, 30.52, "kiev"],
     ["Ukraine", 49.0, 32.0],
     ["Istanbul", 41.01, 28.98],
-    ["Beijing", 39.90, 116.41],
+    ["Pékin", 39.90, 116.41, "beijing"],
     ["Shanghai", 31.23, 121.47],
     ["Hong Kong", 22.32, 114.17],
-    ["Taiwan", 23.70, 120.96, "taipei"],
+    ["Taïwan", 23.70, 120.96, "taiwan", "taipei"],
     ["Tokyo", 35.68, 139.69],
-    ["Seoul", 37.57, 126.98],
-    ["North Korea", 39.04, 125.76, "pyongyang"],
+    ["Séoul", 37.57, 126.98, "seoul"],
+    ["Corée du Nord", 39.04, 125.76, "north korea", "pyongyang"],
     ["Delhi", 28.61, 77.21, "new delhi"],
     ["Mumbai", 19.08, 72.88],
-    ["Singapore", 1.35, 103.82],
+    ["Singapour", 1.35, 103.82, "singapore"],
     ["Bangkok", 13.76, 100.50],
     ["Jakarta", -6.21, 106.85],
-    ["Manila", 14.60, 120.98],
+    ["Manille", 14.60, 120.98, "manila"],
     ["Sydney", -33.87, 151.21],
     ["Melbourne", -37.81, 144.96],
-    ["New Zealand", -41.29, 174.78, "auckland", "wellington"],
-    ["Dubai", 25.20, 55.27],
-    ["Saudi Arabia", 24.71, 46.68, "riyadh"],
-    ["Tel Aviv", 32.08, 34.78, "israel"],
-    ["Jerusalem", 31.77, 35.21],
+    ["Nouvelle-Zélande", -41.29, 174.78, "new zealand", "auckland", "wellington"],
+    ["Dubaï", 25.20, 55.27, "dubai"],
+    ["Arabie saoudite", 24.71, 46.68, "saudi arabia", "riyad", "riyadh"],
+    ["Tel Aviv", 32.08, 34.78, "israel", "israël"],
+    ["Jérusalem", 31.77, 35.21, "jerusalem"],
     ["Gaza", 31.50, 34.47],
-    ["Iran", 35.69, 51.39, "tehran"],
-    ["Iraq", 33.31, 44.36, "baghdad"],
-    ["Egypt", 30.04, 31.24, "cairo"],
+    ["Iran", 35.69, 51.39, "téhéran", "tehran"],
+    ["Irak", 33.31, 44.36, "iraq", "bagdad", "baghdad"],
+    ["Égypte", 30.04, 31.24, "egypt", "le caire", "cairo"],
     ["Nigeria", 9.08, 8.68, "lagos"],
     ["Kenya", -1.29, 36.82, "nairobi"],
-    ["Johannesburg", -26.20, 28.05, "south africa"],
-    ["Cape Town", -33.92, 18.42],
-    ["California", 36.78, -119.42],
+    ["Johannesburg", -26.20, 28.05, "south africa", "afrique du sud"],
+    ["Le Cap", -33.92, 18.42, "cape town"],
+    ["Californie", 36.78, -119.42, "california"],
     ["Texas", 31.97, -99.90],
-    ["Florida", 27.66, -81.52],
+    ["Floride", 27.66, -81.52, "florida"],
     ["Canada", 56.13, -106.35],
-    ["China", 35.86, 104.20],
-    ["Japan", 36.20, 138.25],
-    ["India", 20.59, 78.96],
-    ["Australia", -25.27, 133.78],
-    ["Germany", 51.16, 10.45],
+    ["Chine", 35.86, 104.20, "china"],
+    ["Japon", 36.20, 138.25, "japan"],
+    ["Inde", 20.59, 78.96, "india"],
+    ["Australie", -25.27, 133.78, "australia"],
+    ["Allemagne", 51.16, 10.45, "germany"],
     ["France", 46.60, 2.21],
-    ["Mexico", 23.63, -102.55],
-    ["Brazil", -14.24, -51.93]
+    ["Mexique", 23.63, -102.55, "mexico"],
+    ["Brésil", -14.24, -51.93, "brazil"]
   ];
 
   var PLACES = PLACES_RAW.map(function(row){
@@ -965,27 +965,27 @@
   ];
   var DEFAULT_TODOS = [];
   var DEFAULT_LOG = [
-    { id: "seed-1", text: "Console fully operational. All systems nominal.", ts: new Date().toISOString() }
+    { id: "seed-1", text: "Console pleinement opérationnelle. Tous les systèmes sont nominaux.", ts: new Date().toISOString() }
   ];
 
   var SHIP_STATUS_LINES = [
-    "Shields nominal · Warp core stable",
-    "Deflector array calibrated",
-    "Life support: optimal",
-    "Comm relays synced with Starfleet Command",
-    "Sensor sweep: no anomalies detected",
-    "Replicator queue: nominal",
-    "Structural integrity field: 100%",
-    "Impulse engines standing by",
-    "Navigational deflector: green",
-    "Auxiliary power: online",
-    "Long-range sensors: all clear",
-    "Holodeck safety protocols: engaged",
-    "Transporter buffer: stable",
-    "Subspace relay: strong signal",
-    "Bridge systems: fully operational",
-    "Environmental controls: within tolerance",
-    "Astrometric survey: in progress"
+    "Boucliers nominaux · Cœur de distorsion stable",
+    "Réseau déflecteur calibré",
+    "Support de vie : optimal",
+    "Relais de communication synchronisés avec le Commandement de Starfleet",
+    "Balayage des capteurs : aucune anomalie détectée",
+    "File du réplicateur : nominale",
+    "Champ d'intégrité structurelle : 100 %",
+    "Moteurs à impulsion en attente",
+    "Déflecteur de navigation : au vert",
+    "Alimentation auxiliaire : en ligne",
+    "Capteurs longue portée : tout est clair",
+    "Protocoles de sécurité de l'holopont : activés",
+    "Tampon du téléporteur : stable",
+    "Relais subspatial : signal puissant",
+    "Systèmes de la passerelle : pleinement opérationnels",
+    "Contrôles environnementaux : dans les limites normales",
+    "Relevé astrométrique : en cours"
   ];
 
   /* ============================================================
@@ -1006,15 +1006,15 @@
     if(isNaN(d.getTime())) return "";
     var diff = Math.max(0, Date.now() - d.getTime());
     var m = Math.floor(diff/60000);
-    if(m < 1) return "just now";
-    if(m < 60) return m + "m ago";
+    if(m < 1) return "à l'instant";
+    if(m < 60) return "il y a " + m + " min";
     var h = Math.floor(m/60);
-    if(h < 24) return h + "h ago";
-    return Math.floor(h/24) + "d ago";
+    if(h < 24) return "il y a " + h + " h";
+    return "il y a " + Math.floor(h/24) + " j";
   }
   function fmtMoney(n, ccy){
     if(typeof n !== "number" || isNaN(n)) return "—";
-    try{ return new Intl.NumberFormat("en-US", { style: ccy ? "currency" : "decimal", currency: ccy || undefined, maximumFractionDigits: n < 5 ? 4 : 2 }).format(n); }
+    try{ return new Intl.NumberFormat("fr-CA", { style: ccy ? "currency" : "decimal", currency: ccy || undefined, maximumFractionDigits: n < 5 ? 4 : 2 }).format(n); }
     catch(e){ return n.toFixed(2); }
   }
 
@@ -1030,23 +1030,28 @@
   ============================================================ */
   function updateClock(){
     var now = new Date();
-    var timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
-    $("clock").childNodes[0].nodeValue = timeFmt.format(now) + " ";
+    // fr-CA's default time format spells out "h / min / s" (e.g. "10 h 51 min 14 s"),
+    // which is much wider than a compact digital-clock readout and crowds the header —
+    // pull the numeric parts out and assemble them with colons ourselves instead.
+    var timeFmt = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    var timeParts = timeFmt.formatToParts(now);
+    function timePart(type){ var p = timeParts.find(function(x){ return x.type === type; }); return p ? p.value : "00"; }
+    $("clock").childNodes[0].nodeValue = timePart("hour") + ":" + timePart("minute") + ":" + timePart("second") + " ";
 
-    var dateFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    var dateFmt = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
     $("date-text").textContent = dateFmt.format(now);
 
-    var hourFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "numeric", hour12: false });
+    var hourFmt = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, hour: "numeric", hour12: false });
     var hour = parseInt(hourFmt.format(now), 10);
-    var part = hour < 5 ? "night watch" : hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
-    var greetWord = hour < 5 ? "Systems nominal," : "Good " + part + ",";
+    var part = hour < 5 ? "quart de nuit" : hour < 12 ? "matin" : hour < 18 ? "après-midi" : "soir";
+    var greetWord = hour < 5 ? "Systèmes nominaux," : (part === "soir" ? "Bonsoir," : "Bon " + part + ",");
     if(!nameEditing) $("greeting-text").textContent = greetWord + " " + userName;
 
     // simple pseudo-stardate: YYYY.DDD.tenths-of-day
     var start = new Date(Date.UTC(now.getUTCFullYear(), 0, 0));
     var doy = Math.floor((now - start) / 86400000);
     var frac = Math.floor(((now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds())/86400) * 10);
-    $("stardate").textContent = "STARDATE " + now.getUTCFullYear() + "." + String(doy).padStart(3,"0") + "." + frac;
+    $("stardate").textContent = "DATE STELLAIRE " + now.getUTCFullYear() + "." + String(doy).padStart(3,"0") + "." + frac;
   }
   var nameEditing = false;
   function renderNameEditor(){
@@ -1076,7 +1081,7 @@
     });
     input.addEventListener("blur", commit);
   }
-  $("greeting-text").title = "Double-click to edit your name";
+  $("greeting-text").title = "Cliquer deux fois pour modifier votre nom";
   $("greeting-text").addEventListener("dblclick", function(){
     nameEditing = true;
     renderNameEditor();
@@ -1128,7 +1133,7 @@
     input.addEventListener("blur", commit);
   }
   renderBrandName();
-  $("brand-name").title = "Double-click to edit";
+  $("brand-name").title = "Cliquer deux fois pour modifier";
   $("brand-name").addEventListener("dblclick", function(){
     brandEditing = true;
     renderBrandEditor();
@@ -1162,7 +1167,7 @@
     });
     sel.innerHTML = html;
     sel.value = homeCity.name;
-    sel.title = "Set your home city — moves the globe marker, local weather, and clock";
+    sel.title = "Définir votre ville de résidence — déplace le repère sur le globe, la météo locale et l'horloge";
     syncHomeLabels();
     sel.addEventListener("change", function(){
       var picked = WORLD_CITIES.find(function(c){ return c.name === sel.value; });
@@ -1237,30 +1242,30 @@
   var detailEyebrow = $("detail-eyebrow");
 
   function openStoryDetail(item, contextLabel){
-    detailEyebrow.textContent = contextLabel || (item.sourceLabel || "Record");
+    detailEyebrow.textContent = contextLabel || (item.sourceLabel || "Fiche");
     var html = "";
     if(item.image) html += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
     html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
-    html += '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
+    html += '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · près de " + escapeHtml(item.place) : "") + "</div>";
     if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
-    html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open Full Story ↗</a>';
+    html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Article complet ↗</a>';
     detailBody.innerHTML = html;
     overlay.hidden = false;
   }
 
   function openPlaceDetail(place, items, station, wx){
-    detailEyebrow.textContent = "Dateline — " + place;
+    detailEyebrow.textContent = "Origine — " + place;
     var html = '<h2 class="detail-title">' + escapeHtml(place) + "</h2>";
     if(station && wx){
-      html += '<div class="detail-meta"><b>Local conditions</b> · ' + Math.round(wx.current.temperature_2m) + "°C · " + wxLabel(wx.current.weather_code) + "</div>";
+      html += '<div class="detail-meta"><b>Conditions locales</b> · ' + Math.round(wx.current.temperature_2m) + "°C · " + wxLabel(wx.current.weather_code) + "</div>";
     }
     if(items && items.length){
-      html += '<div class="detail-meta" style="margin-top:10px;">' + items.length + " stor" + (items.length===1?"y":"ies") + " tagged to this location</div>";
+      html += '<div class="detail-meta" style="margin-top:10px;">' + items.length + " nouvelle" + (items.length===1?"":"s") + " associée" + (items.length===1?"":"s") + " à cet endroit</div>";
       items.forEach(function(it, idx){
         html += '<div class="detail-list-item" data-idx="' + idx + '"><div class="detail-title-sm">' + escapeHtml(it.title) + '</div><div class="detail-src">' + escapeHtml(it.sourceLabel) + " · " + escapeHtml(timeAgo(it.pubDate)) + "</div></div>";
       });
     } else {
-      html += '<p class="detail-snippet">No active headlines tagged to ' + escapeHtml(place) + " right now — this marker is a live weather station.</p>";
+      html += '<p class="detail-snippet">Aucune manchette active associée à ' + escapeHtml(place) + " en ce moment — ce repère est une station météo en direct.</p>";
     }
     detailBody.innerHTML = html;
     overlay.hidden = false;
@@ -1268,7 +1273,7 @@
       Array.prototype.forEach.call(detailBody.querySelectorAll(".detail-list-item"), function(row){
         row.addEventListener("click", function(){
           var idx = parseInt(row.getAttribute("data-idx"), 10);
-          openStoryDetail(items[idx], "Dateline — " + place);
+          openStoryDetail(items[idx], "Origine — " + place);
         });
       });
     }
@@ -1314,7 +1319,7 @@
   async function loadPodcasts(){
     var container = $("video-tiles");
     if(!podcasts.length){
-      container.innerHTML = '<div class="podcast-empty">No channels added — hit Edit to add one.</div>';
+      container.innerHTML = '<div class="podcast-empty">Aucune chaîne ajoutée — cliquez sur Modifier pour en ajouter une.</div>';
       return;
     }
     var results = await Promise.allSettled(podcasts.map(function(p){
@@ -1332,7 +1337,7 @@
         tile.addEventListener("click", function(){ openVideo(d.videoId); });
       } else {
         tile.className = "video-tile unavailable";
-        tile.innerHTML = '<div class="video-tile-title">' + escapeHtml(podcasts[idx].label) + " unavailable</div>";
+        tile.innerHTML = '<div class="video-tile-title">' + escapeHtml(podcasts[idx].label) + " indisponible</div>";
       }
       container.appendChild(tile);
     });
@@ -1351,9 +1356,9 @@
     }).join("");
     wrap.innerHTML = rowsHtml +
       '<div class="podcast-add">' +
-        '<input type="text" id="podcast-name-input" placeholder="Name">' +
-        '<input type="text" id="podcast-channel-input" placeholder="Channel URL, @handle, or ID">' +
-        '<button type="button" id="podcast-add-btn">Add</button>' +
+        '<input type="text" id="podcast-name-input" placeholder="Nom">' +
+        '<input type="text" id="podcast-channel-input" placeholder="URL de la chaîne, @identifiant ou ID">' +
+        '<button type="button" id="podcast-add-btn">Ajouter</button>' +
       "</div>";
     body.appendChild(wrap);
 
@@ -1396,7 +1401,7 @@
     quotes.forEach(function(q){
       var row = el("div", "quote-row");
       var id = el("div", "q-id");
-      id.innerHTML = '<div class="q-sym">' + escapeHtml(q.symbol) + '</div><div class="q-name">' + escapeHtml(q.error ? "unavailable" : (q.name || q.symbol)) + "</div>";
+      id.innerHTML = '<div class="q-sym">' + escapeHtml(q.symbol) + '</div><div class="q-name">' + escapeHtml(q.error ? "indisponible" : (q.name || q.symbol)) + "</div>";
       var nums = el("div", "q-nums");
       if(q.error || isNaN(q.price)){
         nums.innerHTML = '<div class="q-price">—</div>';
@@ -1414,7 +1419,7 @@
 
   function renderStocksEditor(){
     var wrap = el("div", "edit-row");
-    wrap.innerHTML = '<input type="text" id="symbols-input" value="' + escapeHtml(currentSymbols.join(",")) + '"><div class="edit-hint">Comma-separated tickers · Enter to save</div>';
+    wrap.innerHTML = '<input type="text" id="symbols-input" value="' + escapeHtml(currentSymbols.join(",")) + '"><div class="edit-hint">Symboles séparés par des virgules · Entrée pour enregistrer</div>';
     stocksBody.appendChild(wrap);
     var input = $("symbols-input");
     input.addEventListener("keydown", function(e){
@@ -1435,7 +1440,7 @@
       var data = await getJSON("/api/quotes?symbols=" + encodeURIComponent(currentSymbols.join(",")));
       renderQuotes(data.quotes || []);
     }catch(err){
-      stocksBody.innerHTML = '<div class="error-state">Market feed unavailable — try again shortly.</div>';
+      stocksBody.innerHTML = '<div class="error-state">Flux boursier indisponible — réessayez sous peu.</div>';
     }
   }
 
@@ -1456,11 +1461,11 @@
       '<div class="fx-row">' +
         '<input type="number" id="fx-amount" min="0" value="' + fxState.amount + '">' +
         '<select id="fx-from">' + opts(fxState.from) + "</select>" +
-        '<button type="button" class="fx-swap" id="fx-swap" aria-label="Swap currencies">⇄</button>' +
+        '<button type="button" class="fx-swap" id="fx-swap" aria-label="Inverser les devises">⇄</button>' +
         '<select id="fx-to">' + opts(fxState.to) + "</select>" +
       "</div>" +
       '<div class="fx-result" id="fx-result">—</div>' +
-      '<div class="fx-meta" id="fx-meta">Loading rate…</div>';
+      '<div class="fx-meta" id="fx-meta">Chargement du taux…</div>';
 
     $("fx-amount").addEventListener("input", debounce(function(){ fxState.amount = parseFloat($("fx-amount").value) || 0; writeLS(LS.fxAmt, fxState.amount); loadFx(); }, 350));
     $("fx-from").addEventListener("change", function(){ fxState.from = $("fx-from").value; writeLS(LS.fxFrom, fxState.from); loadFx(); });
@@ -1479,10 +1484,10 @@
       var data = await getJSON("/api/currency?from=" + fxState.from + "&to=" + fxState.to + "&amount=" + fxState.amount);
       var rate = data.rates && data.rates[fxState.to];
       resultEl.textContent = typeof rate === "number" ? fmtMoney(rate) + " " + fxState.to : "—";
-      metaEl.textContent = fxState.amount + " " + fxState.from + " · updated " + timeAgo(data.updated);
+      metaEl.textContent = fxState.amount + " " + fxState.from + " · mis à jour " + timeAgo(data.updated);
     }catch(err){
       resultEl.textContent = "—";
-      metaEl.textContent = "Rate feed unavailable";
+      metaEl.textContent = "Taux indisponible";
     }
   }
 
@@ -1516,7 +1521,7 @@
     return "cloudy";
   }
   function wxLabel(code){
-    var map = { clear:"Clear", cloudy:"Cloudy", fog:"Fog", drizzle:"Drizzle", rain:"Rain", snow:"Snow", storm:"Storm" };
+    var map = { clear:"Dégagé", cloudy:"Nuageux", fog:"Brouillard", drizzle:"Bruine", rain:"Pluie", snow:"Neige", storm:"Orage" };
     return map[wxCategory(code)];
   }
   function wxIconSvg(code, size){
@@ -1526,7 +1531,7 @@
 
   function renderWx(data){
     wxViewMode = "home";
-    if(!data || !data.current){ wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>'; return; }
+    if(!data || !data.current){ wxBody.innerHTML = '<div class="error-state">Flux météo indisponible.</div>'; return; }
     var c = data.current;
     var html = '<div class="wx-top">' +
       '<div class="wx-icon">' + wxIconSvg(c.weather_code, 40) + "</div>" +
@@ -1534,15 +1539,15 @@
       '<div class="wx-place">' + escapeHtml(data.place.name) + (data.place.country ? ", " + escapeHtml(data.place.country) : "") + "</div>" +
       '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
       '<div class="wx-grid">' +
-        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Feels</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidity</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h wind</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Ressenti</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidité</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h vent</div>" +
       "</div>";
     if(data.today && typeof data.today.max === "number"){
-      html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>High</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Low</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synced</div></div>";
+      html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>Max</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Min</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synchro</div></div>";
     }
     html += buildSnowReportHtml(lastBromontData);
-    html += '<button type="button" class="wx-more-link" id="wx-more-btn">Full forecast →</button>';
+    html += '<button type="button" class="wx-more-link" id="wx-more-btn">Prévisions complètes →</button>';
     wxBody.innerHTML = html;
     if(wxEditing) renderWxEditor();
     if(snowEditing) renderSnowEditor();
@@ -1562,7 +1567,7 @@
   function wxBackButton(onClick){
     var back = el("button", "news-back");
     back.type = "button";
-    back.textContent = "← Back";
+    back.textContent = "← Retour";
     back.addEventListener("click", onClick);
     return back;
   }
@@ -1573,7 +1578,7 @@
   }
 
   function coordLabel(lat, lon){
-    return Math.abs(lat).toFixed(1) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lon).toFixed(1) + "°" + (lon >= 0 ? "E" : "W");
+    return Math.abs(lat).toFixed(1) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lon).toFixed(1) + "°" + (lon >= 0 ? "E" : "O");
   }
 
   function ensureWeatherPanelVisible(){
@@ -1621,7 +1626,7 @@
     wrap.appendChild(wxBackButton(goHomeWx));
     var msg = el("div");
     msg.style.padding = "6px 2px";
-    msg.innerHTML = '<div class="detail-meta">Loading forecast for ' + escapeHtml(name) + "…</div>";
+    msg.innerHTML = '<div class="detail-meta">Chargement des prévisions pour ' + escapeHtml(name) + "…</div>";
     wrap.appendChild(msg);
     wxBody.innerHTML = "";
     wxBody.appendChild(wrap);
@@ -1632,7 +1637,7 @@
     wrap.appendChild(wxBackButton(goHomeWx));
     var msg = el("div");
     msg.style.padding = "6px 2px";
-    msg.innerHTML = '<div class="error-state">Couldn\'t load weather for ' + escapeHtml(name) + ".</div>";
+    msg.innerHTML = '<div class="error-state">Impossible de charger la météo pour ' + escapeHtml(name) + ".</div>";
     wrap.appendChild(msg);
     wxBody.innerHTML = "";
     wxBody.appendChild(wrap);
@@ -1647,7 +1652,7 @@
     content.style.padding = "2px 2px 4px";
 
     if(!data || !data.current){
-      content.innerHTML = '<div class="error-state">No weather data for ' + escapeHtml(name) + ".</div>";
+      content.innerHTML = '<div class="error-state">Aucune donnée météo pour ' + escapeHtml(name) + ".</div>";
       wrap.appendChild(content);
       wxBody.innerHTML = "";
       wxBody.appendChild(wrap);
@@ -1665,21 +1670,21 @@
       '<div class="wx-place">' + escapeHtml(name) + "</div>" + coordSub +
       '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
       '<div class="wx-grid">' +
-        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Feels</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidity</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h wind</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Ressenti</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidité</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h vent</div>" +
       "</div>";
 
     html += '<div class="wx-grid" style="margin-top:2px;">';
-    html += '<div class="wx-stat"><b>' + Math.round(c.wind_gusts_10m || 0) + "</b>Gusts</div>";
+    html += '<div class="wx-stat"><b>' + Math.round(c.wind_gusts_10m || 0) + "</b>Rafales</div>";
     html += '<div class="wx-stat"><b>' + Math.round(c.pressure_msl || 0) + "</b>hPa</div>";
-    html += '<div class="wx-stat"><b>' + Math.round(c.cloud_cover || 0) + "%</b>Cloud</div>";
+    html += '<div class="wx-stat"><b>' + Math.round(c.cloud_cover || 0) + "%</b>Nuages</div>";
     html += "</div>";
 
     if(data.daily && data.daily.length){
       html += '<div class="wx-forecast">';
       data.daily.forEach(function(d, idx){
-        var dayLabel = idx === 0 ? "Today" : (d.date ? new Date(d.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" }) : "");
+        var dayLabel = idx === 0 ? "Aujourd'hui" : (d.date ? new Date(d.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" }) : "");
         html += '<div class="wx-fday">' +
           '<div class="wx-fday-label">' + escapeHtml(dayLabel) + "</div>" +
           wxIconSvg(d.code, 20) +
@@ -1693,9 +1698,9 @@
     if(data.daily && data.daily[0] && data.daily[0].sunrise){
       var sr = new Date(data.daily[0].sunrise), ss = new Date(data.daily[0].sunset);
       html += '<div class="wx-grid" style="margin-top:8px;">' +
-        '<div class="wx-stat"><b>' + sr.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Sunrise</div>" +
-        '<div class="wx-stat"><b>' + ss.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Sunset</div>";
-      html += '<div class="wx-stat"><b>' + Math.round(data.daily[0].uvMax || 0) + "</b>UV index</div>";
+        '<div class="wx-stat"><b>' + sr.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Lever</div>" +
+        '<div class="wx-stat"><b>' + ss.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Coucher</div>";
+      html += '<div class="wx-stat"><b>' + Math.round(data.daily[0].uvMax || 0) + "</b>Indice UV</div>";
       html += "</div>";
     }
 
@@ -1709,7 +1714,7 @@
 
   function renderWxEditor(){
     var wrap = el("div", "wx-city-edit");
-    wrap.innerHTML = '<input type="text" id="wx-city-input" value="' + escapeHtml(wxPlace.name) + '" placeholder="City name">';
+    wrap.innerHTML = '<input type="text" id="wx-city-input" value="' + escapeHtml(wxPlace.name) + '" placeholder="Nom de la ville">';
     wxBody.appendChild(wrap);
     $("wx-city-input").addEventListener("keydown", function(e){
       if(e.key === "Enter"){
@@ -1740,7 +1745,7 @@
       lastHomeWxData = data;
       if(wxViewMode === "home") renderWx(data);
     }catch(err){
-      if(wxViewMode === "home") wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>';
+      if(wxViewMode === "home") wxBody.innerHTML = '<div class="error-state">Flux météo indisponible.</div>';
     }
   }
 
@@ -1759,7 +1764,7 @@
   }
 
   function moonPhaseName(phase){
-    var names = ["New Moon","Waxing Crescent","First Quarter","Waxing Gibbous","Full Moon","Waning Gibbous","Last Quarter","Waning Crescent"];
+    var names = ["Nouvelle lune","Premier croissant","Premier quartier","Gibbeuse croissante","Pleine lune","Gibbeuse décroissante","Dernier quartier","Dernier croissant"];
     var idx = Math.round(phase * 8) % 8;
     return names[idx];
   }
@@ -1804,16 +1809,16 @@
 
     var html = '<div class="sky-row">' +
       '<canvas class="moon-icon" id="moon-canvas" width="36" height="36"></canvas>' +
-      '<div><div class="sky-value">' + moonPhaseName(phase) + '</div><div class="sky-sub">' + illum + '% illuminated</div></div>' +
+      '<div><div class="sky-value">' + moonPhaseName(phase) + '</div><div class="sky-sub">' + illum + '% illuminée</div></div>' +
     '</div>';
 
     html += '<div class="sky-row">';
     if(auroraData && typeof auroraData.kp === "number"){
       var kpClass = auroraData.kp >= 7 ? "storm" : (auroraData.kp >= 5 ? "high" : "");
       html += '<div class="kp-badge ' + kpClass + '">' + auroraData.kp.toFixed(1) + '</div>' +
-        '<div><div class="sky-value">Aurora · Kp ' + auroraData.kp.toFixed(1) + '</div><div class="sky-sub">' + escapeHtml(auroraData.hint || "") + '</div></div>';
+        '<div><div class="sky-value">Aurore · Kp ' + auroraData.kp.toFixed(1) + '</div><div class="sky-sub">' + escapeHtml(auroraData.hint || "") + '</div></div>';
     } else {
-      html += '<div class="kp-badge">—</div><div><div class="sky-value">Aurora forecast</div><div class="sky-sub">Feed unavailable</div></div>';
+      html += '<div class="kp-badge">—</div><div><div class="sky-value">Prévisions aurorales</div><div class="sky-sub">Flux indisponible</div></div>';
     }
     html += '</div>';
 
@@ -1848,9 +1853,9 @@
   var snowEditing = false;
 
   function buildSnowReportHtml(data){
-    var head = '<div class="snow-report-head" id="snow-report-head" title="Double-click to change region">❄ Snow Report — ' + escapeHtml(snowRegion.name) + "</div>";
+    var head = '<div class="snow-report-head" id="snow-report-head" title="Cliquer deux fois pour changer de région">❄ Bulletin de neige — ' + escapeHtml(snowRegion.name) + "</div>";
     if(!data || !data.current){
-      return '<div class="snow-report">' + head + '<div class="error-state">Conditions unavailable.</div></div>';
+      return '<div class="snow-report">' + head + '<div class="error-state">Conditions indisponibles.</div></div>';
     }
     var c = data.current;
     var snow = typeof c.snowfall === "number" ? c.snowfall : 0;
@@ -1858,10 +1863,10 @@
     html += head;
     html += '<div class="wx-grid">' +
       '<div class="wx-stat"><b>' + Math.round(c.temperature_2m) + "°</b>Temp</div>" +
-      '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m || 0) + "</b>km/h wind</div>" +
-      '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm snow</div>" +
+      '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m || 0) + "</b>km/h vent</div>" +
+      '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm neige</div>" +
     "</div>";
-    html += '<div class="snow-report-caption">Weather-based proxy — not an official trail report.</div>';
+    html += '<div class="snow-report-caption">Estimation basée sur la météo — pas un bulletin officiel des pistes.</div>';
     html += "</div>";
     return html;
   }
@@ -1870,7 +1875,7 @@
     var head = $("snow-report-head");
     if(!head) return;
     var wrap = el("div", "wx-city-edit");
-    wrap.innerHTML = '<input type="text" id="snow-region-input" placeholder="Ski region / city name">';
+    wrap.innerHTML = '<input type="text" id="snow-region-input" placeholder="Région de ski ou ville">';
     head.insertAdjacentElement("afterend", wrap);
     var input = $("snow-region-input");
     input.value = snowRegion.name;
@@ -1911,10 +1916,10 @@
   ============================================================ */
   var LEAGUE_CATALOG = [
     { key: "nfl", label: "NFL", sport: "football" },
-    { key: "college-football", label: "College Football", sport: "football" },
+    { key: "college-football", label: "Football universitaire", sport: "football" },
     { key: "nba", label: "NBA", sport: "basketball" },
-    { key: "mens-college-basketball", label: "Men's College Basketball", sport: "basketball" },
-    { key: "womens-college-basketball", label: "Women's College Basketball", sport: "basketball" },
+    { key: "mens-college-basketball", label: "Basketball universitaire masculin", sport: "basketball" },
+    { key: "womens-college-basketball", label: "Basketball universitaire féminin", sport: "basketball" },
     { key: "mlb", label: "MLB", sport: "baseball" },
     { key: "nhl", label: "NHL", sport: "hockey" }
   ];
@@ -1933,17 +1938,17 @@
   var lastSportsData = null;
 
   function sportLine(team){
-    if(!team) return "No data";
+    if(!team) return "Aucune donnée";
     if(team.lastResult){
       var g = team.lastResult;
-      var wl = g.win === true ? '<span class="w">W</span>' : (g.win === false ? '<span class="l">L</span>' : "");
+      var wl = g.win === true ? '<span class="w">V</span>' : (g.win === false ? '<span class="l">D</span>' : "");
       return wl + " " + (g.teamScore != null ? g.teamScore + "-" + g.oppScore : "") + " vs " + escapeHtml(g.opponent);
     }
     if(team.nextGame){
       var n = team.nextGame;
-      return "Next: vs " + escapeHtml(n.opponent) + " · " + escapeHtml(n.statusText || "");
+      return "Prochain : vs " + escapeHtml(n.opponent) + " · " + escapeHtml(n.statusText || "");
     }
-    return team.note || "Off-season";
+    return team.note || "Hors saison";
   }
 
   function wireSportAddRow(){
@@ -1953,18 +1958,18 @@
     leagueSel.innerHTML = LEAGUE_CATALOG.map(function(l){ return '<option value="' + l.key + '">' + escapeHtml(l.label) + "</option>"; }).join("");
 
     function fillTeamOptions(teams){
-      if(!teams.length){ teamSel.innerHTML = '<option value="">No teams found</option>'; return; }
+      if(!teams.length){ teamSel.innerHTML = '<option value="">Aucune équipe trouvée</option>'; return; }
       teamSel.innerHTML = teams.map(function(t){ return '<option value="' + escapeHtml(t.id) + '">' + escapeHtml(t.name) + "</option>"; }).join("");
     }
     function loadTeamOptions(){
       var league = leagueSel.value;
-      teamSel.innerHTML = '<option value="">Loading teams…</option>';
+      teamSel.innerHTML = '<option value="">Chargement des équipes…</option>';
       if(teamCatalogCache[league]){ fillTeamOptions(teamCatalogCache[league]); return; }
       getJSON("/api/teams?league=" + encodeURIComponent(league)).then(function(data){
         teamCatalogCache[league] = data.teams || [];
         fillTeamOptions(teamCatalogCache[league]);
       }).catch(function(){
-        teamSel.innerHTML = '<option value="">Unavailable</option>';
+        teamSel.innerHTML = '<option value="">Indisponible</option>';
       });
     }
     leagueSel.addEventListener("change", loadTeamOptions);
@@ -1992,12 +1997,12 @@
     var html = "";
 
     if(!sportsTeams.length){
-      html += '<div class="empty-state">No teams added — hit Edit to pick some.</div>';
+      html += '<div class="empty-state">Aucune équipe ajoutée — cliquez sur Modifier pour en choisir.</div>';
     } else {
       sportsTeams.forEach(function(t, idx){
         html += '<div class="sport-row"><div class="sport-team">' + escapeHtml(t.label) +
           (sportsEditing ? '<span class="sport-team-x" data-idx="' + idx + '">✕</span>' : "") +
-          '</div><div class="sport-line">' + (data ? sportLine(results[idx]) : "Sports feed unavailable.") + "</div></div>";
+          '</div><div class="sport-line">' + (data ? sportLine(results[idx]) : "Flux sportif indisponible.") + "</div></div>";
       });
     }
 
@@ -2011,15 +2016,15 @@
           html += '<div class="sport-tennis-match">' + escapeHtml(m.player1) + " vs " + escapeHtml(m.player2) + ' <span>' + escapeHtml(m.status || "") + "</span></div>";
         });
       } else {
-        html += '<div class="sport-tennis-match">No tournament in progress</div>';
+        html += '<div class="sport-tennis-match">Aucun tournoi en cours</div>';
       }
     });
 
     if(sportsEditing){
       html += '<div class="sport-add" id="sport-add-row">' +
         '<select id="sport-league-select"></select>' +
-        '<select id="sport-team-select"><option value="">Loading teams…</option></select>' +
-        '<button type="button" id="sport-team-add-btn">Add</button>' +
+        '<select id="sport-team-select"><option value="">Chargement des équipes…</option></select>' +
+        '<button type="button" id="sport-team-add-btn">Ajouter</button>' +
         "</div>";
     }
 
@@ -2082,7 +2087,7 @@
       logBody.appendChild(row);
     });
     var addRow = el("div", "log-add");
-    addRow.innerHTML = '<input type="text" id="log-input" placeholder="Log entry…"><button type="button" id="log-add-btn">Add</button>';
+    addRow.innerHTML = '<input type="text" id="log-input" placeholder="Entrée du journal…"><button type="button" id="log-add-btn">Ajouter</button>';
     logBody.appendChild(addRow);
     function addEntry(){
       var input = $("log-input");
@@ -2101,7 +2106,7 @@
   ============================================================ */
   var newsCache = {};      // key -> items[]
   var allItemsFlat = [];   // merged, deduped, for globe matching
-  var activeTab = "top-stories";
+  var activeTab = "fr-top-stories";
 
   function buildTabs(){
     var tabsEl = $("news-tabs");
@@ -2123,8 +2128,8 @@
   function renderNewsList(){
     var body = $("news-body");
     var items = newsCache[activeTab];
-    if(!items){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>'; return; }
-    if(!items.length){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">No headlines available.</div>'; return; }
+    if(!items){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">Chargement des manchettes…</div>'; return; }
+    if(!items.length){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">Aucune manchette disponible.</div>'; return; }
     var wrap = el("div");
     wrap.style.padding = "6px 14px";
     items.slice(0, 14).forEach(function(item){
@@ -2151,7 +2156,7 @@
 
     var back = el("button", "news-back");
     back.type = "button";
-    back.textContent = "← Back to headlines";
+    back.textContent = "← Retour aux manchettes";
     back.addEventListener("click", function(){ renderNewsList(); });
     wrap.appendChild(back);
 
@@ -2160,14 +2165,14 @@
     wrap.appendChild(content);
 
     function metaLine(){
-      return '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
+      return '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · près de " + escapeHtml(item.place) : "") + "</div>";
     }
 
     var loadingHtml = "";
     if(item.image) loadingHtml += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
     loadingHtml += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
     loadingHtml += metaLine();
-    loadingHtml += '<p class="detail-snippet">Loading full story…</p>';
+    loadingHtml += '<p class="detail-snippet">Chargement de la suite…</p>';
     content.innerHTML = loadingHtml;
 
     body.innerHTML = "";
@@ -2186,7 +2191,7 @@
       } else if(item.snippet){
         html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
       }
-      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">View original source ↗</a>';
+      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Voir la source originale ↗</a>';
       content.innerHTML = html;
     }).catch(function(){
       var html = "";
@@ -2194,8 +2199,8 @@
       html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
       html += metaLine();
       if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
-      html += '<p class="detail-meta">Couldn\'t load the full article from the source site.</p>';
-      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open on original site ↗</a>';
+      html += '<p class="detail-meta">Le chargement du texte complet depuis la source a échoué.</p>';
+      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Voir sur le site original ↗</a>';
       content.innerHTML = html;
     });
   }
@@ -2714,7 +2719,7 @@
       if(grouped[key].items.length < 6) grouped[key].items.push(item);
     });
     newsMarkers = Object.keys(grouped).slice(0, 30).map(function(k){ return grouped[k]; });
-    $("globe-count").textContent = (newsMarkers.length + 1) + " markers tracked";
+    $("globe-count").textContent = (newsMarkers.length + 1) + " repères suivis";
   }
 
   async function loadStations(){
@@ -2724,7 +2729,7 @@
       });
     }));
     stationMarkers = results.filter(function(r){ return r.status === "fulfilled"; }).map(function(r){ return r.value; });
-    $("globe-count").textContent = (newsMarkers.length + 1) + " markers tracked";
+    $("globe-count").textContent = (newsMarkers.length + 1) + " repères suivis";
   }
 
   /* ============================================================
@@ -3079,10 +3084,10 @@
       } else {
         var gp = hit.ref;
         var parts = [];
-        if(typeof gp.cloud === "number") parts.push(Math.round(gp.cloud) + "% cloud");
+        if(typeof gp.cloud === "number") parts.push(Math.round(gp.cloud) + "% nuages");
         if(typeof gp.temp === "number") parts.push(Math.round(gp.temp) + "°C");
-        if(typeof gp.precip === "number" && gp.precip > 0.05) parts.push(gp.precip.toFixed(1) + "mm precip");
-        tooltip2.textContent = parts.join(" · ") || "no data";
+        if(typeof gp.precip === "number" && gp.precip > 0.05) parts.push(gp.precip.toFixed(1) + "mm précip");
+        tooltip2.textContent = parts.join(" · ") || "aucune donnée";
       }
     } else {
       if(!G2.dragging) canvas2.style.cursor = "grab";
@@ -3128,9 +3133,9 @@
       var data = await getJSON("/api/weather-grid");
       weatherGridPoints = data.points || [];
       recomputeCloudCoverage();
-      $("weather-globe-count").textContent = weatherGridPoints.length + " cells · updated " + timeAgo(data.updated);
+      $("weather-globe-count").textContent = weatherGridPoints.length + " cellules · mis à jour " + timeAgo(data.updated);
     }catch(err){
-      $("weather-globe-count").textContent = "weather layer unavailable";
+      $("weather-globe-count").textContent = "couche météo indisponible";
     }
   }
 
@@ -3151,7 +3156,7 @@
     });
     if(linksEditing){
       var addRow = el("div", "tile-add");
-      addRow.innerHTML = '<input type="text" id="link-name" placeholder="Name"><input type="text" id="link-url" placeholder="https://…"><button type="button" id="link-add">Add</button>';
+      addRow.innerHTML = '<input type="text" id="link-name" placeholder="Nom"><input type="text" id="link-url" placeholder="https://…"><button type="button" id="link-add">Ajouter</button>';
       linksBody.appendChild(addRow);
       $("link-add").addEventListener("click", function(){
         var name = $("link-name").value.trim();
@@ -3206,7 +3211,7 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-    settingsIoStatus("Exported " + Object.keys(data).length + " settings.", false);
+    settingsIoStatus(Object.keys(data).length + " réglages exportés.", false);
   }
 
   function importSettingsFile(file){
@@ -3227,13 +3232,13 @@
         });
         if(!applied) throw new Error("nothing_recognized");
       }catch(err){
-        settingsIoStatus("Couldn't read that file — not a docdrew console export.", true);
+        settingsIoStatus("Ce fichier est illisible — ce n'est pas un export de la console docdrew.", true);
         return;
       }
-      settingsIoStatus("Imported " + applied + " settings — reloading…", false);
+      settingsIoStatus(applied + " réglages importés — rechargement…", false);
       setTimeout(function(){ location.reload(); }, 700);
     };
-    reader.onerror = function(){ settingsIoStatus("Couldn't read that file.", true); };
+    reader.onerror = function(){ settingsIoStatus("Impossible de lire ce fichier.", true); };
     reader.readAsText(file);
   }
 
@@ -3266,7 +3271,7 @@
       todoBody.appendChild(row);
     });
     var addRow = el("div", "todo-add");
-    addRow.innerHTML = '<input type="text" id="todo-input" placeholder="Add a task…"><button type="button" id="todo-add-btn">Add</button>';
+    addRow.innerHTML = '<input type="text" id="todo-input" placeholder="Ajouter une tâche…"><button type="button" id="todo-add-btn">Ajouter</button>';
     todoBody.appendChild(addRow);
     function addTodo(){
       var input = $("todo-input");
