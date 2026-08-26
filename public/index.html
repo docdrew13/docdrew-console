@@ -1031,18 +1031,47 @@
 
     var content = el("div");
     content.style.padding = "6px 14px 20px";
-    var html = "";
-    if(item.image) html += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
-    html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
-    html += '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
-    if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
-    html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open Full Story ↗</a>';
-    content.innerHTML = html;
     wrap.appendChild(content);
+
+    function metaLine(){
+      return '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
+    }
+
+    var loadingHtml = "";
+    if(item.image) loadingHtml += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
+    loadingHtml += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
+    loadingHtml += metaLine();
+    loadingHtml += '<p class="detail-snippet">Loading full story…</p>';
+    content.innerHTML = loadingHtml;
 
     body.innerHTML = "";
     body.appendChild(wrap);
     body.scrollTop = 0;
+
+    getJSON("/api/article?url=" + encodeURIComponent(item.link)).then(function(data){
+      var html = "";
+      var img = data.image || item.image;
+      if(img) html += '<img class="detail-img" src="' + escapeHtml(img) + '" alt="" onerror="this.remove()">';
+      html += '<h2 class="detail-title">' + escapeHtml(data.title || item.title) + "</h2>";
+      html += metaLine();
+      var paras = data.paragraphs || [];
+      if(paras.length){
+        paras.forEach(function(p){ html += '<p class="detail-snippet">' + escapeHtml(p) + "</p>"; });
+      } else if(item.snippet){
+        html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
+      }
+      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">View original source ↗</a>';
+      content.innerHTML = html;
+    }).catch(function(){
+      var html = "";
+      if(item.image) html += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
+      html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
+      html += metaLine();
+      if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
+      html += '<p class="detail-meta">Couldn\'t load the full article from the source site.</p>';
+      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open on original site ↗</a>';
+      content.innerHTML = html;
+    });
   }
 
   function buildTicker(){
