@@ -1234,9 +1234,9 @@
   setInterval(updateClock, 1000);
 
   /* ============================================================
-     BRAND NAME (editable, top-left "DOCDREW.CA")
+     BRAND NAME (editable, top-left "CENTRAL COMMAND")
   ============================================================ */
-  var brandName = readLS(LS.brandName, "DOCDREW.CA");
+  var brandName = readLS(LS.brandName, "CENTRAL COMMAND");
   var brandEditing = false;
   function renderBrandName(){
     if(brandEditing) return;
@@ -1264,7 +1264,7 @@
       if(closed) return;
       closed = true;
       var typed = input.value.trim();
-      brandName = typed || "DOCDREW.CA";
+      brandName = typed || "CENTRAL COMMAND";
       writeLS(LS.brandName, brandName);
       brandEditing = false;
       renderBrandName();

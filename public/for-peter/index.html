@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Console Docdrew</title>
-<meta name="description" content="Une console en direct plein écran — météo, marchés et actualités mondiales sur un globe rotatif.">
+<title>Peter's Console</title>
+<meta name="description" content="A full-screen live console — weather, markets and world news plotted on a rotating globe. Preconfigured for Peter.">
+<meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305070C'/%3E%3Cpath d='M32 10 54 46H10Z' fill='none' stroke='%23FFA94D' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='36' r='4.5' fill='%2352D8DE'/%3E%3C/svg%3E">
 <style>
   /* ============ TOKENS ============ */
@@ -102,8 +103,8 @@
   }
   .brand-name .dim{ color:var(--text-dim); font-weight:600; }
 
-  /* Sélecteur de ville d'accueil — vit maintenant sous le texte de la marque (était sous
-     l'horloge), pour que la boîte de l'horloge n'ait qu'à s'ajuster à l'heure. */
+  /* Home city picker — lives under the brand text now (was under the clock), so the
+     clock box only ever has to size for the time readout. */
   .brand-city-select{
     appearance:none; -webkit-appearance:none; background:transparent; border:none; outline:none;
     font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px; color:var(--text-dim);
@@ -115,8 +116,8 @@
   .brand-city-select:hover{ color:var(--text); }
   .brand-city-select option{ background:var(--panel); color:var(--text); font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
-  /* La date stellaire et la date partagent une colonne à deux lignes maintenant, au lieu
-     que la date soit sous l'accueil — libère l'accueil pour une seule ligne plus large. */
+  /* Stardate + date share one two-line column now, instead of the date living under
+     the greeting — frees the greeting to be a single line with more room to breathe. */
   .stardate-block{
     flex:0 0 auto; display:flex; flex-direction:column; justify-content:center; gap:2px;
     border-left:1px solid var(--grid-line); padding-left:16px; line-height:1.2;
@@ -319,9 +320,9 @@
   .podcast-result-add:hover{ color:var(--text); border-color:var(--violet); }
   .podcast-manual-toggle{ display:inline-block; margin-top:10px; background:none; border:none; color:var(--cyan); font-size:13px; text-decoration:underline; cursor:pointer; padding:0; }
 
-  /* ---- liste des balados — rangées simples (nom + dernier titre), pas de « mini fenêtre »
-     miniature ; empilées verticalement pour rester lisibles peu importe le nombre de chaînes,
-     plutôt que d'écraser des vignettes côte à côte jusqu'à les rendre illisibles ---- */
+  /* ---- podcasts list — plain rows (name + latest title), no thumbnail "mini window";
+     stacks vertically so any number of channels reads cleanly in a narrow rail, instead
+     of squeezing side-by-side preview tiles down to an unreadable size ---- */
   .video-tiles{ display:flex; flex-direction:column; gap:6px; }
   .podcast-row{
     display:flex; flex-direction:column; gap:2px; cursor:pointer;
@@ -377,7 +378,7 @@
   .fx-result{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:32px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
   .fx-meta{ text-align:center; font-size:15px; color:var(--text-dim); }
 
-  /* ---- suivi de vols + SSI ---- */
+  /* ---- flight tracker + ISS ---- */
   .ft-iss{ background:var(--panel-2); border:1px solid var(--grid-line); border-radius:8px; padding:9px 11px; margin-bottom:10px; }
   .ft-iss-head{ display:flex; align-items:center; gap:6px; font-size:14px; font-weight:700; color:var(--frost); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
   .ft-iss-dot{ width:7px; height:7px; border-radius:50%; background:var(--frost); box-shadow:0 0 6px var(--frost); flex:none; animation:blink 2.4s ease-in-out infinite; }
@@ -521,9 +522,10 @@
 
   /* ============ FOOTER STRIP (ship status + market ticker) ============ */
   .footer-strip{ display:flex; align-items:center; gap:14px; padding:0 6px; overflow:hidden; }
-  /* Ship status flavor line rotates every 9s and can run long; rather than truncate with
-     an ellipsis on narrower screens, it scrolls continuously — same duplicated-track/-50%
-     technique as the market ticker right next to it — so the full line always reads. */
+  /* Ship status flavor line rotates every 9s and can run long ("Comm relays synced with
+     Starfleet Command"); rather than truncate with an ellipsis on narrower screens, it
+     scrolls continuously — same duplicated-track/-50% technique as the market ticker
+     right next to it — so the full line always reads, on any viewport width. */
   .ship-status-wrap{ flex:0 1 340px; min-width:0; overflow:hidden; white-space:nowrap; position:relative; }
   .ship-status-track{ display:inline-flex; gap:40px; animation:ship-status-scroll 22s linear infinite; }
   @keyframes ship-status-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
@@ -624,11 +626,11 @@
     .strip{ grid-template-columns:1fr; }
   }
 
-  /* Bande tablette (iPad paysage et similaire, ~981-1300px) : les colonnes fixes des
-     globes + les deux colonnes de droite dans la grille de bureau à 4 colonnes ne
-     laissent pas assez de place pour les nouvelles avant le repli mobile à une colonne
-     à 980px. On comprime encore les globes et les colonnes de droite ici pour que les
-     nouvelles gardent une largeur utilisable, aux dépens des globes. */
+  /* Tablet band (iPad landscape and similar, ~981-1300px): the desktop 4-column grid's
+     fixed-width globes + two right-rail columns don't leave enough room for news before
+     the full single-column mobile fallback kicks in at 980px — news was down to a sliver
+     or forcing horizontal overflow. Compress the globes and right rails further here so
+     news keeps a workable width, at the globes' expense. */
   @media (min-width: 981px) and (max-width: 1300px){
     .deck{ grid-template-columns: minmax(0,1fr) 300px 210px 210px; }
   }
@@ -670,11 +672,11 @@
     .search button{ padding:5px 7px; font-size:12px; }
     .lang-switch{ width:22px; height:20px; font-size:9.5px; }
   }
-  /* Sous ~1020px, même la mise en page réduite sur une seule ligne a trop d'éléments
-     rigides pour tenir sans forcer une barre de défilement horizontale (sous ~680px)
-     ou tronquer l'accueil avec une ellipse (l'écart 700-980px). On passe à une
-     disposition stable sur 3 lignes — l'accueil obtient sa propre ligne pleine
-     largeur, il n'a donc jamais besoin de tronquer ou de défiler. */
+  /* Below ~1020px, even the shrunk single-row layout has too many rigid pieces (brand+city,
+     stardate+date, greeting, clock, search, language switch) to fit without either forcing
+     a horizontal scrollbar (below ~680px) or truncating the greeting with an ellipsis
+     (the 700-980px gap). Wrap into a stable 3-row layout instead — greeting gets a
+     full-width row of its own, so it never needs to truncate or scroll. */
   @media (max-width: 1020px){
     .topbar{ flex-wrap:wrap; row-gap:6px; padding:8px; }
     .brand-block{ order:1; }
@@ -697,157 +699,157 @@
           <span class="brand-mark" aria-hidden="true"></span>
           <span class="brand-name" id="brand-name">DOCDREW<span class="dim">.CA</span></span>
         </div>
-        <select class="brand-city-select" id="home-city-select" aria-label="Ville de résidence"></select>
+        <select class="brand-city-select" id="home-city-select" aria-label="Home city"></select>
       </div>
       <div class="stardate-block">
-        <span class="stardate" id="stardate">DATE STELLAIRE —</span>
+        <span class="stardate" id="stardate">STARDATE —</span>
         <div class="subline" id="date-text">—</div>
         <div class="subline subline-short" id="date-text-short">—</div>
       </div>
       <div class="greeting-block">
-        <div class="greeting"><span class="status-dot" aria-hidden="true"></span><span id="greeting-text">Initialisation de la console…</span></div>
+        <div class="greeting"><span class="status-dot" aria-hidden="true"></span><span id="greeting-text">Initializing console…</span></div>
       </div>
       <div class="clock" id="clock">
         --:--:--
       </div>
       <form class="search" id="search-form" role="search">
-        <input type="text" id="search-input" placeholder="Recherche…" autocomplete="off">
-        <button type="submit">Aller</button>
+        <input type="text" id="search-input" placeholder="Search…" autocomplete="off">
+        <button type="submit">Go</button>
       </form>
-      <a class="lang-switch" href="/" title="Switch to English">EN</a>
+      <a class="lang-switch" href="/fr/" title="Passer en français">FR</a>
     </header>
 
     <main class="deck">
       <aside class="rail rail-left">
-        <section class="panel round-l" data-accent="violet" aria-label="Fil de presse">
+        <section class="panel round-l" data-accent="violet" aria-label="News feed">
           <div class="panel-head">
-            <span>Fil de presse</span>
+            <span>Newswire</span>
           </div>
           <div class="news-tabs-bar" id="news-tabs"></div>
           <div class="panel-body no-pad scroll" id="news-body">
-            <div class="empty-state" style="padding:12px 14px;">Chargement des manchettes…</div>
+            <div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>
           </div>
         </section>
       </aside>
 
       <div class="globes-stack">
-        <section class="globe-panel" aria-label="Systèmes météo en direct" data-accent="weather">
+        <section class="globe-panel" aria-label="Live weather systems" data-accent="weather">
           <div class="globe-head">
-            <span>Systèmes météo</span>
-            <span class="n" id="weather-globe-count">synchronisation…</span>
+            <span>Weather Systems</span>
+            <span class="n" id="weather-globe-count">syncing…</span>
           </div>
           <div class="globe-body" id="weather-globe-body">
             <canvas id="weather-globe-canvas"></canvas>
             <div class="globe-tooltip" id="weather-globe-tooltip"></div>
             <div class="globe-legend">
-              <span><i class="legend-dot haze"></i>Couverture nuageuse</span>
-              <span><i class="legend-dot precip-grad"></i>Précip. (léger→fort)</span>
-              <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montréal</span></span>
+              <span><i class="legend-dot haze"></i>Cloud cover</span>
+              <span><i class="legend-dot precip-grad"></i>Precip (light→heavy)</span>
+              <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montreal</span></span>
             </div>
-            <div class="globe-hint">glisser pour pivoter et incliner · couverture nuageuse en direct</div>
+            <div class="globe-hint">drag to rotate &amp; tilt · live cloud cover</div>
           </div>
         </section>
 
-        <section class="globe-panel" aria-label="Flux mondial en direct">
+        <section class="globe-panel" aria-label="Live global feed">
           <div class="globe-head">
-            <span>Flux mondial en direct</span>
-            <span class="n" id="globe-count">0 repères suivis</span>
+            <span>Live Global Feed</span>
+            <span class="n" id="globe-count">0 markers tracked</span>
           </div>
           <div class="globe-body" id="globe-body">
             <canvas id="globe-canvas"></canvas>
             <div class="globe-tooltip" id="globe-tooltip"></div>
             <div class="globe-legend">
-              <span><i class="legend-dot amber"></i>Origine de la nouvelle</span>
-              <span><i class="legend-dot red"></i><span id="globe-home-label">Montréal</span></span>
-              <span><i class="legend-dot frost"></i>SSI</span>
-              <span><i class="legend-dot green"></i>Vol suivi</span>
+              <span><i class="legend-dot amber"></i>News dateline</span>
+              <span><i class="legend-dot red"></i><span id="globe-home-label">Montreal</span></span>
+              <span><i class="legend-dot frost"></i>ISS</span>
+              <span><i class="legend-dot green"></i>Tracked flight</span>
             </div>
-            <div class="globe-hint">glisser pour pivoter et incliner · cliquer sur un repère</div>
+            <div class="globe-hint">drag to rotate &amp; tilt · click a marker</div>
           </div>
         </section>
       </div>
 
-      <aside class="rail rail-right" aria-label="Météo et conditions">
+      <aside class="rail rail-right" aria-label="Weather and conditions">
         <div class="rail-spacer" aria-hidden="true"></div>
-        <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Météo">
-          <div class="panel-head"><span>Météo</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
+          <div class="panel-head"><span>Weather</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="wx-body">
-            <div class="empty-state">Chargement de la météo…</div>
+            <div class="empty-state">Loading weather…</div>
           </div>
         </section>
-        <section class="panel" data-accent="teal" data-panel-key="skywatch" aria-label="Veille du ciel">
-          <div class="panel-head"><span>Veille du ciel</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="teal" data-panel-key="skywatch" aria-label="Sky watch">
+          <div class="panel-head"><span>Sky Watch</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="skywatch-body">
-            <div class="empty-state">Chargement des données célestes…</div>
+            <div class="empty-state">Loading sky data…</div>
           </div>
         </section>
-        <section class="panel" data-accent="frost" data-panel-key="flighttracker" aria-label="Suivi de vols">
-          <div class="panel-head"><span>Suivi de vols</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="frost" data-panel-key="flighttracker" aria-label="Flight tracker">
+          <div class="panel-head"><span>Flight Tracker</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="flighttracker-body">
-            <div class="empty-state">Chargement du suivi…</div>
+            <div class="empty-state">Loading tracker…</div>
           </div>
         </section>
-        <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Résultats sportifs">
+        <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Sports scores">
           <div class="panel-head">
             <span>Sports</span>
-            <button class="head-btn" id="sports-edit-btn" type="button">Modifier</button>
+            <button class="head-btn" id="sports-edit-btn" type="button">Edit</button>
             <i class="panel-chevron">▾</i>
           </div>
           <div class="panel-body scroll" id="sports-body">
-            <div class="empty-state">Chargement des résultats…</div>
+            <div class="empty-state">Loading scores…</div>
           </div>
         </section>
       </aside>
 
-      <aside class="rail rail-right" aria-label="Médias et finance">
+      <aside class="rail rail-right" aria-label="Media and finance">
         <div class="rail-spacer" aria-hidden="true"></div>
-        <section class="panel" data-accent="violet" data-panel-key="tasks" aria-label="Tâches">
-          <div class="panel-head"><span>Tâches</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="violet" data-panel-key="tasks" aria-label="Tasks">
+          <div class="panel-head"><span>Tasks</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="todo-body"></div>
         </section>
-        <section class="panel" data-accent="teal" data-panel-key="log" aria-label="Journal de bord">
-          <div class="panel-head"><span>Journal de bord</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="teal" data-panel-key="log" aria-label="Captain's log">
+          <div class="panel-head"><span>Captain's Log</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="log-body"></div>
         </section>
-        <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Balados">
+        <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
           <div class="panel-head">
-            <span>Balados</span>
-            <button class="head-btn" id="podcasts-edit-btn" type="button">Modifier</button>
+            <span>Podcasts</span>
+            <button class="head-btn" id="podcasts-edit-btn" type="button">Edit</button>
             <i class="panel-chevron">▾</i>
           </div>
           <div class="panel-body" id="podcasts-body">
             <div class="video-tiles" id="video-tiles">
-              <div class="podcast-empty">Chargement…</div>
+              <div class="podcast-empty">Loading…</div>
             </div>
           </div>
         </section>
-        <section class="panel" data-accent="amber" data-panel-key="markets" aria-label="Cours boursiers">
+        <section class="panel" data-accent="amber" data-panel-key="markets" aria-label="Stock quotes">
           <div class="panel-head">
-            <span>Marchés</span>
-            <button class="head-btn" id="stocks-edit-btn" type="button">Modifier</button>
+            <span>Markets</span>
+            <button class="head-btn" id="stocks-edit-btn" type="button">Edit</button>
             <i class="panel-chevron">▾</i>
           </div>
           <div class="panel-body scroll" id="stocks-body">
-            <div class="empty-state">Chargement des cours…</div>
+            <div class="empty-state">Loading quotes…</div>
           </div>
         </section>
-        <section class="panel round-l" data-accent="gold" data-panel-key="currency" aria-label="Convertisseur de devises">
-          <div class="panel-head"><span>Devises</span><i class="panel-chevron">▾</i></div>
+        <section class="panel round-l" data-accent="gold" data-panel-key="currency" aria-label="Currency converter">
+          <div class="panel-head"><span>Currency</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="fx-body"></div>
         </section>
       </aside>
     </main>
 
     <div class="strip">
-      <section class="panel round-l" data-accent="amber" aria-label="Liens rapides">
+      <section class="panel round-l" data-accent="amber" aria-label="Quick links">
         <div class="panel-head">
-          <span>Liens rapides</span>
+          <span>Quick Links</span>
           <div class="head-btn-group">
             <span class="settings-io-status" id="settings-io-status"></span>
-            <button class="head-btn" id="settings-export-btn" type="button" title="Télécharger tous les réglages de la console dans un seul fichier">Exporter</button>
-            <button class="head-btn" id="settings-import-btn" type="button" title="Restaurer les réglages à partir d'un fichier exporté">Importer</button>
+            <button class="head-btn" id="settings-export-btn" type="button" title="Download all your console settings as one file">Export Settings</button>
+            <button class="head-btn" id="settings-import-btn" type="button" title="Restore settings from a previously exported file">Import Settings</button>
             <input type="file" id="settings-import-file" accept="application/json" hidden>
-            <button class="head-btn" id="links-edit-btn" type="button">Modifier</button>
+            <button class="head-btn" id="links-edit-btn" type="button">Edit</button>
           </div>
         </div>
         <div class="panel-body scroll" id="links-body"></div>
@@ -855,10 +857,10 @@
     </div>
 
     <div class="footer-strip">
-      <div class="ship-status-wrap" aria-label="État du vaisseau">
+      <div class="ship-status-wrap" aria-label="Ship status">
         <div class="ship-status-track" id="ship-status-track">
-          <span class="ship-status" id="ship-status">Systèmes nominaux</span>
-          <span class="ship-status" id="ship-status-dup" aria-hidden="true">Systèmes nominaux</span>
+          <span class="ship-status" id="ship-status">Systems nominal</span>
+          <span class="ship-status" id="ship-status-dup" aria-hidden="true">Systems nominal</span>
         </div>
       </div>
       <div class="footer-sep"></div>
@@ -869,18 +871,18 @@
   <div class="overlay" id="detail-overlay" hidden>
     <div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-eyebrow">
       <div class="detail-topbar">
-        <span class="detail-eyebrow" id="detail-eyebrow">Fiche</span>
-        <button class="detail-close" id="detail-close" aria-label="Fermer">✕</button>
+        <span class="detail-eyebrow" id="detail-eyebrow">Record</span>
+        <button class="detail-close" id="detail-close" aria-label="Close">✕</button>
       </div>
       <div class="detail-body scroll" id="detail-body"></div>
     </div>
   </div>
 
   <div class="overlay" id="video-overlay" hidden>
-    <div class="video-panel" role="dialog" aria-modal="true" aria-label="Lecteur vidéo">
-      <button class="detail-close" id="video-close" aria-label="Fermer">✕</button>
+    <div class="video-panel" role="dialog" aria-modal="true" aria-label="Video player">
+      <button class="detail-close" id="video-close" aria-label="Close">✕</button>
       <div class="video-frame-wrap">
-        <iframe id="video-frame" src="" title="Lecteur vidéo" frameborder="0"
+        <iframe id="video-frame" src="" title="Video player" frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
     </div>
@@ -897,49 +899,52 @@
 
   // Declared early (before WORLD_CITIES/homeCity below) since that code reads LS.homeCity
   // at definition time, not just inside a function called later.
+  // Namespaced "dds-peter-*" (instead of "dds-*") so this page's saved settings never
+  // collide with the main console's, even when both are opened in the same browser —
+  // e.g. while Andrew is previewing this page before handing it off.
   var LS = {
-    symbols: "dds-symbols",
-    fxFrom: "dds-fx-from",
-    fxTo: "dds-fx-to",
-    fxAmt: "dds-fx-amt",
-    wxCity: "dds-wx-city",
-    links: "dds-links",
-    todos: "dds-todos",
-    railCollapse: "dds-rail-collapse",
-    captainsLog: "dds-captains-log",
-    homeCity: "dds-home-city",
-    userName: "dds-user-name",
-    brandName: "dds-brand-name",
-    snowRegion: "dds-snow-region",
-    sportsTeams: "dds-sports-teams",
-    podcasts: "dds-podcasts"
+    symbols: "dds-peter-symbols",
+    fxFrom: "dds-peter-fx-from",
+    fxTo: "dds-peter-fx-to",
+    fxAmt: "dds-peter-fx-amt",
+    wxCity: "dds-peter-wx-city",
+    links: "dds-peter-links",
+    todos: "dds-peter-todos",
+    railCollapse: "dds-peter-rail-collapse",
+    captainsLog: "dds-peter-captains-log",
+    homeCity: "dds-peter-home-city",
+    userName: "dds-peter-user-name",
+    brandName: "dds-peter-brand-name",
+    snowRegion: "dds-peter-snow-region",
+    sportsTeams: "dds-peter-sports-teams",
+    podcasts: "dds-peter-podcasts"
   };
 
   // "Top Stories" is pinned first (the default/home tab, catching general news that
   // doesn't fit any narrower category below); the rest are kept in alphabetical order.
   var NEWS_SOURCES = [
-    { key: "fr-top-stories", label: "Manchettes" },
-    { key: "fr-ai-tech", label: "Techno IA" },
-    { key: "fr-apple-tech", label: "Techno Apple" },
-    { key: "fr-canada", label: "Nouvelles canadiennes" },
-    { key: "fr-economics", label: "Économie" },
-    { key: "fr-entertainment", label: "Divertissement" },
-    { key: "fr-general-tech-science", label: "Techno et sciences" },
-    { key: "fr-health-medicine", label: "Santé" },
-    { key: "fr-quebec", label: "Nouvelles du Québec" },
-    { key: "fr-us-politics", label: "Politique américaine" },
-    { key: "fr-world-politics", label: "Politique internationale" }
+    { key: "top-stories", label: "Top Stories" },
+    { key: "ai-tech", label: "AI Tech" },
+    { key: "apple-tech", label: "Apple Tech" },
+    { key: "canada", label: "Canadian News" },
+    { key: "economics", label: "Economics" },
+    { key: "entertainment", label: "Entertainment" },
+    { key: "general-tech-science", label: "General Tech & Science" },
+    { key: "health-medicine", label: "Health & Medicine" },
+    { key: "quebec", label: "Quebec News" },
+    { key: "us-politics", label: "US Politics" },
+    { key: "world-politics", label: "World Politics" }
   ];
 
   var STATIONS = [
     { name: "Toronto", lat: 43.65, lon: -79.38 },
     { name: "New York", lat: 40.71, lon: -74.01 },
-    { name: "Londres", lat: 51.51, lon: -0.13 },
-    { name: "Dubaï", lat: 25.20, lon: 55.27 },
+    { name: "London", lat: 51.51, lon: -0.13 },
+    { name: "Dubai", lat: 25.20, lon: 55.27 },
     { name: "Tokyo", lat: 35.68, lon: 139.69 },
     { name: "Sydney", lat: -33.87, lon: 151.21 },
-    { name: "São Paulo", lat: -23.55, lon: -46.63 },
-    { name: "Le Cap", lat: -33.92, lon: 18.42 }
+    { name: "Sao Paulo", lat: -23.55, lon: -46.63 },
+    { name: "Cape Town", lat: -33.92, lon: 18.42 }
   ];
 
   // Major world cities with international airport hubs — the pool for the "Home" picker in
@@ -947,81 +952,82 @@
   // panel, and the header clock's timezone all at once, so this console can be handed to
   // anyone and set up for their own city in a few seconds instead of staying hardcoded here.
   var WORLD_CITIES = [
-    { name: "Montréal", region: "Amérique du Nord", lat: 45.5017, lon: -73.5673, tz: "America/Toronto" },
-    { name: "Granby, QC", region: "Amérique du Nord", lat: 45.4009, lon: -72.7284, tz: "America/Toronto" },
-    { name: "New York", region: "Amérique du Nord", lat: 40.7128, lon: -74.0060, tz: "America/New_York" },
-    { name: "Providence", region: "Amérique du Nord", lat: 41.8240, lon: -71.4128, tz: "America/New_York" },
-    { name: "Washington, DC", region: "Amérique du Nord", lat: 38.9072, lon: -77.0369, tz: "America/New_York" },
-    { name: "Miami", region: "Amérique du Nord", lat: 25.7617, lon: -80.1918, tz: "America/New_York" },
-    { name: "Atlanta", region: "Amérique du Nord", lat: 33.7490, lon: -84.3880, tz: "America/New_York" },
-    { name: "Chicago", region: "Amérique du Nord", lat: 41.8781, lon: -87.6298, tz: "America/Chicago" },
-    { name: "Dallas", region: "Amérique du Nord", lat: 32.7767, lon: -96.7970, tz: "America/Chicago" },
-    { name: "Denver", region: "Amérique du Nord", lat: 39.7392, lon: -104.9903, tz: "America/Denver" },
-    { name: "Los Angeles", region: "Amérique du Nord", lat: 34.0522, lon: -118.2437, tz: "America/Los_Angeles" },
-    { name: "San Francisco", region: "Amérique du Nord", lat: 37.7749, lon: -122.4194, tz: "America/Los_Angeles" },
-    { name: "Seattle", region: "Amérique du Nord", lat: 47.6062, lon: -122.3321, tz: "America/Los_Angeles" },
-    { name: "Honolulu", region: "Amérique du Nord", lat: 21.3069, lon: -157.8583, tz: "Pacific/Honolulu" },
-    { name: "Toronto", region: "Amérique du Nord", lat: 43.6532, lon: -79.3832, tz: "America/Toronto" },
-    { name: "Vancouver", region: "Amérique du Nord", lat: 49.2827, lon: -123.1207, tz: "America/Vancouver" },
-    { name: "Calgary", region: "Amérique du Nord", lat: 51.0447, lon: -114.0719, tz: "America/Edmonton" },
-    { name: "Mexico", region: "Amérique du Nord", lat: 19.4326, lon: -99.1332, tz: "America/Mexico_City" },
-    { name: "Sao Paulo", region: "Amérique du Sud", lat: -23.5505, lon: -46.6333, tz: "America/Sao_Paulo" },
-    { name: "Buenos Aires", region: "Amérique du Sud", lat: -34.6037, lon: -58.3816, tz: "America/Argentina/Buenos_Aires" },
-    { name: "Londres", region: "Europe", lat: 51.5074, lon: -0.1278, tz: "Europe/London" },
+    { name: "Montreal", region: "North America", lat: 45.5017, lon: -73.5673, tz: "America/Toronto" },
+    { name: "Granby, QC", region: "North America", lat: 45.4009, lon: -72.7284, tz: "America/Toronto" },
+    { name: "New York", region: "North America", lat: 40.7128, lon: -74.0060, tz: "America/New_York" },
+    { name: "Providence", region: "North America", lat: 41.8240, lon: -71.4128, tz: "America/New_York" },
+    { name: "Washington, DC", region: "North America", lat: 38.9072, lon: -77.0369, tz: "America/New_York" },
+    { name: "Miami", region: "North America", lat: 25.7617, lon: -80.1918, tz: "America/New_York" },
+    { name: "Atlanta", region: "North America", lat: 33.7490, lon: -84.3880, tz: "America/New_York" },
+    { name: "Chicago", region: "North America", lat: 41.8781, lon: -87.6298, tz: "America/Chicago" },
+    { name: "Dallas", region: "North America", lat: 32.7767, lon: -96.7970, tz: "America/Chicago" },
+    { name: "Denver", region: "North America", lat: 39.7392, lon: -104.9903, tz: "America/Denver" },
+    { name: "Los Angeles", region: "North America", lat: 34.0522, lon: -118.2437, tz: "America/Los_Angeles" },
+    { name: "San Francisco", region: "North America", lat: 37.7749, lon: -122.4194, tz: "America/Los_Angeles" },
+    { name: "Seattle", region: "North America", lat: 47.6062, lon: -122.3321, tz: "America/Los_Angeles" },
+    { name: "Honolulu", region: "North America", lat: 21.3069, lon: -157.8583, tz: "Pacific/Honolulu" },
+    { name: "Toronto", region: "North America", lat: 43.6532, lon: -79.3832, tz: "America/Toronto" },
+    { name: "Vancouver", region: "North America", lat: 49.2827, lon: -123.1207, tz: "America/Vancouver" },
+    { name: "Calgary", region: "North America", lat: 51.0447, lon: -114.0719, tz: "America/Edmonton" },
+    { name: "Mexico City", region: "North America", lat: 19.4326, lon: -99.1332, tz: "America/Mexico_City" },
+    { name: "Sao Paulo", region: "South America", lat: -23.5505, lon: -46.6333, tz: "America/Sao_Paulo" },
+    { name: "Buenos Aires", region: "South America", lat: -34.6037, lon: -58.3816, tz: "America/Argentina/Buenos_Aires" },
+    { name: "London", region: "Europe", lat: 51.5074, lon: -0.1278, tz: "Europe/London" },
     { name: "Dublin", region: "Europe", lat: 53.3498, lon: -6.2603, tz: "Europe/Dublin" },
     { name: "Paris", region: "Europe", lat: 48.8566, lon: 2.3522, tz: "Europe/Paris" },
-    { name: "Bruxelles", region: "Europe", lat: 50.8503, lon: 4.3517, tz: "Europe/Brussels" },
+    { name: "Brussels", region: "Europe", lat: 50.8503, lon: 4.3517, tz: "Europe/Brussels" },
     { name: "Amsterdam", region: "Europe", lat: 52.3676, lon: 4.9041, tz: "Europe/Amsterdam" },
     { name: "Berlin", region: "Europe", lat: 52.5200, lon: 13.4050, tz: "Europe/Berlin" },
     { name: "Zurich", region: "Europe", lat: 47.3769, lon: 8.5417, tz: "Europe/Zurich" },
-    { name: "Vienne", region: "Europe", lat: 48.2082, lon: 16.3738, tz: "Europe/Vienna" },
+    { name: "Vienna", region: "Europe", lat: 48.2082, lon: 16.3738, tz: "Europe/Vienna" },
     { name: "Madrid", region: "Europe", lat: 40.4168, lon: -3.7038, tz: "Europe/Madrid" },
-    { name: "Lisbonne", region: "Europe", lat: 38.7223, lon: -9.1393, tz: "Europe/Lisbon" },
+    { name: "Lisbon", region: "Europe", lat: 38.7223, lon: -9.1393, tz: "Europe/Lisbon" },
     { name: "Rome", region: "Europe", lat: 41.9028, lon: 12.4964, tz: "Europe/Rome" },
-    { name: "Copenhague", region: "Europe", lat: 55.6761, lon: 12.5683, tz: "Europe/Copenhagen" },
+    { name: "Copenhagen", region: "Europe", lat: 55.6761, lon: 12.5683, tz: "Europe/Copenhagen" },
     { name: "Stockholm", region: "Europe", lat: 59.3293, lon: 18.0686, tz: "Europe/Stockholm" },
     { name: "Oslo", region: "Europe", lat: 59.9139, lon: 10.7522, tz: "Europe/Oslo" },
     { name: "Helsinki", region: "Europe", lat: 60.1699, lon: 24.9384, tz: "Europe/Helsinki" },
-    { name: "Varsovie", region: "Europe", lat: 52.2297, lon: 21.0122, tz: "Europe/Warsaw" },
-    { name: "Athènes", region: "Europe", lat: 37.9838, lon: 23.7275, tz: "Europe/Athens" },
+    { name: "Warsaw", region: "Europe", lat: 52.2297, lon: 21.0122, tz: "Europe/Warsaw" },
+    { name: "Athens", region: "Europe", lat: 37.9838, lon: 23.7275, tz: "Europe/Athens" },
     { name: "Istanbul", region: "Europe", lat: 41.0082, lon: 28.9784, tz: "Europe/Istanbul" },
-    { name: "Moscou", region: "Europe", lat: 55.7558, lon: 37.6173, tz: "Europe/Moscow" },
-    { name: "Dubai", region: "Moyen-Orient et Afrique", lat: 25.2048, lon: 55.2708, tz: "Asia/Dubai" },
-    { name: "Doha", region: "Moyen-Orient et Afrique", lat: 25.2854, lon: 51.5310, tz: "Asia/Qatar" },
-    { name: "Riyad", region: "Moyen-Orient et Afrique", lat: 24.7136, lon: 46.6753, tz: "Asia/Riyadh" },
-    { name: "Tel Aviv", region: "Moyen-Orient et Afrique", lat: 32.0853, lon: 34.7818, tz: "Asia/Jerusalem" },
-    { name: "Le Caire", region: "Moyen-Orient et Afrique", lat: 30.0444, lon: 31.2357, tz: "Africa/Cairo" },
-    { name: "Nairobi", region: "Moyen-Orient et Afrique", lat: -1.2921, lon: 36.8219, tz: "Africa/Nairobi" },
-    { name: "Johannesburg", region: "Moyen-Orient et Afrique", lat: -26.2041, lon: 28.0473, tz: "Africa/Johannesburg" },
-    { name: "Mumbai", region: "Asie", lat: 19.0760, lon: 72.8777, tz: "Asia/Kolkata" },
-    { name: "Delhi", region: "Asie", lat: 28.7041, lon: 77.1025, tz: "Asia/Kolkata" },
-    { name: "Bangkok", region: "Asie", lat: 13.7563, lon: 100.5018, tz: "Asia/Bangkok" },
-    { name: "Singapore", region: "Asie", lat: 1.3521, lon: 103.8198, tz: "Asia/Singapore" },
-    { name: "Kuala Lumpur", region: "Asie", lat: 3.1390, lon: 101.6869, tz: "Asia/Kuala_Lumpur" },
-    { name: "Jakarta", region: "Asie", lat: -6.2088, lon: 106.8456, tz: "Asia/Jakarta" },
-    { name: "Manille", region: "Asie", lat: 14.5995, lon: 120.9842, tz: "Asia/Manila" },
-    { name: "Hong Kong", region: "Asie", lat: 22.3193, lon: 114.1694, tz: "Asia/Hong_Kong" },
-    { name: "Shanghai", region: "Asie", lat: 31.2304, lon: 121.4737, tz: "Asia/Shanghai" },
-    { name: "Pékin", region: "Asie", lat: 39.9042, lon: 116.4074, tz: "Asia/Shanghai" },
-    { name: "Taipei", region: "Asie", lat: 25.0330, lon: 121.5654, tz: "Asia/Taipei" },
-    { name: "Séoul", region: "Asie", lat: 37.5665, lon: 126.9780, tz: "Asia/Seoul" },
-    { name: "Tokyo", region: "Asie", lat: 35.6762, lon: 139.6503, tz: "Asia/Tokyo" },
-    { name: "Sydney", region: "Océanie", lat: -33.8688, lon: 151.2093, tz: "Australia/Sydney" },
-    { name: "Melbourne", region: "Océanie", lat: -37.8136, lon: 144.9631, tz: "Australia/Melbourne" },
-    { name: "Auckland", region: "Océanie", lat: -36.8485, lon: 174.7633, tz: "Pacific/Auckland" }
+    { name: "Moscow", region: "Europe", lat: 55.7558, lon: 37.6173, tz: "Europe/Moscow" },
+    { name: "Dubai", region: "Middle East & Africa", lat: 25.2048, lon: 55.2708, tz: "Asia/Dubai" },
+    { name: "Doha", region: "Middle East & Africa", lat: 25.2854, lon: 51.5310, tz: "Asia/Qatar" },
+    { name: "Riyadh", region: "Middle East & Africa", lat: 24.7136, lon: 46.6753, tz: "Asia/Riyadh" },
+    { name: "Tel Aviv", region: "Middle East & Africa", lat: 32.0853, lon: 34.7818, tz: "Asia/Jerusalem" },
+    { name: "Cairo", region: "Middle East & Africa", lat: 30.0444, lon: 31.2357, tz: "Africa/Cairo" },
+    { name: "Nairobi", region: "Middle East & Africa", lat: -1.2921, lon: 36.8219, tz: "Africa/Nairobi" },
+    { name: "Johannesburg", region: "Middle East & Africa", lat: -26.2041, lon: 28.0473, tz: "Africa/Johannesburg" },
+    { name: "Mumbai", region: "Asia", lat: 19.0760, lon: 72.8777, tz: "Asia/Kolkata" },
+    { name: "Delhi", region: "Asia", lat: 28.7041, lon: 77.1025, tz: "Asia/Kolkata" },
+    { name: "Bangkok", region: "Asia", lat: 13.7563, lon: 100.5018, tz: "Asia/Bangkok" },
+    { name: "Singapore", region: "Asia", lat: 1.3521, lon: 103.8198, tz: "Asia/Singapore" },
+    { name: "Kuala Lumpur", region: "Asia", lat: 3.1390, lon: 101.6869, tz: "Asia/Kuala_Lumpur" },
+    { name: "Jakarta", region: "Asia", lat: -6.2088, lon: 106.8456, tz: "Asia/Jakarta" },
+    { name: "Manila", region: "Asia", lat: 14.5995, lon: 120.9842, tz: "Asia/Manila" },
+    { name: "Hong Kong", region: "Asia", lat: 22.3193, lon: 114.1694, tz: "Asia/Hong_Kong" },
+    { name: "Shanghai", region: "Asia", lat: 31.2304, lon: 121.4737, tz: "Asia/Shanghai" },
+    { name: "Beijing", region: "Asia", lat: 39.9042, lon: 116.4074, tz: "Asia/Shanghai" },
+    { name: "Taipei", region: "Asia", lat: 25.0330, lon: 121.5654, tz: "Asia/Taipei" },
+    { name: "Seoul", region: "Asia", lat: 37.5665, lon: 126.9780, tz: "Asia/Seoul" },
+    { name: "Tokyo", region: "Asia", lat: 35.6762, lon: 139.6503, tz: "Asia/Tokyo" },
+    { name: "Sydney", region: "Oceania", lat: -33.8688, lon: 151.2093, tz: "Australia/Sydney" },
+    { name: "Melbourne", region: "Oceania", lat: -37.8136, lon: 144.9631, tz: "Australia/Melbourne" },
+    { name: "Auckland", region: "Oceania", lat: -36.8485, lon: 174.7633, tz: "Pacific/Auckland" }
   ];
-  var DEFAULT_HOME_CITY = WORLD_CITIES[0]; // Montréal — preserves current behavior until changed
+  // Preset for Peter — Wakefield, RI (part of South Kingstown, near Providence).
+  var DEFAULT_HOME_CITY = { name: "Wakefield, RI", region: "North America", lat: 41.4334, lon: -71.4970, tz: "America/New_York" };
   var homeCity = readLS(LS.homeCity, DEFAULT_HOME_CITY);
   var HOME = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
   var HOME_TZ = homeCity.tz;
-  // Générique par défaut — un nouveau visiteur (navigateur sans LS.userName enregistré)
-  // voit un accueil neutre, pas le nom d'Andrew. Modifiable via le même double-clic qu'avant.
-  var userName = readLS(LS.userName, "Commandant");
+  // Generic by default — a fresh visitor (any browser without LS.userName saved) sees a
+  // neutral greeting, not Andrew's name. Editable via the same greeting-text dblclick as before.
+  var userName = readLS(LS.userName, "Commander");
 
   // [name, lat, lon, extra match keywords...]
   var PLACES_RAW = [
     ["New York", 40.71, -74.01, "nyc"],
-    ["Washington", 38.91, -77.04, "washington dc", "white house", "maison blanche", "maison-blanche"],
+    ["Washington", 38.91, -77.04, "washington dc", "white house"],
     ["Los Angeles", 34.05, -118.24],
     ["San Francisco", 37.77, -122.42, "silicon valley"],
     ["Chicago", 41.88, -87.63],
@@ -1029,70 +1035,70 @@
     ["Toronto", 43.65, -79.38],
     ["Ottawa", 45.42, -75.70],
     ["Vancouver", 49.28, -123.12],
-    ["Québec", 46.81, -71.21],
-    ["Mexico", 19.43, -99.13, "mexico city"],
-    ["São Paulo", -23.55, -46.63, "sao paulo"],
+    ["Quebec", 46.81, -71.21],
+    ["Mexico City", 19.43, -99.13],
+    ["Sao Paulo", -23.55, -46.63],
     ["Buenos Aires", -34.60, -58.38],
-    ["Londres", 51.51, -0.13, "london"],
+    ["London", 51.51, -0.13],
     ["Paris", 48.86, 2.35],
     ["Berlin", 52.52, 13.40],
-    ["Bruxelles", 50.85, 4.35, "european union", "union européenne", "brussels"],
+    ["Brussels", 50.85, 4.35, "european union"],
     ["Rome", 41.90, 12.50],
     ["Madrid", 40.42, -3.70],
     ["Amsterdam", 52.37, 4.90],
-    ["Vienne", 48.21, 16.37, "vienna"],
-    ["Varsovie", 52.23, 21.01, "warsaw"],
+    ["Vienna", 48.21, 16.37],
+    ["Warsaw", 52.23, 21.01],
     ["Stockholm", 59.33, 18.07],
     ["Oslo", 59.91, 10.75],
     ["Helsinki", 60.17, 24.94],
-    ["Copenhague", 55.68, 12.57, "copenhagen"],
-    ["Athènes", 37.98, 23.73, "athens"],
-    ["Lisbonne", 38.72, -9.14, "lisbon"],
+    ["Copenhagen", 55.68, 12.57],
+    ["Athens", 37.98, 23.73],
+    ["Lisbon", 38.72, -9.14],
     ["Dublin", 53.35, -6.26],
-    ["Moscou", 55.76, 37.62, "moscow"],
+    ["Moscow", 55.76, 37.62],
     ["Kyiv", 50.45, 30.52, "kiev"],
     ["Ukraine", 49.0, 32.0],
     ["Istanbul", 41.01, 28.98],
-    ["Pékin", 39.90, 116.41, "beijing"],
+    ["Beijing", 39.90, 116.41],
     ["Shanghai", 31.23, 121.47],
     ["Hong Kong", 22.32, 114.17],
-    ["Taïwan", 23.70, 120.96, "taiwan", "taipei"],
+    ["Taiwan", 23.70, 120.96, "taipei"],
     ["Tokyo", 35.68, 139.69],
-    ["Séoul", 37.57, 126.98, "seoul"],
-    ["Corée du Nord", 39.04, 125.76, "north korea", "pyongyang"],
+    ["Seoul", 37.57, 126.98],
+    ["North Korea", 39.04, 125.76, "pyongyang"],
     ["Delhi", 28.61, 77.21, "new delhi"],
     ["Mumbai", 19.08, 72.88],
-    ["Singapour", 1.35, 103.82, "singapore"],
+    ["Singapore", 1.35, 103.82],
     ["Bangkok", 13.76, 100.50],
     ["Jakarta", -6.21, 106.85],
-    ["Manille", 14.60, 120.98, "manila"],
+    ["Manila", 14.60, 120.98],
     ["Sydney", -33.87, 151.21],
     ["Melbourne", -37.81, 144.96],
-    ["Nouvelle-Zélande", -41.29, 174.78, "new zealand", "auckland", "wellington"],
-    ["Dubaï", 25.20, 55.27, "dubai"],
-    ["Arabie saoudite", 24.71, 46.68, "saudi arabia", "riyad", "riyadh"],
-    ["Tel Aviv", 32.08, 34.78, "israel", "israël"],
-    ["Jérusalem", 31.77, 35.21, "jerusalem"],
+    ["New Zealand", -41.29, 174.78, "auckland", "wellington"],
+    ["Dubai", 25.20, 55.27],
+    ["Saudi Arabia", 24.71, 46.68, "riyadh"],
+    ["Tel Aviv", 32.08, 34.78, "israel"],
+    ["Jerusalem", 31.77, 35.21],
     ["Gaza", 31.50, 34.47],
-    ["Iran", 35.69, 51.39, "téhéran", "tehran"],
-    ["Irak", 33.31, 44.36, "iraq", "bagdad", "baghdad"],
-    ["Égypte", 30.04, 31.24, "egypt", "le caire", "cairo"],
+    ["Iran", 35.69, 51.39, "tehran"],
+    ["Iraq", 33.31, 44.36, "baghdad"],
+    ["Egypt", 30.04, 31.24, "cairo"],
     ["Nigeria", 9.08, 8.68, "lagos"],
     ["Kenya", -1.29, 36.82, "nairobi"],
-    ["Johannesburg", -26.20, 28.05, "south africa", "afrique du sud"],
-    ["Le Cap", -33.92, 18.42, "cape town"],
-    ["Californie", 36.78, -119.42, "california"],
+    ["Johannesburg", -26.20, 28.05, "south africa"],
+    ["Cape Town", -33.92, 18.42],
+    ["California", 36.78, -119.42],
     ["Texas", 31.97, -99.90],
-    ["Floride", 27.66, -81.52, "florida"],
+    ["Florida", 27.66, -81.52],
     ["Canada", 56.13, -106.35],
-    ["Chine", 35.86, 104.20, "china"],
-    ["Japon", 36.20, 138.25, "japan"],
-    ["Inde", 20.59, 78.96, "india"],
-    ["Australie", -25.27, 133.78, "australia"],
-    ["Allemagne", 51.16, 10.45, "germany"],
+    ["China", 35.86, 104.20],
+    ["Japan", 36.20, 138.25],
+    ["India", 20.59, 78.96],
+    ["Australia", -25.27, 133.78],
+    ["Germany", 51.16, 10.45],
     ["France", 46.60, 2.21],
-    ["Mexique", 23.63, -102.55, "mexico"],
-    ["Brésil", -14.24, -51.93, "brazil"]
+    ["Mexico", 23.63, -102.55],
+    ["Brazil", -14.24, -51.93]
   ];
 
   var PLACES = PLACES_RAW.map(function(row){
@@ -1108,27 +1114,27 @@
   ];
   var DEFAULT_TODOS = [];
   var DEFAULT_LOG = [
-    { id: "seed-1", text: "Console pleinement opérationnelle. Tous les systèmes sont nominaux.", ts: new Date().toISOString() }
+    { id: "seed-1", text: "Console fully operational. All systems nominal.", ts: new Date().toISOString() }
   ];
 
   var SHIP_STATUS_LINES = [
-    "Boucliers nominaux · Cœur de distorsion stable",
-    "Réseau déflecteur calibré",
-    "Support de vie : optimal",
-    "Relais de communication synchronisés avec le Commandement de Starfleet",
-    "Balayage des capteurs : aucune anomalie détectée",
-    "File du réplicateur : nominale",
-    "Champ d'intégrité structurelle : 100 %",
-    "Moteurs à impulsion en attente",
-    "Déflecteur de navigation : au vert",
-    "Alimentation auxiliaire : en ligne",
-    "Capteurs longue portée : tout est clair",
-    "Protocoles de sécurité de l'holopont : activés",
-    "Tampon du téléporteur : stable",
-    "Relais subspatial : signal puissant",
-    "Systèmes de la passerelle : pleinement opérationnels",
-    "Contrôles environnementaux : dans les limites normales",
-    "Relevé astrométrique : en cours"
+    "Shields nominal · Warp core stable",
+    "Deflector array calibrated",
+    "Life support: optimal",
+    "Comm relays synced with Starfleet Command",
+    "Sensor sweep: no anomalies detected",
+    "Replicator queue: nominal",
+    "Structural integrity field: 100%",
+    "Impulse engines standing by",
+    "Navigational deflector: green",
+    "Auxiliary power: online",
+    "Long-range sensors: all clear",
+    "Holodeck safety protocols: engaged",
+    "Transporter buffer: stable",
+    "Subspace relay: strong signal",
+    "Bridge systems: fully operational",
+    "Environmental controls: within tolerance",
+    "Astrometric survey: in progress"
   ];
 
   /* ============================================================
@@ -1149,15 +1155,15 @@
     if(isNaN(d.getTime())) return "";
     var diff = Math.max(0, Date.now() - d.getTime());
     var m = Math.floor(diff/60000);
-    if(m < 1) return "à l'instant";
-    if(m < 60) return "il y a " + m + " min";
+    if(m < 1) return "just now";
+    if(m < 60) return m + "m ago";
     var h = Math.floor(m/60);
-    if(h < 24) return "il y a " + h + " h";
-    return "il y a " + Math.floor(h/24) + " j";
+    if(h < 24) return h + "h ago";
+    return Math.floor(h/24) + "d ago";
   }
   function fmtMoney(n, ccy){
     if(typeof n !== "number" || isNaN(n)) return "—";
-    try{ return new Intl.NumberFormat("fr-CA", { style: ccy ? "currency" : "decimal", currency: ccy || undefined, maximumFractionDigits: n < 5 ? 4 : 2 }).format(n); }
+    try{ return new Intl.NumberFormat("en-US", { style: ccy ? "currency" : "decimal", currency: ccy || undefined, maximumFractionDigits: n < 5 ? 4 : 2 }).format(n); }
     catch(e){ return n.toFixed(2); }
   }
 
@@ -1173,32 +1179,27 @@
   ============================================================ */
   function updateClock(){
     var now = new Date();
-    // fr-CA's default time format spells out "h / min / s" (e.g. "10 h 51 min 14 s"),
-    // which is much wider than a compact digital-clock readout and crowds the header —
-    // pull the numeric parts out and assemble them with colons ourselves instead.
-    var timeFmt = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
-    var timeParts = timeFmt.formatToParts(now);
-    function timePart(type){ var p = timeParts.find(function(x){ return x.type === type; }); return p ? p.value : "00"; }
-    $("clock").childNodes[0].nodeValue = timePart("hour") + ":" + timePart("minute") + ":" + timePart("second") + " ";
+    var timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    $("clock").childNodes[0].nodeValue = timeFmt.format(now) + " ";
 
-    var dateFmt = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    var dateFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
     $("date-text").textContent = dateFmt.format(now);
-    // version courte échangée via CSS sur les petits écrans — la date complète est trop
-    // large pour partager la barre supérieure avec tout le reste une fois sur sa propre ligne
-    var dateFmtShort = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, weekday: "short", month: "short", day: "numeric" });
+    // shorter rendering swapped in via CSS on narrow screens — the full date is too
+    // wide to share the topbar with everything else once it's on its own line
+    var dateFmtShort = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, weekday: "short", month: "short", day: "numeric" });
     $("date-text-short").textContent = dateFmtShort.format(now);
 
-    var hourFmt = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, hour: "numeric", hour12: false });
+    var hourFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "numeric", hour12: false });
     var hour = parseInt(hourFmt.format(now), 10);
-    var part = hour < 5 ? "quart de nuit" : hour < 12 ? "matin" : hour < 18 ? "après-midi" : "soir";
-    var greetWord = hour < 5 ? "Systèmes nominaux," : (part === "soir" ? "Bonsoir," : "Bon " + part + ",");
+    var part = hour < 5 ? "night watch" : hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+    var greetWord = hour < 5 ? "Systems nominal," : "Good " + part + ",";
     if(!nameEditing) $("greeting-text").textContent = greetWord + " " + userName;
 
     // simple pseudo-stardate: YYYY.DDD.tenths-of-day
     var start = new Date(Date.UTC(now.getUTCFullYear(), 0, 0));
     var doy = Math.floor((now - start) / 86400000);
     var frac = Math.floor(((now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds())/86400) * 10);
-    $("stardate").textContent = "DATE STELLAIRE " + now.getUTCFullYear() + "." + String(doy).padStart(3,"0") + "." + frac;
+    $("stardate").textContent = "STARDATE " + now.getUTCFullYear() + "." + String(doy).padStart(3,"0") + "." + frac;
   }
   var nameEditing = false;
   function renderNameEditor(){
@@ -1217,7 +1218,7 @@
       if(closed) return;
       closed = true;
       var typed = input.value.trim();
-      userName = typed || "Commandant";
+      userName = typed || "Commander";
       writeLS(LS.userName, userName);
       nameEditing = false;
       updateClock();
@@ -1228,7 +1229,7 @@
     });
     input.addEventListener("blur", commit);
   }
-  $("greeting-text").title = "Cliquer deux fois pour modifier votre nom";
+  $("greeting-text").title = "Double-click to edit your name";
   $("greeting-text").addEventListener("dblclick", function(){
     nameEditing = true;
     renderNameEditor();
@@ -1238,9 +1239,9 @@
   setInterval(updateClock, 1000);
 
   /* ============================================================
-     BRAND NAME (editable, top-left "CENTRAL COMMAND")
+     BRAND NAME (editable, top-left "PETER'S CONSOLE")
   ============================================================ */
-  var brandName = readLS(LS.brandName, "CENTRAL COMMAND");
+  var brandName = readLS(LS.brandName, "PETER'S CONSOLE");
   var brandEditing = false;
   function renderBrandName(){
     if(brandEditing) return;
@@ -1268,7 +1269,7 @@
       if(closed) return;
       closed = true;
       var typed = input.value.trim();
-      brandName = typed || "CENTRAL COMMAND";
+      brandName = typed || "PETER'S CONSOLE";
       writeLS(LS.brandName, brandName);
       brandEditing = false;
       renderBrandName();
@@ -1280,7 +1281,7 @@
     input.addEventListener("blur", commit);
   }
   renderBrandName();
-  $("brand-name").title = "Cliquer deux fois pour modifier";
+  $("brand-name").title = "Double-click to edit";
   $("brand-name").addEventListener("dblclick", function(){
     brandEditing = true;
     renderBrandEditor();
@@ -1314,7 +1315,7 @@
     });
     sel.innerHTML = html;
     sel.value = homeCity.name;
-    sel.title = "Définir votre ville de résidence — déplace le repère sur le globe, la météo locale et l'horloge";
+    sel.title = "Set your home city — moves the globe marker, local weather, and clock";
     syncHomeLabels();
     sel.addEventListener("change", function(){
       var picked = WORLD_CITIES.find(function(c){ return c.name === sel.value; });
@@ -1396,30 +1397,30 @@
   var detailEyebrow = $("detail-eyebrow");
 
   function openStoryDetail(item, contextLabel){
-    detailEyebrow.textContent = contextLabel || (item.sourceLabel || "Fiche");
+    detailEyebrow.textContent = contextLabel || (item.sourceLabel || "Record");
     var html = "";
     if(item.image) html += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
     html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
-    html += '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · près de " + escapeHtml(item.place) : "") + "</div>";
+    html += '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
     if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
-    html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Article complet ↗</a>';
+    html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open Full Story ↗</a>';
     detailBody.innerHTML = html;
     overlay.hidden = false;
   }
 
   function openPlaceDetail(place, items, station, wx){
-    detailEyebrow.textContent = "Origine — " + place;
+    detailEyebrow.textContent = "Dateline — " + place;
     var html = '<h2 class="detail-title">' + escapeHtml(place) + "</h2>";
     if(station && wx){
-      html += '<div class="detail-meta"><b>Conditions locales</b> · ' + Math.round(wx.current.temperature_2m) + "°C · " + wxLabel(wx.current.weather_code) + "</div>";
+      html += '<div class="detail-meta"><b>Local conditions</b> · ' + Math.round(wx.current.temperature_2m) + "°C · " + wxLabel(wx.current.weather_code) + "</div>";
     }
     if(items && items.length){
-      html += '<div class="detail-meta" style="margin-top:10px;">' + items.length + " nouvelle" + (items.length===1?"":"s") + " associée" + (items.length===1?"":"s") + " à cet endroit</div>";
+      html += '<div class="detail-meta" style="margin-top:10px;">' + items.length + " stor" + (items.length===1?"y":"ies") + " tagged to this location</div>";
       items.forEach(function(it, idx){
         html += '<div class="detail-list-item" data-idx="' + idx + '"><div class="detail-title-sm">' + escapeHtml(it.title) + '</div><div class="detail-src">' + escapeHtml(it.sourceLabel) + " · " + escapeHtml(timeAgo(it.pubDate)) + "</div></div>";
       });
     } else {
-      html += '<p class="detail-snippet">Aucune manchette active associée à ' + escapeHtml(place) + " en ce moment — ce repère est une station météo en direct.</p>";
+      html += '<p class="detail-snippet">No active headlines tagged to ' + escapeHtml(place) + " right now — this marker is a live weather station.</p>";
     }
     detailBody.innerHTML = html;
     overlay.hidden = false;
@@ -1427,7 +1428,7 @@
       Array.prototype.forEach.call(detailBody.querySelectorAll(".detail-list-item"), function(row){
         row.addEventListener("click", function(){
           var idx = parseInt(row.getAttribute("data-idx"), 10);
-          openStoryDetail(items[idx], "Origine — " + place);
+          openStoryDetail(items[idx], "Dateline — " + place);
         });
       });
     }
@@ -1463,23 +1464,22 @@
      accepts a channel URL, an @handle, or a raw channel ID —
      youtube.mts resolves whichever one to a channel ID server-side.
   ============================================================ */
-  // Générique par défaut — vide, pas les abonnements personnels d'Andrew, pour qu'un
-  // nouveau visiteur parte d'une page blanche (le panneau a déjà un état vide invitant
-  // à cliquer sur Modifier).
-  var DEFAULT_PODCASTS = [];
+  // Preset for Peter — channel ids confirmed live against each channel's About page.
+  var DEFAULT_PODCASTS = [
+    { label: "MeidasTouch", channelId: "UC9r9HYFxEQOBXSopFS61ZWg" },
+    { label: "Tod Maffin", channelId: "UCy9djDjPbgW7chRBXK2TV1g" }
+  ];
   var podcasts = readLS(LS.podcasts, DEFAULT_PODCASTS);
   var podcastsEditing = false;
-  var podcastSearchResults = []; // derniers résultats de recherche de chaînes, conservés d'un
-                                  // ré-affichage à l'autre pour qu'en ajouter un ne fasse pas
-                                  // disparaître la liste avant d'en ajouter un autre
+  var podcastSearchResults = []; // last channel-search results, kept across re-renders so
+                                  // adding one doesn't wipe the list before adding another
   var podcastSearchQuery = "";
-  var podcastManualOpen = false; // l'ancien champ URL/@identifiant/ID, replié derrière une
-                                  // divulgation maintenant que la recherche est le chemin principal
+  var podcastManualOpen = false; // the old URL/@handle/ID field, tucked behind a disclosure now that search is the main path
 
   async function loadPodcasts(){
     var container = $("video-tiles");
     if(!podcasts.length){
-      container.innerHTML = '<div class="podcast-empty">Aucune chaîne ajoutée — cliquez sur Modifier pour en ajouter une.</div>';
+      container.innerHTML = '<div class="podcast-empty">No channels added — hit Edit to add one.</div>';
       return;
     }
     var results = await Promise.allSettled(podcasts.map(function(p){
@@ -1498,7 +1498,7 @@
         row.className = "podcast-row unavailable";
         row.innerHTML =
           '<div class="podcast-row-name">' + escapeHtml(podcasts[idx].label) + "</div>" +
-          '<div class="podcast-row-video">Indisponible pour le moment</div>';
+          '<div class="podcast-row-video">Unavailable right now</div>';
       }
       container.appendChild(row);
     });
@@ -1507,14 +1507,14 @@
   async function searchPodcastChannels(query){
     var resultsEl = $("podcast-search-results");
     if(!resultsEl) return;
-    resultsEl.innerHTML = '<div class="podcast-empty">Recherche…</div>';
+    resultsEl.innerHTML = '<div class="podcast-empty">Searching…</div>';
     try{
       var data = await getJSON("/api/youtube-search?q=" + encodeURIComponent(query));
       podcastSearchResults = data.results || [];
       renderPodcastSearchResults();
     }catch(err){
       podcastSearchResults = [];
-      resultsEl.innerHTML = '<div class="podcast-empty">Recherche indisponible pour le moment — essayez d\'ajouter par URL ou @identifiant ci-dessous.</div>';
+      resultsEl.innerHTML = '<div class="podcast-empty">Search unavailable right now — try adding by URL or @handle below.</div>';
     }
   }
 
@@ -1535,7 +1535,7 @@
           '<div class="podcast-result-name">' + escapeHtml(r.name) + "</div>" +
           (r.subscribers ? '<div class="podcast-result-sub">' + escapeHtml(r.subscribers) + "</div>" : "") +
         "</div>" +
-        '<button type="button" class="podcast-result-add">Ajouter</button>' +
+        '<button type="button" class="podcast-result-add">Add</button>' +
       "</div>";
     }).join("");
     Array.prototype.forEach.call(resultsEl.querySelectorAll(".podcast-result-row"), function(row){
@@ -1565,17 +1565,17 @@
     wrap.innerHTML =
       '<div class="podcast-search">' +
         '<div class="podcast-search-row">' +
-          '<input type="text" id="podcast-search-input" placeholder="Rechercher une chaîne ou un balado" value="' + escapeHtml(podcastSearchQuery) + '">' +
-          '<button type="button" id="podcast-search-btn">Rechercher</button>' +
+          '<input type="text" id="podcast-search-input" placeholder="Search for a channel or podcast" value="' + escapeHtml(podcastSearchQuery) + '">' +
+          '<button type="button" id="podcast-search-btn">Search</button>' +
         "</div>" +
         '<div class="podcast-search-results" id="podcast-search-results"></div>' +
       "</div>" +
       rowsHtml +
-      '<button type="button" class="podcast-manual-toggle" id="podcast-manual-toggle">' + (podcastManualOpen ? "Masquer l'ajout manuel" : "Ajouter par URL ou @identifiant plutôt") + "</button>" +
+      '<button type="button" class="podcast-manual-toggle" id="podcast-manual-toggle">' + (podcastManualOpen ? "Hide manual add" : "Add by URL or @handle instead") + "</button>" +
       '<div class="podcast-add" id="podcast-manual-add"' + (podcastManualOpen ? "" : ' style="display:none;"') + '>' +
-        '<input type="text" id="podcast-name-input" placeholder="Nom">' +
-        '<input type="text" id="podcast-channel-input" placeholder="URL de la chaîne, @identifiant ou ID">' +
-        '<button type="button" id="podcast-add-btn">Ajouter</button>' +
+        '<input type="text" id="podcast-name-input" placeholder="Name">' +
+        '<input type="text" id="podcast-channel-input" placeholder="Channel URL, @handle, or ID">' +
+        '<button type="button" id="podcast-add-btn">Add</button>' +
       "</div>";
     body.appendChild(wrap);
     renderPodcastSearchResults();
@@ -1628,9 +1628,9 @@
      MARKETS (stocks)
   ============================================================ */
   var stocksBody = $("stocks-body");
-  // Neutral, widely-recognized default for a fresh visitor — anyone's actual portfolio
-  // lives only in their own browser's localStorage (LS.symbols) once they hit Edit.
-  var currentSymbols = readLS(LS.symbols, ["AAPL","MSFT","NVDA","BTC-USD","ETH-USD"]);
+  // Generic picks for Peter, plus the Nasdaq and Dow indices he asked for — editable
+  // any time via LS.symbols once he hits Edit.
+  var currentSymbols = readLS(LS.symbols, ["AAPL","MSFT","NVDA","BTC-USD","ETH-USD","^IXIC","^DJI"]);
   var stocksEditing = false;
 
   function renderQuotes(quotes){
@@ -1638,7 +1638,7 @@
     quotes.forEach(function(q){
       var row = el("div", "quote-row");
       var id = el("div", "q-id");
-      id.innerHTML = '<div class="q-sym">' + escapeHtml(q.symbol) + '</div><div class="q-name">' + escapeHtml(q.error ? "indisponible" : (q.name || q.symbol)) + "</div>";
+      id.innerHTML = '<div class="q-sym">' + escapeHtml(q.symbol) + '</div><div class="q-name">' + escapeHtml(q.error ? "unavailable" : (q.name || q.symbol)) + "</div>";
       var nums = el("div", "q-nums");
       if(q.error || isNaN(q.price)){
         nums.innerHTML = '<div class="q-price">—</div>';
@@ -1656,7 +1656,7 @@
 
   function renderStocksEditor(){
     var wrap = el("div", "edit-row");
-    wrap.innerHTML = '<input type="text" id="symbols-input" value="' + escapeHtml(currentSymbols.join(",")) + '"><div class="edit-hint">Symboles séparés par des virgules · Entrée pour enregistrer</div>';
+    wrap.innerHTML = '<input type="text" id="symbols-input" value="' + escapeHtml(currentSymbols.join(",")) + '"><div class="edit-hint">Comma-separated tickers · Enter to save</div>';
     stocksBody.appendChild(wrap);
     var input = $("symbols-input");
     input.addEventListener("keydown", function(e){
@@ -1677,7 +1677,7 @@
       var data = await getJSON("/api/quotes?symbols=" + encodeURIComponent(currentSymbols.join(",")));
       renderQuotes(data.quotes || []);
     }catch(err){
-      stocksBody.innerHTML = '<div class="error-state">Flux boursier indisponible — réessayez sous peu.</div>';
+      stocksBody.innerHTML = '<div class="error-state">Market feed unavailable — try again shortly.</div>';
     }
   }
 
@@ -1698,11 +1698,11 @@
       '<div class="fx-row">' +
         '<input type="number" id="fx-amount" min="0" value="' + fxState.amount + '">' +
         '<select id="fx-from">' + opts(fxState.from) + "</select>" +
-        '<button type="button" class="fx-swap" id="fx-swap" aria-label="Inverser les devises">⇄</button>' +
+        '<button type="button" class="fx-swap" id="fx-swap" aria-label="Swap currencies">⇄</button>' +
         '<select id="fx-to">' + opts(fxState.to) + "</select>" +
       "</div>" +
       '<div class="fx-result" id="fx-result">—</div>' +
-      '<div class="fx-meta" id="fx-meta">Chargement du taux…</div>';
+      '<div class="fx-meta" id="fx-meta">Loading rate…</div>';
 
     $("fx-amount").addEventListener("input", debounce(function(){ fxState.amount = parseFloat($("fx-amount").value) || 0; writeLS(LS.fxAmt, fxState.amount); loadFx(); }, 350));
     $("fx-from").addEventListener("change", function(){ fxState.from = $("fx-from").value; writeLS(LS.fxFrom, fxState.from); loadFx(); });
@@ -1721,27 +1721,25 @@
       var data = await getJSON("/api/currency?from=" + fxState.from + "&to=" + fxState.to + "&amount=" + fxState.amount);
       var rate = data.rates && data.rates[fxState.to];
       resultEl.textContent = typeof rate === "number" ? fmtMoney(rate) + " " + fxState.to : "—";
-      metaEl.textContent = fxState.amount + " " + fxState.from + " · mis à jour " + timeAgo(data.updated);
+      metaEl.textContent = fxState.amount + " " + fxState.from + " · updated " + timeAgo(data.updated);
     }catch(err){
       resultEl.textContent = "—";
-      metaEl.textContent = "Taux indisponible";
+      metaEl.textContent = "Rate feed unavailable";
     }
   }
 
   /* ============================================================
-     SUIVI DE VOLS + SSI — positions en direct via OpenSky Network
-     (avions) et wheretheiss.at (SSI). L'accès anonyme d'OpenSky est
-     plafonné à 400 crédits/jour et chaque recherche ici récupère
-     l'instantané mondial complet des positions côté serveur — les
-     recherches de vols ne sont donc DÉCLENCHÉES QUE par une action
-     explicite de l'utilisateur (soumission d'une recherche, ou le
-     bouton Actualiser sur un vol suivi) — jamais par un intervalle
-     automatique. Le flux de la SSI n'a pas ce plafond quotidien,
-     seulement une limite de courtoisie d'environ 1 requête/seconde,
-     il est donc actualisé sur son propre intervalle indépendant
-     ci-dessous. Les deux repères sont dessinés sur le globe « Flux
-     mondial en direct » via le pipeline partagé renderedMarkers/
-     project() défini plus loin.
+     FLIGHT TRACKER + ISS — live positions via OpenSky Network
+     (aircraft) and wheretheiss.at (ISS). OpenSky's anonymous access
+     is capped at 400 credits/day and each lookup here fetches the
+     full worldwide state-vector snapshot server-side, so flight
+     searches are ONLY ever triggered by explicit user action (a
+     search submit, or the manual Refresh button on a tracked
+     flight) — never on an automatic interval. The ISS feed has no
+     such daily cap, just a gentle ~1 req/sec courtesy limit, so it
+     polls on its own independent interval below. Both markers are
+     drawn on the "Live Global Feed" globe via the shared
+     renderedMarkers/project() pipeline defined further down.
   ============================================================ */
   var AIRLINE_CATALOG = [
     { code: "ACA", name: "Air Canada" },
@@ -1764,28 +1762,28 @@
     { code: "EZY", name: "easyJet" }
   ];
 
-  var issData = null;           // dernière position SSI reçue — dessinée sur le globe une fois chargée
-  var trackedFlight = null;     // résultat de recherche actuellement sélectionné — dessiné sur le globe
-  var trackedFlightPath = [];   // trajectoire réellement parcourue par ce vol (~30 dernières min via
-                                 // le flux gratuit /tracks d'OpenSky) — PAS un itinéraire prévu
-                                 // départ/arrivée, qui exige un forfait payant que cette console n'utilise pas.
+  var issData = null;           // latest ISS reading — drawn on the globe whenever loaded
+  var trackedFlight = null;     // currently selected search result — drawn on the globe
+  var trackedFlightPath = [];   // that flight's actual recent flown history (last ~30 min via
+                                 // OpenSky's free /tracks endpoint) — NOT a scheduled dep/arr
+                                 // route, which needs a paid tier this console doesn't use.
 
   function renderFlightTracker(){
     var body = $("flighttracker-body");
     if(!body) return;
-    var opts = '<option value="">Toute compagnie…</option>' + AIRLINE_CATALOG.map(function(a){
+    var opts = '<option value="">Any airline…</option>' + AIRLINE_CATALOG.map(function(a){
       return '<option value="' + a.code + '">' + escapeHtml(a.name) + "</option>";
     }).join("");
     body.innerHTML =
       '<div class="ft-iss" id="ft-iss">' +
-        '<div class="ft-iss-head"><span class="ft-iss-dot" aria-hidden="true"></span>SSI — Station spatiale internationale</div>' +
-        '<div class="ft-iss-stats" id="ft-iss-stats">Chargement des données orbitales…</div>' +
+        '<div class="ft-iss-head"><span class="ft-iss-dot" aria-hidden="true"></span>ISS — International Space Station</div>' +
+        '<div class="ft-iss-stats" id="ft-iss-stats">Loading orbital data…</div>' +
       "</div>" +
       '<form class="ft-form" id="ft-form">' +
-        '<select id="ft-airline" aria-label="Compagnie aérienne">' + opts + "</select>" +
+        '<select id="ft-airline" aria-label="Airline">' + opts + "</select>" +
         '<div class="ft-search-row">' +
-          '<input type="text" id="ft-query" placeholder="Indicatif de vol, ex. DAL123" autocomplete="off">' +
-          '<button type="submit">Suivre</button>' +
+          '<input type="text" id="ft-query" placeholder="Flight callsign, e.g. DAL123" autocomplete="off">' +
+          '<button type="submit">Track</button>' +
         "</div>" +
       "</form>" +
       '<div class="ft-results" id="ft-results"></div>' +
@@ -1811,12 +1809,12 @@
   async function searchFlights(query, mode){
     var resultsEl = $("ft-results");
     if(!resultsEl) return;
-    resultsEl.innerHTML = '<div class="empty-state" style="padding:6px 0;">Recherche des positions en direct…</div>';
+    resultsEl.innerHTML = '<div class="empty-state" style="padding:6px 0;">Searching live positions…</div>';
     try{
       var data = await getJSON("/api/flights?mode=" + mode + "&query=" + encodeURIComponent(query));
       renderFlightResults(data.results || [], query);
     }catch(err){
-      resultsEl.innerHTML = '<div class="error-state" style="padding:6px 0;">Recherche de vols indisponible pour le moment.</div>';
+      resultsEl.innerHTML = '<div class="error-state" style="padding:6px 0;">Flight lookup unavailable right now.</div>';
     }
   }
 
@@ -1824,15 +1822,15 @@
     var resultsEl = $("ft-results");
     if(!resultsEl) return;
     if(!results.length){
-      resultsEl.innerHTML = '<div class="empty-state" style="padding:6px 0;">Aucun appareil ne signale sa position pour « ' + escapeHtml(query) + ' » en ce moment — ce suivi ne montre que les avions actuellement en vol, pas les horaires.</div>';
+      resultsEl.innerHTML = '<div class="empty-state" style="padding:6px 0;">No aircraft currently reporting for &ldquo;' + escapeHtml(query) + '&rdquo; — this only sees planes in the air right now, not schedules.</div>';
       return;
     }
     resultsEl.innerHTML = results.map(function(f, idx){
-      var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("fr-CA") + " m" : "—";
-      var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("fr-CA") + " km/h" : "—";
+      var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("en-US") + " m" : "—";
+      var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("en-US") + " km/h" : "—";
       return '<div class="ft-result-row" data-idx="' + idx + '">' +
         '<div class="ft-callsign">' + escapeHtml(f.callsign || f.icao24) + "</div>" +
-        '<div class="ft-sub">' + escapeHtml(f.originCountry || "") + " · " + alt + " · " + spd + (f.onGround ? " · au sol" : "") + "</div>" +
+        '<div class="ft-sub">' + escapeHtml(f.originCountry || "") + " · " + alt + " · " + spd + (f.onGround ? " · on ground" : "") + "</div>" +
       "</div>";
     }).join("");
     Array.prototype.forEach.call(resultsEl.querySelectorAll(".ft-result-row"), function(row){
@@ -1851,10 +1849,10 @@
     if(!icao24) return;
     try{
       var data = await getJSON("/api/flight-track?icao24=" + encodeURIComponent(icao24));
-      // une réponse lente peut arriver après que l'utilisateur ait suivi un autre vol, ou effacé — on l'ignore alors
+      // a slower response can land after the user tracked something else, or cleared — ignore it then
       if(!trackedFlight || trackedFlight.icao24 !== icao24) return;
       trackedFlightPath = data.path || [];
-      renderTrackedFlight(); // rafraîchit la note « trajectoire récente » maintenant qu'on sait si elle existe
+      renderTrackedFlight(); // refresh the "recent path" note now that we know whether one exists
     }catch(err){
       if(trackedFlight && trackedFlight.icao24 === icao24) trackedFlightPath = [];
     }
@@ -1866,28 +1864,28 @@
     if(!trackedFlight){ wrap.hidden = true; wrap.innerHTML = ""; return; }
     var f = trackedFlight;
     wrap.hidden = false;
-    var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("fr-CA") + " m" : "—";
-    var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("fr-CA") + " km/h" : "—";
+    var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("en-US") + " m" : "—";
+    var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("en-US") + " km/h" : "—";
     var hdg = f.headingDeg != null ? Math.round(f.headingDeg) + "°" : "—";
-    var vr = f.verticalRateMs != null ? (f.verticalRateMs > 0.5 ? "en montée" : f.verticalRateMs < -0.5 ? "en descente" : "stable") : "—";
-    var html = '<div class="ft-tracked-head"><span class="ft-callsign">' + escapeHtml(f.callsign || f.icao24) + '</span><button type="button" class="ft-tracked-clear" id="ft-tracked-clear">Effacer</button></div>' +
-      '<div class="ft-tracked-stats"><b>' + escapeHtml(f.originCountry || "Origine inconnue") + "</b><br>" +
-        "Altitude " + alt + " · " + spd + " · cap " + hdg + " · " + vr +
+    var vr = f.verticalRateMs != null ? (f.verticalRateMs > 0.5 ? "climbing" : f.verticalRateMs < -0.5 ? "descending" : "level") : "—";
+    var html = '<div class="ft-tracked-head"><span class="ft-callsign">' + escapeHtml(f.callsign || f.icao24) + '</span><button type="button" class="ft-tracked-clear" id="ft-tracked-clear">Clear</button></div>' +
+      '<div class="ft-tracked-stats"><b>' + escapeHtml(f.originCountry || "Unknown origin") + "</b><br>" +
+        "Altitude " + alt + " · " + spd + " · heading " + hdg + " · " + vr +
       "</div>";
     if(issData && f.lat != null && f.lon != null){
       var distKm = Math.round(haversineKm(f.lat, f.lon, issData.lat, issData.lon));
-      var fun = "✦ " + distKm.toLocaleString("fr-CA") + " km de la SSI en ce moment";
+      var fun = "✦ " + distKm.toLocaleString("en-US") + " km from the ISS overhead right now";
       if(f.altitudeM && f.altitudeM > 0){
         var multiple = Math.round((issData.altitudeKm * 1000) / f.altitudeM);
-        fun += " — la station est " + multiple.toLocaleString("fr-CA") + " fois plus haute que ce vol (" +
-          Math.round(issData.altitudeKm).toLocaleString("fr-CA") + " km contre " + Math.round(f.altitudeM / 1000).toLocaleString("fr-CA") + " km).";
+        fun += " — the station is " + multiple.toLocaleString("en-US") + "× higher than this flight (" +
+          Math.round(issData.altitudeKm).toLocaleString("en-US") + " km vs " + Math.round(f.altitudeM / 1000).toLocaleString("en-US") + " km).";
       } else {
         fun += ".";
       }
       html += '<div class="ft-fun">' + fun + "</div>";
     }
     if(trackedFlightPath && trackedFlightPath.length > 1){
-      html += '<div class="ft-path-note">Le pointillé sur le globe montre où il a réellement volé ces ~30 dernières minutes — pas l\'itinéraire complet (les flux gratuits n\'incluent pas les horaires).</div>';
+      html += '<div class="ft-path-note">Dotted trail on the globe shows where it\'s actually flown the last ~30 min — not the full route (free feeds don\'t include schedules).</div>';
     }
     wrap.innerHTML = html;
     $("ft-tracked-clear").addEventListener("click", function(){
@@ -1901,11 +1899,11 @@
   function renderIssStats(){
     var statsEl = $("ft-iss-stats");
     if(!statsEl) return;
-    if(!issData){ statsEl.textContent = "Flux SSI indisponible pour le moment."; return; }
-    var vis = issData.visibility === "daylight" ? "en plein jour" : issData.visibility === "eclipsed" ? "dans l'ombre de la Terre" : (issData.visibility || "");
+    if(!issData){ statsEl.textContent = "ISS feed unavailable right now."; return; }
+    var vis = issData.visibility === "daylight" ? "in daylight" : issData.visibility === "eclipsed" ? "in Earth's shadow" : (issData.visibility || "");
     statsEl.innerHTML = "<b>" + issData.lat.toFixed(1) + "°, " + issData.lon.toFixed(1) + "°</b> · " +
-      Math.round(issData.altitudeKm).toLocaleString("fr-CA") + " km d'altitude · " +
-      Math.round(issData.velocityKmh).toLocaleString("fr-CA") + " km/h" + (vis ? " · " + vis : "");
+      Math.round(issData.altitudeKm).toLocaleString("en-US") + " km up · " +
+      Math.round(issData.velocityKmh).toLocaleString("en-US") + " km/h" + (vis ? " · " + vis : "");
   }
 
   async function loadIss(){
@@ -1913,34 +1911,34 @@
       var data = await getJSON("/api/iss");
       issData = data;
       renderIssStats();
-      if(trackedFlight) renderTrackedFlight(); // rafraîchit aussi la statistique amusante de distance à la SSI
+      if(trackedFlight) renderTrackedFlight(); // refresh the ISS-distance fun stat too
       updateGlobeMarkerCount();
     }catch(err){
       if(!issData){
         var statsEl = $("ft-iss-stats");
-        if(statsEl) statsEl.textContent = "Flux SSI indisponible pour le moment.";
+        if(statsEl) statsEl.textContent = "ISS feed unavailable right now.";
       }
     }
   }
 
   function openIssDetail(data){
-    detailEyebrow.textContent = "Position en direct";
-    var vis = data.visibility === "daylight" ? "En plein jour" : data.visibility === "eclipsed" ? "Dans l'ombre de la Terre" : (data.visibility || "Visibilité inconnue");
-    var html = '<h2 class="detail-title">Station spatiale internationale</h2>' +
-      '<div class="detail-meta"><b>' + data.lat.toFixed(2) + "°, " + data.lon.toFixed(2) + "°</b> · " + Math.round(data.altitudeKm).toLocaleString("fr-CA") + " km d'altitude</div>" +
-      '<p class="detail-snippet">Se déplace à ' + Math.round(data.velocityKmh).toLocaleString("fr-CA") + " km/h — " + vis + ". Fait le tour de la Terre en environ 93 minutes.</p>";
+    detailEyebrow.textContent = "Live Position";
+    var vis = data.visibility === "daylight" ? "In daylight" : data.visibility === "eclipsed" ? "In Earth's shadow" : (data.visibility || "Unknown visibility");
+    var html = '<h2 class="detail-title">International Space Station</h2>' +
+      '<div class="detail-meta"><b>' + data.lat.toFixed(2) + "°, " + data.lon.toFixed(2) + "°</b> · " + Math.round(data.altitudeKm).toLocaleString("en-US") + " km altitude</div>" +
+      '<p class="detail-snippet">Traveling at ' + Math.round(data.velocityKmh).toLocaleString("en-US") + " km/h — " + vis + ". Orbits the Earth roughly every 93 minutes.</p>";
     detailBody.innerHTML = html;
     overlay.hidden = false;
   }
 
   function openFlightDetail(f){
-    detailEyebrow.textContent = "Position en direct";
-    var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("fr-CA") + " m" : "—";
-    var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("fr-CA") + " km/h" : "—";
+    detailEyebrow.textContent = "Live Position";
+    var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("en-US") + " m" : "—";
+    var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("en-US") + " km/h" : "—";
     var hdg = f.headingDeg != null ? Math.round(f.headingDeg) + "°" : "—";
     var html = '<h2 class="detail-title">' + escapeHtml(f.callsign || f.icao24) + "</h2>" +
-      '<div class="detail-meta"><b>' + escapeHtml(f.originCountry || "Origine inconnue") + "</b> · " + alt + " · " + spd + "</div>" +
-      '<p class="detail-snippet">Cap ' + hdg + (f.onGround ? " · actuellement au sol" : "") + ". Position en direct via OpenSky Network — aucune donnée d'horaire ou de porte disponible depuis ce flux.</p>";
+      '<div class="detail-meta"><b>' + escapeHtml(f.originCountry || "Unknown origin") + "</b> · " + alt + " · " + spd + "</div>" +
+      '<p class="detail-snippet">Heading ' + hdg + (f.onGround ? " · currently on the ground" : "") + ". Live position via OpenSky Network — no schedule or gate data available from this feed.</p>";
     detailBody.innerHTML = html;
     overlay.hidden = false;
   }
@@ -1949,7 +1947,7 @@
     var countEl = $("globe-count");
     if(!countEl) return;
     var n = (typeof newsMarkers !== "undefined" ? newsMarkers.length : 0) + 1 + (issData ? 1 : 0) + (trackedFlight ? 1 : 0);
-    countEl.textContent = n + " repères suivis";
+    countEl.textContent = n + " markers tracked";
   }
 
   /* ============================================================
@@ -1982,7 +1980,7 @@
     return "cloudy";
   }
   function wxLabel(code){
-    var map = { clear:"Dégagé", cloudy:"Nuageux", fog:"Brouillard", drizzle:"Bruine", rain:"Pluie", snow:"Neige", storm:"Orage" };
+    var map = { clear:"Clear", cloudy:"Cloudy", fog:"Fog", drizzle:"Drizzle", rain:"Rain", snow:"Snow", storm:"Storm" };
     return map[wxCategory(code)];
   }
   function wxIconSvg(code, size){
@@ -1992,7 +1990,7 @@
 
   function renderWx(data){
     wxViewMode = "home";
-    if(!data || !data.current){ wxBody.innerHTML = '<div class="error-state">Flux météo indisponible.</div>'; return; }
+    if(!data || !data.current){ wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>'; return; }
     var c = data.current;
     var html = '<div class="wx-top">' +
       '<div class="wx-icon">' + wxIconSvg(c.weather_code, 40) + "</div>" +
@@ -2000,15 +1998,15 @@
       '<div class="wx-place">' + escapeHtml(data.place.name) + (data.place.country ? ", " + escapeHtml(data.place.country) : "") + "</div>" +
       '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
       '<div class="wx-grid">' +
-        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Ressenti</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidité</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h vent</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Feels</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidity</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h wind</div>" +
       "</div>";
     if(data.today && typeof data.today.max === "number"){
-      html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>Max</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Min</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synchro</div></div>";
+      html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>High</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Low</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synced</div></div>";
     }
     html += buildSnowReportHtml(lastBromontData, snowExpanded);
-    html += '<button type="button" class="wx-more-link" id="wx-more-btn">Prévisions complètes →</button>';
+    html += '<button type="button" class="wx-more-link" id="wx-more-btn">Full forecast →</button>';
     wxBody.innerHTML = html;
     if(wxEditing) renderWxEditor();
     if(snowEditing) renderSnowEditor();
@@ -2034,7 +2032,7 @@
   function wxBackButton(onClick){
     var back = el("button", "news-back");
     back.type = "button";
-    back.textContent = "← Retour";
+    back.textContent = "← Back";
     back.addEventListener("click", onClick);
     return back;
   }
@@ -2045,7 +2043,7 @@
   }
 
   function coordLabel(lat, lon){
-    return Math.abs(lat).toFixed(1) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lon).toFixed(1) + "°" + (lon >= 0 ? "E" : "O");
+    return Math.abs(lat).toFixed(1) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lon).toFixed(1) + "°" + (lon >= 0 ? "E" : "W");
   }
 
   function ensureWeatherPanelVisible(){
@@ -2093,7 +2091,7 @@
     wrap.appendChild(wxBackButton(goHomeWx));
     var msg = el("div");
     msg.style.padding = "6px 2px";
-    msg.innerHTML = '<div class="detail-meta">Chargement des prévisions pour ' + escapeHtml(name) + "…</div>";
+    msg.innerHTML = '<div class="detail-meta">Loading forecast for ' + escapeHtml(name) + "…</div>";
     wrap.appendChild(msg);
     wxBody.innerHTML = "";
     wxBody.appendChild(wrap);
@@ -2104,7 +2102,7 @@
     wrap.appendChild(wxBackButton(goHomeWx));
     var msg = el("div");
     msg.style.padding = "6px 2px";
-    msg.innerHTML = '<div class="error-state">Impossible de charger la météo pour ' + escapeHtml(name) + ".</div>";
+    msg.innerHTML = '<div class="error-state">Couldn\'t load weather for ' + escapeHtml(name) + ".</div>";
     wrap.appendChild(msg);
     wxBody.innerHTML = "";
     wxBody.appendChild(wrap);
@@ -2119,7 +2117,7 @@
     content.style.padding = "2px 2px 4px";
 
     if(!data || !data.current){
-      content.innerHTML = '<div class="error-state">Aucune donnée météo pour ' + escapeHtml(name) + ".</div>";
+      content.innerHTML = '<div class="error-state">No weather data for ' + escapeHtml(name) + ".</div>";
       wrap.appendChild(content);
       wxBody.innerHTML = "";
       wxBody.appendChild(wrap);
@@ -2137,21 +2135,21 @@
       '<div class="wx-place">' + escapeHtml(name) + "</div>" + coordSub +
       '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
       '<div class="wx-grid">' +
-        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Ressenti</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidité</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h vent</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Feels</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidity</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h wind</div>" +
       "</div>";
 
     html += '<div class="wx-grid" style="margin-top:2px;">';
-    html += '<div class="wx-stat"><b>' + Math.round(c.wind_gusts_10m || 0) + "</b>Rafales</div>";
+    html += '<div class="wx-stat"><b>' + Math.round(c.wind_gusts_10m || 0) + "</b>Gusts</div>";
     html += '<div class="wx-stat"><b>' + Math.round(c.pressure_msl || 0) + "</b>hPa</div>";
-    html += '<div class="wx-stat"><b>' + Math.round(c.cloud_cover || 0) + "%</b>Nuages</div>";
+    html += '<div class="wx-stat"><b>' + Math.round(c.cloud_cover || 0) + "%</b>Cloud</div>";
     html += "</div>";
 
     if(data.daily && data.daily.length){
       html += '<div class="wx-forecast">';
       data.daily.forEach(function(d, idx){
-        var dayLabel = idx === 0 ? "Aujourd'hui" : (d.date ? new Date(d.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" }) : "");
+        var dayLabel = idx === 0 ? "Today" : (d.date ? new Date(d.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" }) : "");
         html += '<div class="wx-fday">' +
           '<div class="wx-fday-label">' + escapeHtml(dayLabel) + "</div>" +
           wxIconSvg(d.code, 20) +
@@ -2165,9 +2163,9 @@
     if(data.daily && data.daily[0] && data.daily[0].sunrise){
       var sr = new Date(data.daily[0].sunrise), ss = new Date(data.daily[0].sunset);
       html += '<div class="wx-grid" style="margin-top:8px;">' +
-        '<div class="wx-stat"><b>' + sr.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Lever</div>" +
-        '<div class="wx-stat"><b>' + ss.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Coucher</div>";
-      html += '<div class="wx-stat"><b>' + Math.round(data.daily[0].uvMax || 0) + "</b>Indice UV</div>";
+        '<div class="wx-stat"><b>' + sr.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Sunrise</div>" +
+        '<div class="wx-stat"><b>' + ss.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Sunset</div>";
+      html += '<div class="wx-stat"><b>' + Math.round(data.daily[0].uvMax || 0) + "</b>UV index</div>";
       html += "</div>";
     }
 
@@ -2181,7 +2179,7 @@
 
   function renderWxEditor(){
     var wrap = el("div", "wx-city-edit");
-    wrap.innerHTML = '<input type="text" id="wx-city-input" value="' + escapeHtml(wxPlace.name) + '" placeholder="Nom de la ville">';
+    wrap.innerHTML = '<input type="text" id="wx-city-input" value="' + escapeHtml(wxPlace.name) + '" placeholder="City name">';
     wxBody.appendChild(wrap);
     $("wx-city-input").addEventListener("keydown", function(e){
       if(e.key === "Enter"){
@@ -2212,7 +2210,7 @@
       lastHomeWxData = data;
       if(wxViewMode === "home") renderWx(data);
     }catch(err){
-      if(wxViewMode === "home") wxBody.innerHTML = '<div class="error-state">Flux météo indisponible.</div>';
+      if(wxViewMode === "home") wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>';
     }
   }
 
@@ -2231,7 +2229,7 @@
   }
 
   function moonPhaseName(phase){
-    var names = ["Nouvelle lune","Premier croissant","Premier quartier","Gibbeuse croissante","Pleine lune","Gibbeuse décroissante","Dernier quartier","Dernier croissant"];
+    var names = ["New Moon","Waxing Crescent","First Quarter","Waxing Gibbous","Full Moon","Waning Gibbous","Last Quarter","Waning Crescent"];
     var idx = Math.round(phase * 8) % 8;
     return names[idx];
   }
@@ -2276,16 +2274,16 @@
 
     var html = '<div class="sky-row">' +
       '<canvas class="moon-icon" id="moon-canvas" width="36" height="36"></canvas>' +
-      '<div><div class="sky-value">' + moonPhaseName(phase) + '</div><div class="sky-sub">' + illum + '% illuminée</div></div>' +
+      '<div><div class="sky-value">' + moonPhaseName(phase) + '</div><div class="sky-sub">' + illum + '% illuminated</div></div>' +
     '</div>';
 
     html += '<div class="sky-row">';
     if(auroraData && typeof auroraData.kp === "number"){
       var kpClass = auroraData.kp >= 7 ? "storm" : (auroraData.kp >= 5 ? "high" : "");
       html += '<div class="kp-badge ' + kpClass + '">' + auroraData.kp.toFixed(1) + '</div>' +
-        '<div><div class="sky-value">Aurore · Kp ' + auroraData.kp.toFixed(1) + '</div><div class="sky-sub">' + escapeHtml(auroraData.hint || "") + '</div></div>';
+        '<div><div class="sky-value">Aurora · Kp ' + auroraData.kp.toFixed(1) + '</div><div class="sky-sub">' + escapeHtml(auroraData.hint || "") + '</div></div>';
     } else {
-      html += '<div class="kp-badge">—</div><div><div class="sky-value">Prévisions aurorales</div><div class="sky-sub">Flux indisponible</div></div>';
+      html += '<div class="kp-badge">—</div><div><div class="sky-value">Aurora forecast</div><div class="sky-sub">Feed unavailable</div></div>';
     }
     html += '</div>';
 
@@ -2312,26 +2310,25 @@
      this is honestly a weather/snowfall proxy, not an official
      piste report — said plainly in the caption below).
   ============================================================ */
-  // Générique par défaut — reflète la ville d'accueil (même logique que DEFAULT_WX_PLACE
-  // plus bas) plutôt que la région de ski personnelle d'Andrew, pour qu'un nouveau
-  // visiteur n'hérite pas de son choix. Réglage par navigateur (LS.snowRegion) —
-  // double-cliquer sur l'en-tête du bulletin de neige pour changer de région/ville.
-  var DEFAULT_SNOW_REGION = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
+  // Preset for Peter — Southern Vermont (pinned near Stratton Mountain for accurate
+  // conditions). The region is still a per-browser setting (LS.snowRegion) — double-click
+  // the snow report header to point it at any other ski region/city.
+  var DEFAULT_SNOW_REGION = { name: "Southern Vermont", lat: 43.1127, lon: -72.9081 };
   var snowRegion = readLS(LS.snowRegion, DEFAULT_SNOW_REGION);
   var lastBromontData = null;
   var snowEditing = false;
-  // Réduit par défaut — un bulletin de neige n'a pas sa place à l'écran la majeure partie
-  // de l'année, donc il est caché derrière un lien du même genre que « Prévisions complètes ».
+  // Collapsed by default — a snow report is dead weight (and a little depressing) most of
+  // the year, so it's tucked behind a "Full forecast"-style link instead of always showing.
   var snowExpanded = false;
 
   function buildSnowReportHtml(data, expanded){
-    var head = '<div class="snow-report-head" id="snow-report-head" title="Cliquer deux fois pour changer de région">❄ Bulletin de neige — ' + escapeHtml(snowRegion.name) + "</div>";
+    var head = '<div class="snow-report-head" id="snow-report-head" title="Double-click to change region">❄ Snow Report — ' + escapeHtml(snowRegion.name) + "</div>";
     if(!expanded){
-      return '<div class="snow-report-collapsed"><button type="button" class="wx-more-link" id="snow-toggle-btn">❄ Bulletin de neige — ' + escapeHtml(snowRegion.name) + " →</button></div>";
+      return '<div class="snow-report-collapsed"><button type="button" class="wx-more-link" id="snow-toggle-btn">❄ Snow Report — ' + escapeHtml(snowRegion.name) + " →</button></div>";
     }
     if(!data || !data.current){
-      return '<div class="snow-report">' + head + '<div class="error-state">Conditions indisponibles.</div>' +
-        '<button type="button" class="wx-more-link" id="snow-toggle-btn">▲ Masquer</button></div>';
+      return '<div class="snow-report">' + head + '<div class="error-state">Conditions unavailable.</div>' +
+        '<button type="button" class="wx-more-link" id="snow-toggle-btn">▲ Hide</button></div>';
     }
     var c = data.current;
     var snow = typeof c.snowfall === "number" ? c.snowfall : 0;
@@ -2339,11 +2336,11 @@
     html += head;
     html += '<div class="wx-grid">' +
       '<div class="wx-stat"><b>' + Math.round(c.temperature_2m) + "°</b>Temp</div>" +
-      '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m || 0) + "</b>km/h vent</div>" +
-      '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm neige</div>" +
+      '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m || 0) + "</b>km/h wind</div>" +
+      '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm snow</div>" +
     "</div>";
-    html += '<div class="snow-report-caption">Estimation basée sur la météo — pas un bulletin officiel des pistes.</div>';
-    html += '<button type="button" class="wx-more-link" id="snow-toggle-btn">▲ Masquer</button>';
+    html += '<div class="snow-report-caption">Weather-based proxy — not an official trail report.</div>';
+    html += '<button type="button" class="wx-more-link" id="snow-toggle-btn">▲ Hide</button>';
     html += "</div>";
     return html;
   }
@@ -2352,7 +2349,7 @@
     var head = $("snow-report-head");
     if(!head) return;
     var wrap = el("div", "wx-city-edit");
-    wrap.innerHTML = '<input type="text" id="snow-region-input" placeholder="Région de ski ou ville">';
+    wrap.innerHTML = '<input type="text" id="snow-region-input" placeholder="Ski region / city name">';
     head.insertAdjacentElement("afterend", wrap);
     var input = $("snow-region-input");
     input.value = snowRegion.name;
@@ -2396,39 +2393,43 @@
   ============================================================ */
   var LEAGUE_CATALOG = [
     { key: "nfl", label: "NFL", sport: "football", espnPath: "football/nfl" },
-    { key: "college-football", label: "Football universitaire", sport: "football", espnPath: "football/college-football" },
+    { key: "college-football", label: "College Football", sport: "football", espnPath: "football/college-football" },
     { key: "nba", label: "NBA", sport: "basketball", espnPath: "basketball/nba" },
-    { key: "mens-college-basketball", label: "Basketball universitaire masculin", sport: "basketball", espnPath: "basketball/mens-college-basketball" },
-    { key: "womens-college-basketball", label: "Basketball universitaire féminin", sport: "basketball", espnPath: "basketball/womens-college-basketball" },
+    { key: "mens-college-basketball", label: "Men's College Basketball", sport: "basketball", espnPath: "basketball/mens-college-basketball" },
+    { key: "womens-college-basketball", label: "Women's College Basketball", sport: "basketball", espnPath: "basketball/womens-college-basketball" },
     { key: "mlb", label: "MLB", sport: "baseball", espnPath: "baseball/mlb" },
     { key: "nhl", label: "NHL", sport: "hockey", espnPath: "hockey/nhl" }
   ];
-  // Générique par défaut — vide, pas les équipes personnelles d'Andrew, pour qu'un
-  // nouveau visiteur parte d'une page blanche (le panneau a déjà un état vide invitant
-  // à cliquer sur Modifier). Entièrement modifiable par navigateur via LS.sportsTeams.
-  var DEFAULT_SPORTS_TEAMS = [];
+  // Preset for Peter — team ids confirmed live against ESPN's teams endpoint.
+  // Still fully editable per-browser via LS.sportsTeams from here on.
+  var DEFAULT_SPORTS_TEAMS = [
+    { sport: "football", league: "college-football", teamId: "130", label: "Michigan Wolverines" },
+    { sport: "basketball", league: "mens-college-basketball", teamId: "130", label: "Michigan Wolverines" },
+    { sport: "basketball", league: "mens-college-basketball", teamId: "41", label: "UConn Huskies" },
+    { sport: "basketball", league: "womens-college-basketball", teamId: "41", label: "UConn Huskies" }
+  ];
   var sportsTeams = readLS(LS.sportsTeams, DEFAULT_SPORTS_TEAMS);
   var sportsEditing = false;
   var teamCatalogCache = {}; // league -> [{id,name}], fetched on demand for the Add-team picker
   var lastSportsData = null;
 
   function sportLine(team){
-    if(!team) return "Aucune donnée";
+    if(!team) return "No data";
     if(team.liveGame){
       var lg = team.liveGame;
       var liveScore = (lg.teamScore != null && lg.oppScore != null) ? (lg.teamScore + "-" + lg.oppScore) : "";
-      return '<span class="sport-live">● EN DIRECT</span> ' + liveScore + " vs " + escapeHtml(lg.opponent) + (lg.statusText ? " · " + escapeHtml(lg.statusText) : "");
+      return '<span class="sport-live">● LIVE</span> ' + liveScore + " vs " + escapeHtml(lg.opponent) + (lg.statusText ? " · " + escapeHtml(lg.statusText) : "");
     }
     if(team.lastResult){
       var g = team.lastResult;
-      var wl = g.win === true ? '<span class="w">V</span>' : (g.win === false ? '<span class="l">D</span>' : "");
+      var wl = g.win === true ? '<span class="w">W</span>' : (g.win === false ? '<span class="l">L</span>' : "");
       return wl + " " + (g.teamScore != null ? g.teamScore + "-" + g.oppScore : "") + " vs " + escapeHtml(g.opponent);
     }
     if(team.nextGame){
       var n = team.nextGame;
-      return "Prochain : vs " + escapeHtml(n.opponent) + " · " + escapeHtml(n.statusText || "");
+      return "Next: vs " + escapeHtml(n.opponent) + " · " + escapeHtml(n.statusText || "");
     }
-    return team.note || "Hors saison";
+    return team.note || "Off-season";
   }
 
   function wireSportAddRow(){
@@ -2438,19 +2439,19 @@
     leagueSel.innerHTML = LEAGUE_CATALOG.map(function(l){ return '<option value="' + l.key + '">' + escapeHtml(l.label) + "</option>"; }).join("");
 
     function fillTeamOptions(teams){
-      if(!teams.length){ teamSel.innerHTML = '<option value="">Aucune équipe trouvée</option>'; return; }
+      if(!teams.length){ teamSel.innerHTML = '<option value="">No teams found</option>'; return; }
       teamSel.innerHTML = teams.map(function(t){ return '<option value="' + escapeHtml(t.id) + '">' + escapeHtml(t.name) + "</option>"; }).join("");
     }
     function loadTeamOptions(){
       var league = leagueSel.value;
       var meta = LEAGUE_CATALOG.find(function(l){ return l.key === league; });
-      teamSel.innerHTML = '<option value="">Chargement des équipes…</option>';
+      teamSel.innerHTML = '<option value="">Loading teams…</option>';
       if(teamCatalogCache[league]){ fillTeamOptions(teamCatalogCache[league]); return; }
-      if(!meta){ teamSel.innerHTML = '<option value="">Indisponible</option>'; return; }
-      // Le point de terminaison ESPN dédié aux « équipes » n'a aucun en-tête CORS, mais
-      // celui des classements en a un (il alimente des widgets publics de classement) et
-      // contient tout de même l'id + le nom de chaque équipe, imbriqués sous children
-      // (conférences, parfois divisions) — on récupère donc l'effectif à partir de là.
+      if(!meta){ teamSel.innerHTML = '<option value="">Unavailable</option>'; return; }
+      // ESPN's dedicated "teams" listing endpoint has no CORS header at all, but its
+      // "standings" endpoint does (it's what powers public standings widgets) and it
+      // still carries every team's id + name, nested under children (conferences,
+      // and sometimes divisions within those) — so pull the roster from there instead.
       fetch("https://site.api.espn.com/apis/v2/sports/" + meta.espnPath + "/standings")
         .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
         .then(function(data){
@@ -2475,7 +2476,7 @@
           fillTeamOptions(teams);
         })
         .catch(function(){
-          teamSel.innerHTML = '<option value="">Indisponible</option>';
+          teamSel.innerHTML = '<option value="">Unavailable</option>';
         });
     }
     leagueSel.addEventListener("change", loadTeamOptions);
@@ -2503,12 +2504,12 @@
     var html = "";
 
     if(!sportsTeams.length){
-      html += '<div class="empty-state">Aucune équipe ajoutée — cliquez sur Modifier pour en choisir.</div>';
+      html += '<div class="empty-state">No teams added — hit Edit to pick some.</div>';
     } else {
       sportsTeams.forEach(function(t, idx){
         html += '<div class="sport-row"><div class="sport-team">' + escapeHtml(t.label) +
           (sportsEditing ? '<span class="sport-team-x" data-idx="' + idx + '">✕</span>' : "") +
-          '</div><div class="sport-line">' + (data ? sportLine(results[idx]) : "Flux sportif indisponible.") + "</div></div>";
+          '</div><div class="sport-line">' + (data ? sportLine(results[idx]) : "Sports feed unavailable.") + "</div></div>";
       });
     }
 
@@ -2523,8 +2524,8 @@
           if(m.sets1 && m.sets1.length){
             sets = m.sets1.map(function(v, i){ return v + "-" + (m.sets2[i] != null ? m.sets2[i] : "?"); }).join(", ");
           }
-          var badge = m.state === "in" ? '<span class="sport-live">● EN DIRECT</span> ' : "";
-          // Met en gras le nom du joueur gagnant — connu seulement une fois le match terminé.
+          var badge = m.state === "in" ? '<span class="sport-live">● LIVE</span> ' : "";
+          // Bold whichever player actually won — only known once the match is final.
           var p1 = m.winner1 === true ? "<b>" + escapeHtml(m.player1) + "</b>" : escapeHtml(m.player1);
           var p2 = m.winner2 === true ? "<b>" + escapeHtml(m.player2) + "</b>" : escapeHtml(m.player2);
           html += '<div class="sport-tennis-match">' + badge + p1 + " vs " + p2 +
@@ -2532,15 +2533,15 @@
             ' <span>' + escapeHtml(m.status || "") + "</span></div>";
         });
       } else {
-        html += '<div class="sport-tennis-match">Aucun tournoi en cours</div>';
+        html += '<div class="sport-tennis-match">No tournament in progress</div>';
       }
     });
 
     if(sportsEditing){
       html += '<div class="sport-add" id="sport-add-row">' +
         '<select id="sport-league-select"></select>' +
-        '<select id="sport-team-select"><option value="">Chargement des équipes…</option></select>' +
-        '<button type="button" id="sport-team-add-btn">Ajouter</button>' +
+        '<select id="sport-team-select"><option value="">Loading teams…</option></select>' +
+        '<button type="button" id="sport-team-add-btn">Add</button>' +
         "</div>";
     }
 
@@ -2576,8 +2577,8 @@
     return fetch("https://site.api.espn.com/apis/site/v2/sports/" + spec.sport + "/" + spec.league + "/teams/" + spec.teamId + "/schedule")
       .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
       .then(function(data){
-        // Ignore les matchs de présaison/exhibition — ils ne comptent pas dans la fiche
-        // de l'équipe et ne méritent ni le badge EN DIRECT ni la ligne "dernier résultat".
+        // Skip preseason/exhibition games — they don't count for the team's actual
+        // record and aren't worth a LIVE badge or "last result" line.
         var events = ((data && data.events) || []).filter(function(ev){
           var st = ev.seasonType || {};
           return String(st.id) !== "1" && !/preseason|exhibition/i.test(st.name || "");
@@ -2607,11 +2608,11 @@
           liveGame: live || null,
           lastResult: past.length ? past[past.length - 1] : null,
           nextGame: upcoming.length ? upcoming[0] : null,
-          note: games.length ? undefined : "Aucun match programmé (probablement hors saison)."
+          note: games.length ? undefined : "No scheduled games found (likely off-season)."
         };
       })
       .catch(function(){
-        return { label: spec.label, liveGame: null, lastResult: null, nextGame: null, note: "Indisponible" };
+        return { label: spec.label, liveGame: null, lastResult: null, nextGame: null, note: "Unavailable" };
       });
   }
 
@@ -2639,8 +2640,7 @@
               });
             });
           });
-          // Fait remonter tout match en direct en premier pour qu'il ne soit jamais
-          // caché sous des matchs déjà terminés.
+          // Surface any live match first so it's never buried under finished ones.
           matches.sort(function(m1, m2){ return (m1.state === "in" ? 0 : 1) - (m2.state === "in" ? 0 : 1); });
           return { name: ev.name, matches: matches.slice(0, 4) };
         });
@@ -2670,8 +2670,8 @@
       var teams = {};
       sportsTeams.forEach(function(t, i){ teams[t.league + ":" + t.teamId + ":" + i] = teamResults[i]; });
       renderSports({ teams: teams, tennis: { atp: atp, wta: wta } });
-      // Tant qu'une équipe suivie ou un match de tennis est en direct, on rafraîchit
-      // souvent (~20s) pour rester proche du temps réel ; sinon on revient au rythme lent.
+      // While any tracked team or tennis match is live, refresh often (~20s) so
+      // scores stay close to real-time; otherwise fall back to a slow cadence.
       var anyTeamLive = teamResults.some(function(t){ return t && t.liveGame; });
       var anyTennisLive = (atp && atp.anyLive) || (wta && wta.anyLive);
       scheduleSportsPoll((anyTeamLive || anyTennisLive) ? 20000 : 600000);
@@ -2708,7 +2708,7 @@
       logBody.appendChild(row);
     });
     var addRow = el("div", "log-add");
-    addRow.innerHTML = '<input type="text" id="log-input" placeholder="Entrée du journal…"><button type="button" id="log-add-btn">Ajouter</button>';
+    addRow.innerHTML = '<input type="text" id="log-input" placeholder="Log entry…"><button type="button" id="log-add-btn">Add</button>';
     logBody.appendChild(addRow);
     function addEntry(){
       var input = $("log-input");
@@ -2727,7 +2727,7 @@
   ============================================================ */
   var newsCache = {};      // key -> items[]
   var allItemsFlat = [];   // merged, deduped, for globe matching
-  var activeTab = "fr-top-stories";
+  var activeTab = "top-stories";
 
   function buildTabs(){
     var tabsEl = $("news-tabs");
@@ -2749,8 +2749,8 @@
   function renderNewsList(){
     var body = $("news-body");
     var items = newsCache[activeTab];
-    if(!items){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">Chargement des manchettes…</div>'; return; }
-    if(!items.length){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">Aucune manchette disponible.</div>'; return; }
+    if(!items){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>'; return; }
+    if(!items.length){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">No headlines available.</div>'; return; }
     var wrap = el("div");
     wrap.style.padding = "6px 14px";
     items.slice(0, 14).forEach(function(item){
@@ -2777,7 +2777,7 @@
 
     var back = el("button", "news-back");
     back.type = "button";
-    back.textContent = "← Retour aux manchettes";
+    back.textContent = "← Back to headlines";
     back.addEventListener("click", function(){ renderNewsList(); });
     wrap.appendChild(back);
 
@@ -2786,14 +2786,14 @@
     wrap.appendChild(content);
 
     function metaLine(){
-      return '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · près de " + escapeHtml(item.place) : "") + "</div>";
+      return '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
     }
 
     var loadingHtml = "";
     if(item.image) loadingHtml += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
     loadingHtml += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
     loadingHtml += metaLine();
-    loadingHtml += '<p class="detail-snippet">Chargement de la suite…</p>';
+    loadingHtml += '<p class="detail-snippet">Loading full story…</p>';
     content.innerHTML = loadingHtml;
 
     body.innerHTML = "";
@@ -2812,7 +2812,7 @@
       } else if(item.snippet){
         html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
       }
-      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Voir la source originale ↗</a>';
+      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">View original source ↗</a>';
       content.innerHTML = html;
     }).catch(function(){
       var html = "";
@@ -2820,8 +2820,8 @@
       html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
       html += metaLine();
       if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
-      html += '<p class="detail-meta">Le chargement du texte complet depuis la source a échoué.</p>';
-      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Voir sur le site original ↗</a>';
+      html += '<p class="detail-meta">Couldn\'t load the full article from the source site.</p>';
+      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open on original site ↗</a>';
       content.innerHTML = html;
     });
   }
@@ -3241,7 +3241,7 @@
       renderedMarkers.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "home", ref: HOME });
     })();
 
-    // repère de la SSI — position en direct, une fois chargée
+    // ISS marker — current live position, when loaded
     if(issData && issData.lat != null && issData.lon != null){
       var pIss = project(issData.lat, issData.lon, G.rotation, G.tilt);
       if(pIss){
@@ -3262,8 +3262,8 @@
       }
     }
 
-    // trajectoire récente du vol suivi — historique réel via le flux gratuit /tracks
-    // d'OpenSky (~30 dernières minutes), PAS un itinéraire prévu départ/arrivée
+    // tracked flight's recent flown path — real history from OpenSky's free /tracks
+    // feed (typically the last ~30 min), NOT a scheduled dep/arr route
     if(trackedFlightPath && trackedFlightPath.length > 1){
       ctx.save();
       ctx.setLineDash([2, 4]);
@@ -3281,7 +3281,7 @@
       ctx.restore();
     }
 
-    // repère du vol suivi — l'appareil actuellement sélectionné dans un résultat de recherche
+    // tracked flight marker — the aircraft currently selected from a search result
     if(trackedFlight && trackedFlight.lat != null && trackedFlight.lon != null){
       var pFl = project(trackedFlight.lat, trackedFlight.lon, G.rotation, G.tilt);
       if(pFl){
@@ -3333,8 +3333,8 @@
       tooltip.style.left = hit.x + "px";
       tooltip.style.top = hit.y + "px";
       tooltip.textContent = hit.type === "news" ? hit.ref.place :
-        hit.type === "iss" ? "SSI — Station spatiale internationale" :
-        hit.type === "flight" ? (hit.ref.callsign || hit.ref.icao24 || "Vol suivi") :
+        hit.type === "iss" ? "ISS — International Space Station" :
+        hit.type === "flight" ? (hit.ref.callsign || hit.ref.icao24 || "Tracked flight") :
         hit.ref.name;
     } else {
       if(!G.dragging) canvas.style.cursor = "grab";
@@ -3777,10 +3777,10 @@
       } else {
         var gp = hit.ref;
         var parts = [];
-        if(typeof gp.cloud === "number") parts.push(Math.round(gp.cloud) + "% nuages");
+        if(typeof gp.cloud === "number") parts.push(Math.round(gp.cloud) + "% cloud");
         if(typeof gp.temp === "number") parts.push(Math.round(gp.temp) + "°C");
-        if(typeof gp.precip === "number" && gp.precip > 0.05) parts.push(gp.precip.toFixed(1) + "mm précip");
-        tooltip2.textContent = parts.join(" · ") || "aucune donnée";
+        if(typeof gp.precip === "number" && gp.precip > 0.05) parts.push(gp.precip.toFixed(1) + "mm precip");
+        tooltip2.textContent = parts.join(" · ") || "no data";
       }
     } else {
       if(!G2.dragging) canvas2.style.cursor = "grab";
@@ -3826,9 +3826,9 @@
       var data = await getJSON("/api/weather-grid");
       weatherGridPoints = data.points || [];
       recomputeCloudCoverage();
-      $("weather-globe-count").textContent = weatherGridPoints.length + " cellules · mis à jour " + timeAgo(data.updated);
+      $("weather-globe-count").textContent = weatherGridPoints.length + " cells · updated " + timeAgo(data.updated);
     }catch(err){
-      $("weather-globe-count").textContent = "couche météo indisponible";
+      $("weather-globe-count").textContent = "weather layer unavailable";
     }
   }
 
@@ -3849,7 +3849,7 @@
     });
     if(linksEditing){
       var addRow = el("div", "tile-add");
-      addRow.innerHTML = '<input type="text" id="link-name" placeholder="Nom"><input type="text" id="link-url" placeholder="https://…"><button type="button" id="link-add">Ajouter</button>';
+      addRow.innerHTML = '<input type="text" id="link-name" placeholder="Name"><input type="text" id="link-url" placeholder="https://…"><button type="button" id="link-add">Add</button>';
       linksBody.appendChild(addRow);
       $("link-add").addEventListener("click", function(){
         var name = $("link-name").value.trim();
@@ -3904,7 +3904,7 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-    settingsIoStatus(Object.keys(data).length + " réglages exportés.", false);
+    settingsIoStatus("Exported " + Object.keys(data).length + " settings.", false);
   }
 
   function importSettingsFile(file){
@@ -3925,13 +3925,13 @@
         });
         if(!applied) throw new Error("nothing_recognized");
       }catch(err){
-        settingsIoStatus("Ce fichier est illisible — ce n'est pas un export de la console docdrew.", true);
+        settingsIoStatus("Couldn't read that file — not a docdrew console export.", true);
         return;
       }
-      settingsIoStatus(applied + " réglages importés — rechargement…", false);
+      settingsIoStatus("Imported " + applied + " settings — reloading…", false);
       setTimeout(function(){ location.reload(); }, 700);
     };
-    reader.onerror = function(){ settingsIoStatus("Impossible de lire ce fichier.", true); };
+    reader.onerror = function(){ settingsIoStatus("Couldn't read that file.", true); };
     reader.readAsText(file);
   }
 
@@ -3964,7 +3964,7 @@
       todoBody.appendChild(row);
     });
     var addRow = el("div", "todo-add");
-    addRow.innerHTML = '<input type="text" id="todo-input" placeholder="Ajouter une tâche…"><button type="button" id="todo-add-btn">Ajouter</button>';
+    addRow.innerHTML = '<input type="text" id="todo-input" placeholder="Add a task…"><button type="button" id="todo-add-btn">Add</button>';
     todoBody.appendChild(addRow);
     function addTodo(){
       var input = $("todo-input");
@@ -4058,7 +4058,7 @@
     setInterval(loadPodcasts, 1800000);
     setInterval(loadAurora, 900000);
     setInterval(loadBromont, 900000);
-    // loadSports() se replanifie lui-même (souvent en direct, lentement sinon).
+    // loadSports() self-schedules its next poll (fast while something's live, slow otherwise).
     setInterval(loadIss, 15000);
     setInterval(updateSubsolar, 60000);
     setInterval(function(){ renderSkyWatch(lastAuroraData); }, 600000); // keep moon icon fresh
