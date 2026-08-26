@@ -128,6 +128,20 @@
     color:var(--amber); font-size:29px; letter-spacing:0.03em; line-height:1.1;
   }
   .clock .zone{ display:block; font-size:14.5px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; }
+  select.zone{
+    appearance:none; -webkit-appearance:none; background:transparent; border:none; outline:none;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-align:right; cursor:pointer;
+    margin-left:auto; padding:1px 14px 1px 2px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' stroke='%237a9aa8' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 2px center;
+  }
+  select.zone:hover{ color:var(--text); }
+  select.zone option{ background:var(--panel); color:var(--text); font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .greeting-name-edit{
+    display:inline-block; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight:700; font-size:23px; letter-spacing:0.03em; color:var(--text);
+    background:var(--panel-2); border:1px solid var(--grid-line); border-radius:5px; padding:0 6px; width:140px;
+  }
 
   .search{ flex:0 0 auto; display:flex; align-items:center; gap:6px; }
   .search select, .search input{
@@ -526,7 +540,7 @@
       </div>
       <div class="clock" id="clock">
         --:--:--
-        <span class="zone">Montreal</span>
+        <select class="zone" id="home-city-select" aria-label="Home city"></select>
       </div>
       <form class="search" id="search-form" role="search">
         <select id="search-engine" aria-label="Search engine">
@@ -564,7 +578,7 @@
             <div class="globe-legend">
               <span><i class="legend-dot haze"></i>Cloud cover</span>
               <span><i class="legend-dot precip-grad"></i>Precip (light→heavy)</span>
-              <span><i class="legend-dot red"></i>Montreal</span>
+              <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montreal</span></span>
             </div>
             <div class="globe-hint">drag to rotate &amp; tilt · live cloud cover</div>
           </div>
@@ -580,7 +594,7 @@
             <div class="globe-tooltip" id="globe-tooltip"></div>
             <div class="globe-legend">
               <span><i class="legend-dot amber"></i>News dateline</span>
-              <span><i class="legend-dot red"></i>Montreal</span>
+              <span><i class="legend-dot red"></i><span id="globe-home-label">Montreal</span></span>
             </div>
             <div class="globe-hint">drag to rotate &amp; tilt · click a marker</div>
           </div>
@@ -687,7 +701,22 @@
      CONSTANTS
   ============================================================ */
   var REDUCED_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var HOME_TZ = "America/Toronto";
+
+  // Declared early (before WORLD_CITIES/homeCity below) since that code reads LS.homeCity
+  // at definition time, not just inside a function called later.
+  var LS = {
+    symbols: "dds-symbols",
+    fxFrom: "dds-fx-from",
+    fxTo: "dds-fx-to",
+    fxAmt: "dds-fx-amt",
+    wxCity: "dds-wx-city",
+    links: "dds-links",
+    todos: "dds-todos",
+    railCollapse: "dds-rail-collapse",
+    captainsLog: "dds-captains-log",
+    homeCity: "dds-home-city",
+    userName: "dds-user-name"
+  };
 
   // "Top Stories" is pinned first (the default/home tab, catching general news that
   // doesn't fit any narrower category below); the rest are kept in alphabetical order.
@@ -716,7 +745,77 @@
     { name: "Cape Town", lat: -33.92, lon: 18.42 }
   ];
 
-  var HOME = { name: "Montreal", lat: 45.5017, lon: -73.5673 };
+  // Major world cities with international airport hubs — the pool for the "Home" picker in
+  // the header. Picking one drives the red home marker on both globes, the local weather
+  // panel, and the header clock's timezone all at once, so this console can be handed to
+  // anyone and set up for their own city in a few seconds instead of staying hardcoded here.
+  var WORLD_CITIES = [
+    { name: "Montreal", region: "North America", lat: 45.5017, lon: -73.5673, tz: "America/Toronto" },
+    { name: "New York", region: "North America", lat: 40.7128, lon: -74.0060, tz: "America/New_York" },
+    { name: "Washington, DC", region: "North America", lat: 38.9072, lon: -77.0369, tz: "America/New_York" },
+    { name: "Miami", region: "North America", lat: 25.7617, lon: -80.1918, tz: "America/New_York" },
+    { name: "Atlanta", region: "North America", lat: 33.7490, lon: -84.3880, tz: "America/New_York" },
+    { name: "Chicago", region: "North America", lat: 41.8781, lon: -87.6298, tz: "America/Chicago" },
+    { name: "Dallas", region: "North America", lat: 32.7767, lon: -96.7970, tz: "America/Chicago" },
+    { name: "Denver", region: "North America", lat: 39.7392, lon: -104.9903, tz: "America/Denver" },
+    { name: "Los Angeles", region: "North America", lat: 34.0522, lon: -118.2437, tz: "America/Los_Angeles" },
+    { name: "San Francisco", region: "North America", lat: 37.7749, lon: -122.4194, tz: "America/Los_Angeles" },
+    { name: "Seattle", region: "North America", lat: 47.6062, lon: -122.3321, tz: "America/Los_Angeles" },
+    { name: "Honolulu", region: "North America", lat: 21.3069, lon: -157.8583, tz: "Pacific/Honolulu" },
+    { name: "Toronto", region: "North America", lat: 43.6532, lon: -79.3832, tz: "America/Toronto" },
+    { name: "Vancouver", region: "North America", lat: 49.2827, lon: -123.1207, tz: "America/Vancouver" },
+    { name: "Calgary", region: "North America", lat: 51.0447, lon: -114.0719, tz: "America/Edmonton" },
+    { name: "Mexico City", region: "North America", lat: 19.4326, lon: -99.1332, tz: "America/Mexico_City" },
+    { name: "Sao Paulo", region: "South America", lat: -23.5505, lon: -46.6333, tz: "America/Sao_Paulo" },
+    { name: "Buenos Aires", region: "South America", lat: -34.6037, lon: -58.3816, tz: "America/Argentina/Buenos_Aires" },
+    { name: "London", region: "Europe", lat: 51.5074, lon: -0.1278, tz: "Europe/London" },
+    { name: "Dublin", region: "Europe", lat: 53.3498, lon: -6.2603, tz: "Europe/Dublin" },
+    { name: "Paris", region: "Europe", lat: 48.8566, lon: 2.3522, tz: "Europe/Paris" },
+    { name: "Brussels", region: "Europe", lat: 50.8503, lon: 4.3517, tz: "Europe/Brussels" },
+    { name: "Amsterdam", region: "Europe", lat: 52.3676, lon: 4.9041, tz: "Europe/Amsterdam" },
+    { name: "Berlin", region: "Europe", lat: 52.5200, lon: 13.4050, tz: "Europe/Berlin" },
+    { name: "Zurich", region: "Europe", lat: 47.3769, lon: 8.5417, tz: "Europe/Zurich" },
+    { name: "Vienna", region: "Europe", lat: 48.2082, lon: 16.3738, tz: "Europe/Vienna" },
+    { name: "Madrid", region: "Europe", lat: 40.4168, lon: -3.7038, tz: "Europe/Madrid" },
+    { name: "Lisbon", region: "Europe", lat: 38.7223, lon: -9.1393, tz: "Europe/Lisbon" },
+    { name: "Rome", region: "Europe", lat: 41.9028, lon: 12.4964, tz: "Europe/Rome" },
+    { name: "Copenhagen", region: "Europe", lat: 55.6761, lon: 12.5683, tz: "Europe/Copenhagen" },
+    { name: "Stockholm", region: "Europe", lat: 59.3293, lon: 18.0686, tz: "Europe/Stockholm" },
+    { name: "Oslo", region: "Europe", lat: 59.9139, lon: 10.7522, tz: "Europe/Oslo" },
+    { name: "Helsinki", region: "Europe", lat: 60.1699, lon: 24.9384, tz: "Europe/Helsinki" },
+    { name: "Warsaw", region: "Europe", lat: 52.2297, lon: 21.0122, tz: "Europe/Warsaw" },
+    { name: "Athens", region: "Europe", lat: 37.9838, lon: 23.7275, tz: "Europe/Athens" },
+    { name: "Istanbul", region: "Europe", lat: 41.0082, lon: 28.9784, tz: "Europe/Istanbul" },
+    { name: "Moscow", region: "Europe", lat: 55.7558, lon: 37.6173, tz: "Europe/Moscow" },
+    { name: "Dubai", region: "Middle East & Africa", lat: 25.2048, lon: 55.2708, tz: "Asia/Dubai" },
+    { name: "Doha", region: "Middle East & Africa", lat: 25.2854, lon: 51.5310, tz: "Asia/Qatar" },
+    { name: "Riyadh", region: "Middle East & Africa", lat: 24.7136, lon: 46.6753, tz: "Asia/Riyadh" },
+    { name: "Tel Aviv", region: "Middle East & Africa", lat: 32.0853, lon: 34.7818, tz: "Asia/Jerusalem" },
+    { name: "Cairo", region: "Middle East & Africa", lat: 30.0444, lon: 31.2357, tz: "Africa/Cairo" },
+    { name: "Nairobi", region: "Middle East & Africa", lat: -1.2921, lon: 36.8219, tz: "Africa/Nairobi" },
+    { name: "Johannesburg", region: "Middle East & Africa", lat: -26.2041, lon: 28.0473, tz: "Africa/Johannesburg" },
+    { name: "Mumbai", region: "Asia", lat: 19.0760, lon: 72.8777, tz: "Asia/Kolkata" },
+    { name: "Delhi", region: "Asia", lat: 28.7041, lon: 77.1025, tz: "Asia/Kolkata" },
+    { name: "Bangkok", region: "Asia", lat: 13.7563, lon: 100.5018, tz: "Asia/Bangkok" },
+    { name: "Singapore", region: "Asia", lat: 1.3521, lon: 103.8198, tz: "Asia/Singapore" },
+    { name: "Kuala Lumpur", region: "Asia", lat: 3.1390, lon: 101.6869, tz: "Asia/Kuala_Lumpur" },
+    { name: "Jakarta", region: "Asia", lat: -6.2088, lon: 106.8456, tz: "Asia/Jakarta" },
+    { name: "Manila", region: "Asia", lat: 14.5995, lon: 120.9842, tz: "Asia/Manila" },
+    { name: "Hong Kong", region: "Asia", lat: 22.3193, lon: 114.1694, tz: "Asia/Hong_Kong" },
+    { name: "Shanghai", region: "Asia", lat: 31.2304, lon: 121.4737, tz: "Asia/Shanghai" },
+    { name: "Beijing", region: "Asia", lat: 39.9042, lon: 116.4074, tz: "Asia/Shanghai" },
+    { name: "Taipei", region: "Asia", lat: 25.0330, lon: 121.5654, tz: "Asia/Taipei" },
+    { name: "Seoul", region: "Asia", lat: 37.5665, lon: 126.9780, tz: "Asia/Seoul" },
+    { name: "Tokyo", region: "Asia", lat: 35.6762, lon: 139.6503, tz: "Asia/Tokyo" },
+    { name: "Sydney", region: "Oceania", lat: -33.8688, lon: 151.2093, tz: "Australia/Sydney" },
+    { name: "Melbourne", region: "Oceania", lat: -37.8136, lon: 144.9631, tz: "Australia/Melbourne" },
+    { name: "Auckland", region: "Oceania", lat: -36.8485, lon: 174.7633, tz: "Pacific/Auckland" }
+  ];
+  var DEFAULT_HOME_CITY = WORLD_CITIES[0]; // Montreal — preserves current behavior until changed
+  var homeCity = readLS(LS.homeCity, DEFAULT_HOME_CITY);
+  var HOME = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
+  var HOME_TZ = homeCity.tz;
+  var userName = readLS(LS.userName, "Andrew");
 
   // [name, lat, lon, extra match keywords...]
   var PLACES_RAW = [
@@ -813,18 +912,6 @@
     { id: "seed-1", text: "Console fully operational. All systems nominal.", ts: new Date().toISOString() }
   ];
 
-  var LS = {
-    symbols: "dds-symbols",
-    fxFrom: "dds-fx-from",
-    fxTo: "dds-fx-to",
-    fxAmt: "dds-fx-amt",
-    wxCity: "dds-wx-city",
-    links: "dds-links",
-    todos: "dds-todos",
-    railCollapse: "dds-rail-collapse",
-    captainsLog: "dds-captains-log"
-  };
-
   var SHIP_STATUS_LINES = [
     "Shields nominal · Warp core stable",
     "Deflector array calibrated",
@@ -897,7 +984,7 @@
     var hour = parseInt(hourFmt.format(now), 10);
     var part = hour < 5 ? "night watch" : hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
     var greetWord = hour < 5 ? "Systems nominal," : "Good " + part + ",";
-    $("greeting-text").textContent = greetWord + " Andrew";
+    if(!nameEditing) $("greeting-text").textContent = greetWord + " " + userName;
 
     // simple pseudo-stardate: YYYY.DDD.tenths-of-day
     var start = new Date(Date.UTC(now.getUTCFullYear(), 0, 0));
@@ -905,8 +992,85 @@
     var frac = Math.floor(((now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds())/86400) * 10);
     $("stardate").textContent = "STARDATE " + now.getUTCFullYear() + "." + String(doy).padStart(3,"0") + "." + frac;
   }
+  var nameEditing = false;
+  function renderNameEditor(){
+    var greetEl = $("greeting-text");
+    var input = document.createElement("input");
+    input.type = "text";
+    input.className = "greeting-name-edit";
+    input.value = userName;
+    input.maxLength = 24;
+    greetEl.textContent = "";
+    greetEl.appendChild(input);
+    input.focus();
+    input.select();
+    function commit(){
+      var typed = input.value.trim();
+      userName = typed || "Andrew";
+      writeLS(LS.userName, userName);
+      nameEditing = false;
+      updateClock();
+    }
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter") commit();
+      else if(e.key === "Escape"){ nameEditing = false; updateClock(); }
+    });
+    input.addEventListener("blur", commit);
+  }
+  $("greeting-text").title = "Double-click to edit your name";
+  $("greeting-text").addEventListener("dblclick", function(){
+    nameEditing = true;
+    renderNameEditor();
+  });
+
   updateClock();
   setInterval(updateClock, 1000);
+
+  /* ============================================================
+     HOME CITY SELECTOR
+  ============================================================ */
+  function syncHomeLabels(){
+    var a = $("weather-globe-home-label"), b = $("globe-home-label");
+    if(a) a.textContent = HOME.name;
+    if(b) b.textContent = HOME.name;
+  }
+
+  function initHomeCitySelect(){
+    var sel = $("home-city-select");
+    if(!sel) return;
+    var regions = [];
+    var byRegion = {};
+    WORLD_CITIES.forEach(function(c){
+      if(!byRegion[c.region]){ byRegion[c.region] = []; regions.push(c.region); }
+      byRegion[c.region].push(c);
+    });
+    var html = "";
+    regions.forEach(function(region){
+      html += '<optgroup label="' + escapeHtml(region) + '">';
+      byRegion[region].forEach(function(c){
+        html += '<option value="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + "</option>";
+      });
+      html += "</optgroup>";
+    });
+    sel.innerHTML = html;
+    sel.value = homeCity.name;
+    sel.title = "Set your home city — moves the globe marker, local weather, and clock";
+    syncHomeLabels();
+    sel.addEventListener("change", function(){
+      var picked = WORLD_CITIES.find(function(c){ return c.name === sel.value; });
+      if(!picked) return;
+      homeCity = picked;
+      HOME = { name: picked.name, lat: picked.lat, lon: picked.lon };
+      HOME_TZ = picked.tz;
+      writeLS(LS.homeCity, homeCity);
+      updateClock();
+      syncHomeLabels();
+
+      wxPlace = { name: picked.name, lat: picked.lat, lon: picked.lon };
+      writeLS(LS.wxCity, wxPlace);
+      if(wxViewMode === "home") loadHomeWeather();
+    });
+  }
 
   /* ============================================================
      SEARCH
@@ -1164,7 +1328,7 @@
      WEATHER (home panel)
   ============================================================ */
   var wxBody = $("wx-body");
-  var DEFAULT_WX_PLACE = { name: "Granby, QC", lat: 45.4001, lon: -72.7280 };
+  var DEFAULT_WX_PLACE = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
   var wxPlace = readLS(LS.wxCity, DEFAULT_WX_PLACE);
   var wxEditing = false;
   var wxViewMode = "home"; // "home" | "location"
@@ -1216,7 +1380,7 @@
       html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>High</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Low</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synced</div></div>";
     }
     html += buildSnowReportHtml(lastBromontData);
-    html += '<button type="button" class="wx-more-link" id="wx-more-btn">Full forecast &amp; nearby news →</button>';
+    html += '<button type="button" class="wx-more-link" id="wx-more-btn">Full forecast →</button>';
     wxBody.innerHTML = html;
     if(wxEditing) renderWxEditor();
     var moreBtn = $("wx-more-btn");
@@ -2797,6 +2961,7 @@
   ============================================================ */
   function init(){
     initRailAccordion();
+    initHomeCitySelect();
     renderFx();
     renderLinks();
     renderTodos();
