@@ -386,14 +386,15 @@
   .ft-result-row:hover{ border-color:var(--frost); }
   .ft-result-row .ft-callsign{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:15px; color:var(--text); }
   .ft-result-row .ft-sub{ font-size:13.5px; color:var(--text-dim); margin-top:2px; }
-  .ft-tracked{ background:var(--panel-2); border:1px solid var(--frost); border-radius:8px; padding:10px 12px; margin-top:9px; }
+  .ft-tracked{ background:var(--panel-2); border:1px solid var(--good); border-radius:8px; padding:10px 12px; margin-top:9px; }
   .ft-tracked-head{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px; }
-  .ft-tracked-head .ft-callsign{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:16px; color:var(--frost); }
+  .ft-tracked-head .ft-callsign{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:16px; color:var(--good); }
   .ft-tracked-clear{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--text-dim); border-radius:5px; padding:2px 8px; font-size:12px; cursor:pointer; }
   .ft-tracked-clear:hover{ color:var(--text); }
   .ft-tracked-stats{ font-size:14.5px; color:var(--text-dim); line-height:1.55; }
   .ft-tracked-stats b{ color:var(--text); }
   .ft-fun{ margin-top:7px; padding-top:7px; border-top:1px dashed var(--grid-line); font-size:13.5px; color:var(--gold); }
+  .ft-path-note{ margin-top:7px; font-size:12.5px; color:var(--text-dim); font-style:italic; line-height:1.4; }
 
   /* ---- weather compact ---- */
   .wx-top{ display:flex; align-items:center; gap:10px; }
@@ -467,6 +468,7 @@
   .legend-dot.red{ background:#FF6B5E; box-shadow:0 0 6px #FF6B5E; }
   .legend-dot.frost{ background:var(--frost); box-shadow:0 0 6px var(--frost); }
   .legend-dot.gold{ background:var(--gold); box-shadow:0 0 6px var(--gold); }
+  .legend-dot.green{ background:var(--good); box-shadow:0 0 6px var(--good); }
   .legend-dot.haze{ background:rgba(205,222,230,0.85); }
   .legend-dot.precip-grad{
     width:20px; border-radius:4px;
@@ -742,7 +744,7 @@
               <span><i class="legend-dot amber"></i>News dateline</span>
               <span><i class="legend-dot red"></i><span id="globe-home-label">Montreal</span></span>
               <span><i class="legend-dot frost"></i>ISS</span>
-              <span><i class="legend-dot gold"></i>Tracked flight</span>
+              <span><i class="legend-dot green"></i>Tracked flight</span>
             </div>
             <div class="globe-hint">drag to rotate &amp; tilt · click a marker</div>
           </div>
@@ -1656,8 +1658,11 @@
     { code: "EZY", name: "easyJet" }
   ];
 
-  var issData = null;       // latest ISS reading — drawn on the globe whenever loaded
-  var trackedFlight = null; // currently selected search result — drawn on the globe
+  var issData = null;           // latest ISS reading — drawn on the globe whenever loaded
+  var trackedFlight = null;     // currently selected search result — drawn on the globe
+  var trackedFlightPath = [];   // that flight's actual recent flown history (last ~30 min via
+                                 // OpenSky's free /tracks endpoint) — NOT a scheduled dep/arr
+                                 // route, which needs a paid tier this console doesn't use.
 
   function renderFlightTracker(){
     var body = $("flighttracker-body");
@@ -1728,10 +1733,25 @@
       row.addEventListener("click", function(){
         var idx = parseInt(row.getAttribute("data-idx"), 10);
         trackedFlight = results[idx];
+        trackedFlightPath = [];
         renderTrackedFlight();
         updateGlobeMarkerCount();
+        loadFlightTrack(trackedFlight.icao24);
       });
     });
+  }
+
+  async function loadFlightTrack(icao24){
+    if(!icao24) return;
+    try{
+      var data = await getJSON("/api/flight-track?icao24=" + encodeURIComponent(icao24));
+      // a slower response can land after the user tracked something else, or cleared — ignore it then
+      if(!trackedFlight || trackedFlight.icao24 !== icao24) return;
+      trackedFlightPath = data.path || [];
+      renderTrackedFlight(); // refresh the "recent path" note now that we know whether one exists
+    }catch(err){
+      if(trackedFlight && trackedFlight.icao24 === icao24) trackedFlightPath = [];
+    }
   }
 
   function renderTrackedFlight(){
@@ -1760,9 +1780,13 @@
       }
       html += '<div class="ft-fun">' + fun + "</div>";
     }
+    if(trackedFlightPath && trackedFlightPath.length > 1){
+      html += '<div class="ft-path-note">Dotted trail on the globe shows where it\'s actually flown the last ~30 min — not the full route (free feeds don\'t include schedules).</div>';
+    }
     wrap.innerHTML = html;
     $("ft-tracked-clear").addEventListener("click", function(){
       trackedFlight = null;
+      trackedFlightPath = [];
       renderTrackedFlight();
       updateGlobeMarkerCount();
     });
@@ -2969,6 +2993,25 @@
       }
     }
 
+    // tracked flight's recent flown path — real history from OpenSky's free /tracks
+    // feed (typically the last ~30 min), NOT a scheduled dep/arr route
+    if(trackedFlightPath && trackedFlightPath.length > 1){
+      ctx.save();
+      ctx.setLineDash([2, 4]);
+      ctx.strokeStyle = "rgba(79,214,140,0.55)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      var pathStarted = false;
+      for(var tpi = 0; tpi < trackedFlightPath.length; tpi++){
+        var tp = trackedFlightPath[tpi];
+        var ptp = project(tp.lat, tp.lon, G.rotation, G.tilt);
+        if(!ptp){ pathStarted = false; continue; }
+        if(!pathStarted){ ctx.moveTo(ptp.x, ptp.y); pathStarted = true; } else { ctx.lineTo(ptp.x, ptp.y); }
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // tracked flight marker — the aircraft currently selected from a search result
     if(trackedFlight && trackedFlight.lat != null && trackedFlight.lon != null){
       var pFl = project(trackedFlight.lat, trackedFlight.lon, G.rotation, G.tilt);
@@ -2977,13 +3020,13 @@
         var baseRFl = 3.6 * scaleFl;
         ctx.beginPath();
         ctx.arc(pFl.x, pFl.y, baseRFl + pulse*2.6*scaleFl, 0, Math.PI*2);
-        ctx.strokeStyle = "rgba(255,209,102," + (0.6*scaleFl) + ")";
+        ctx.strokeStyle = "rgba(79,214,140," + (0.6*scaleFl) + ")";
         ctx.lineWidth = 1.3;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.arc(pFl.x, pFl.y, baseRFl, 0, Math.PI*2);
-        ctx.fillStyle = "rgba(255,209,102,0.95)";
+        ctx.fillStyle = "rgba(79,214,140,0.95)";
         ctx.fill();
 
         renderedMarkers.push({ x: pFl.x, y: pFl.y, r: Math.max(10, baseRFl + 7), type: "flight", ref: trackedFlight });
