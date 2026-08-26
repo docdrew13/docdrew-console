@@ -279,9 +279,12 @@
   .sport-line{ font-size:15.5px; color:var(--text); margin-top:1px; }
   .sport-line .w{ color:var(--good); }
   .sport-line .l{ color:var(--bad); }
+  .sport-live{ color:var(--bad); font-weight:700; font-size:12.5px; letter-spacing:0.04em; animation:sportLivePulse 1.6s ease-in-out infinite; }
+  @keyframes sportLivePulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.45; } }
   .sport-tennis-head{ font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; margin-top:8px; padding-top:8px; border-top:1px solid var(--grid-line); }
   .sport-tennis-match{ font-size:15px; color:var(--text); margin-top:3px; }
   .sport-tennis-match span{ color:var(--text-dim); font-size:13px; }
+  .sport-tennis-match .sets{ color:var(--text-dim); font-size:13px; margin-left:4px; }
   .sport-team{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
   .sport-team-x{ cursor:pointer; color:var(--text-dim); font-size:13px; flex:0 0 auto; }
   .sport-team-x:hover{ color:var(--bad); }
@@ -2385,6 +2388,11 @@
 
   function sportLine(team){
     if(!team) return "No data";
+    if(team.liveGame){
+      var lg = team.liveGame;
+      var liveScore = (lg.teamScore != null && lg.oppScore != null) ? (lg.teamScore + "-" + lg.oppScore) : "";
+      return '<span class="sport-live">● LIVE</span> ' + liveScore + " vs " + escapeHtml(lg.opponent) + (lg.statusText ? " · " + escapeHtml(lg.statusText) : "");
+    }
     if(team.lastResult){
       var g = team.lastResult;
       var wl = g.win === true ? '<span class="w">W</span>' : (g.win === false ? '<span class="l">L</span>' : "");
@@ -2485,7 +2493,14 @@
         var top = t.tournaments[0];
         html += '<div class="sport-tennis-match">' + escapeHtml(top.name) + "</div>";
         (top.matches || []).slice(0, 2).forEach(function(m){
-          html += '<div class="sport-tennis-match">' + escapeHtml(m.player1) + " vs " + escapeHtml(m.player2) + ' <span>' + escapeHtml(m.status || "") + "</span></div>";
+          var sets = "";
+          if(m.sets1 && m.sets1.length){
+            sets = m.sets1.map(function(v, i){ return v + "-" + (m.sets2[i] != null ? m.sets2[i] : "?"); }).join(", ");
+          }
+          var badge = m.state === "in" ? '<span class="sport-live">● LIVE</span> ' : "";
+          html += '<div class="sport-tennis-match">' + badge + escapeHtml(m.player1) + " vs " + escapeHtml(m.player2) +
+            (sets ? ' <span class="sets">' + escapeHtml(sets) + "</span>" : "") +
+            ' <span>' + escapeHtml(m.status || "") + "</span></div>";
         });
       } else {
         html += '<div class="sport-tennis-match">No tournament in progress</div>';
@@ -2522,6 +2537,12 @@
     renderSports(lastSportsData);
   });
 
+  function espnScore(scoreField){
+    if(!scoreField) return null;
+    if(typeof scoreField === "object") return scoreField.displayValue != null ? scoreField.displayValue : scoreField.value;
+    return scoreField;
+  }
+
   function espnTeamSchedule(spec){
     return fetch("https://site.api.espn.com/apis/site/v2/sports/" + spec.sport + "/" + spec.league + "/teams/" + spec.teamId + "/schedule")
       .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
@@ -2529,32 +2550,34 @@
         var events = (data && data.events) || [];
         var games = events.map(function(ev){
           var comp = ev.competitions && ev.competitions[0];
-          var status = (comp && comp.status && comp.status.type) || {};
+          var type = (comp && comp.status && comp.status.type) || {};
           var competitors = (comp && comp.competitors) || [];
           var self = competitors.find(function(c){ return String(c.team && c.team.id) === String(spec.teamId); });
           var opp = competitors.find(function(c){ return String(c.team && c.team.id) !== String(spec.teamId); });
           return {
             date: ev.date,
-            completed: !!status.completed,
-            statusText: status.shortDetail || status.description || "",
+            state: type.state || "pre", // "pre" | "in" | "post"
+            statusText: type.shortDetail || type.description || "",
             opponent: (opp && opp.team && opp.team.displayName) || "TBD",
-            teamScore: self && self.score ? (self.score.displayValue != null ? self.score.displayValue : self.score.value) : null,
-            oppScore: opp && opp.score ? (opp.score.displayValue != null ? opp.score.displayValue : opp.score.value) : null,
+            teamScore: espnScore(self && self.score),
+            oppScore: espnScore(opp && opp.score),
             win: typeof (self && self.winner) === "boolean" ? self.winner : null
           };
         });
         var now = Date.now();
-        var past = games.filter(function(g){ return g.completed; });
-        var upcoming = games.filter(function(g){ return !g.completed && new Date(g.date).getTime() >= now - 86400000; });
+        var live = games.find(function(g){ return g.state === "in"; });
+        var past = games.filter(function(g){ return g.state === "post"; });
+        var upcoming = games.filter(function(g){ return g.state === "pre" && new Date(g.date).getTime() >= now - 86400000; });
         return {
           label: spec.label,
+          liveGame: live || null,
           lastResult: past.length ? past[past.length - 1] : null,
           nextGame: upcoming.length ? upcoming[0] : null,
           note: games.length ? undefined : "No scheduled games found (likely off-season)."
         };
       })
       .catch(function(){
-        return { label: spec.label, lastResult: null, nextGame: null, note: "Unavailable" };
+        return { label: spec.label, liveGame: null, lastResult: null, nextGame: null, note: "Unavailable" };
       });
   }
 
@@ -2566,23 +2589,36 @@
         var tournaments = events.slice(0, 3).map(function(ev){
           var matches = [];
           (ev.groupings || []).forEach(function(g){
-            (g.competitions || []).slice(0, 4).forEach(function(c){
+            (g.competitions || []).forEach(function(c){
               var a = c.competitors && c.competitors[0];
               var b = c.competitors && c.competitors[1];
+              var type = (c.status && c.status.type) || {};
               matches.push({
-                status: (c.status && c.status.type && c.status.type.description) || "",
+                state: type.state || "pre",
+                status: type.description || type.shortDetail || "",
                 player1: (a && a.athlete && a.athlete.displayName) || "TBD",
-                player2: (b && b.athlete && b.athlete.displayName) || "TBD"
+                player2: (b && b.athlete && b.athlete.displayName) || "TBD",
+                sets1: (a && a.linescores) ? a.linescores.map(function(l){ return l.value; }) : [],
+                sets2: (b && b.linescores) ? b.linescores.map(function(l){ return l.value; }) : []
               });
             });
           });
-          return { name: ev.name, matches: matches };
+          // Surface any live match first so it's never buried under finished ones.
+          matches.sort(function(m1, m2){ return (m1.state === "in" ? 0 : 1) - (m2.state === "in" ? 0 : 1); });
+          return { name: ev.name, matches: matches.slice(0, 4) };
         });
-        return { tour: tour.toUpperCase(), tournaments: tournaments };
+        var anyLive = tournaments.some(function(t){ return t.matches.some(function(m){ return m.state === "in"; }); });
+        return { tour: tour.toUpperCase(), tournaments: tournaments, anyLive: anyLive };
       })
       .catch(function(){
-        return { tour: tour.toUpperCase(), tournaments: [] };
+        return { tour: tour.toUpperCase(), tournaments: [], anyLive: false };
       });
+  }
+
+  var sportsPollTimer = null;
+  function scheduleSportsPoll(delayMs){
+    if(sportsPollTimer) clearTimeout(sportsPollTimer);
+    sportsPollTimer = setTimeout(function(){ loadSports(); }, delayMs);
   }
 
   async function loadSports(){
@@ -2597,8 +2633,14 @@
       var teams = {};
       sportsTeams.forEach(function(t, i){ teams[t.league + ":" + t.teamId + ":" + i] = teamResults[i]; });
       renderSports({ teams: teams, tennis: { atp: atp, wta: wta } });
+      // While any tracked team or tennis match is live, refresh often (~20s) so
+      // scores stay close to real-time; otherwise fall back to a slow cadence.
+      var anyTeamLive = teamResults.some(function(t){ return t && t.liveGame; });
+      var anyTennisLive = (atp && atp.anyLive) || (wta && wta.anyLive);
+      scheduleSportsPoll((anyTeamLive || anyTennisLive) ? 20000 : 600000);
     }catch(err){
       renderSports(null);
+      scheduleSportsPoll(600000);
     }
   }
 
@@ -3979,7 +4021,7 @@
     setInterval(loadPodcasts, 1800000);
     setInterval(loadAurora, 900000);
     setInterval(loadBromont, 900000);
-    setInterval(loadSports, 600000);
+    // loadSports() self-schedules its next poll (fast while something's live, slow otherwise).
     setInterval(loadIss, 15000);
     setInterval(updateSubsolar, 60000);
     setInterval(function(){ renderSkyWatch(lastAuroraData); }, 600000); // keep moon icon fresh
