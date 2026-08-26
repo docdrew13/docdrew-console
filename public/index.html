@@ -74,7 +74,7 @@
     width:100vw;
     padding:10px 12px 8px;
     display:grid;
-    grid-template-rows: 60px 1fr 100px 26px;
+    grid-template-rows: 60px 1fr 100px 30px;
     gap:8px;
   }
 
@@ -163,6 +163,9 @@
   .panel[data-accent="cyan"] .panel-head{ background:var(--cyan); color:var(--cyan-ink); }
   .panel[data-accent="violet"] .panel-head{ background:var(--violet); color:var(--violet-ink); }
   .panel[data-accent="gold"] .panel-head{ background:var(--gold); color:var(--gold-ink); }
+  .panel[data-accent="teal"] .panel-head{ background:var(--teal); color:var(--teal-ink); }
+  .panel[data-accent="frost"] .panel-head{ background:var(--frost); color:var(--frost-ink); }
+  .panel[data-accent="crimson"] .panel-head{ background:var(--crimson); color:var(--crimson-ink); }
 
   .head-btn{
     appearance:none; border:0; background:rgba(0,0,0,0.18); color:inherit;
@@ -183,7 +186,7 @@
   .tab.active{ opacity:1; background:rgba(0,0,0,0.34); }
 
   /* ============ DECK (main 3-col area) ============ */
-  .deck{ display:grid; grid-template-columns: 1fr 460px 280px; gap:8px; min-height:0; }
+  .deck{ display:grid; grid-template-columns: 1fr 440px 260px 260px; gap:8px; min-height:0; }
   .rail{ display:flex; flex-direction:column; gap:8px; min-height:0; }
   .rail-left .panel:nth-child(1){ flex:1; }
   .globes-stack{ display:flex; flex-direction:column; gap:8px; min-height:0; }
@@ -193,7 +196,8 @@
      and the whole column scrolls as one unit instead of each box fighting a squeezed
      internal max-height. */
   .rail-right{ overflow-y:auto; }
-  .rail-right .panel{ flex:0 0 auto; }
+  .rail-right .panel{ flex:0 0 auto; order:1; }
+  .rail-right .panel.collapsed{ order:2; }
   .rail-right .panel-head{ cursor:pointer; user-select:none; }
   .rail-right .panel-body{ overflow-y:visible; max-height:none; }
   .rail-right .panel.collapsed .panel-body{ display:none; }
@@ -202,6 +206,35 @@
     transition:transform 0.15s ease;
   }
   .panel.collapsed .panel-chevron{ transform:rotate(-90deg); }
+
+  /* ---- sky watch (moon phase + aurora) ---- */
+  .sky-row{ display:flex; align-items:center; gap:10px; }
+  .sky-row + .sky-row{ margin-top:8px; padding-top:8px; border-top:1px solid var(--grid-line); }
+  .moon-icon{ flex:none; border-radius:50%; }
+  .sky-label{ font-size:15px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; }
+  .sky-value{ font-size:17.5px; color:var(--text); }
+  .sky-sub{ font-size:13.5px; color:var(--text-dim); margin-top:1px; }
+  .kp-badge{
+    flex:none; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:16px;
+    border:2px solid var(--teal); color:var(--teal);
+  }
+  .kp-badge.high{ border-color:var(--gold); color:var(--gold); }
+  .kp-badge.storm{ border-color:var(--bad); color:var(--bad); }
+
+  /* ---- bromont ---- */
+  .bromont-caption{ font-size:12.5px; color:var(--text-dim); opacity:0.75; margin-top:8px; font-style:italic; }
+
+  /* ---- sports ---- */
+  .sport-row{ padding:5px 0; border-bottom:1px solid var(--grid-soft); }
+  .sport-row:last-child{ border-bottom:0; }
+  .sport-team{ font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; }
+  .sport-line{ font-size:15.5px; color:var(--text); margin-top:1px; }
+  .sport-line .w{ color:var(--good); }
+  .sport-line .l{ color:var(--bad); }
+  .sport-tennis-head{ font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; margin-top:8px; padding-top:8px; border-top:1px solid var(--grid-line); }
+  .sport-tennis-match{ font-size:15px; color:var(--text); margin-top:3px; }
+  .sport-tennis-match span{ color:var(--text-dim); font-size:13px; }
 
   /* ---- podcast video tiles ---- */
   .video-tiles{ display:flex; gap:8px; }
@@ -252,13 +285,14 @@
   .edit-hint{ font-size:14.5px; color:var(--text-dim); margin-top:4px; }
 
   /* ---- currency ---- */
-  .fx-row{ display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+  .fx-row{ display:flex; align-items:center; gap:5px; margin-bottom:8px; }
   .fx-row select, .fx-row input{
     background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
-    border-radius:6px; padding:6px 8px; font-size:17.5px;
+    border-radius:6px; padding:6px 4px; font-size:15.5px; min-width:0;
   }
-  .fx-row input{ width:76px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  .fx-swap{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--cyan); border-radius:6px; width:28px; height:28px; cursor:pointer; }
+  .fx-row input{ width:56px; flex:0 1 56px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .fx-row select{ flex:1 1 0; }
+  .fx-swap{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--cyan); border-radius:6px; width:26px; height:26px; flex:0 0 auto; cursor:pointer; }
   .fx-swap:hover{ background:var(--panel-2); }
   .fx-result{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:32px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
   .fx-meta{ text-align:center; font-size:15px; color:var(--text-dim); }
@@ -331,6 +365,12 @@
   .legend-dot.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
   .legend-dot.blue{ background:#5AA7E8; box-shadow:0 0 6px #5AA7E8; }
   .legend-dot.red{ background:#FF6B5E; box-shadow:0 0 6px #FF6B5E; }
+  .legend-dot.haze{ background:rgba(205,222,230,0.85); }
+  .legend-dot.precip-grad{
+    width:20px; border-radius:4px;
+    background:linear-gradient(90deg, rgb(110,220,150), rgb(235,214,80), rgb(255,110,90));
+    box-shadow:0 0 5px rgba(235,214,80,0.6);
+  }
   .globe-hint{
     position:absolute; left:14px; bottom:12px; font-size:13px; color:var(--text-dim);
     font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; pointer-events:none; text-align:left;
@@ -343,9 +383,40 @@
     box-shadow:0 8px 20px -8px rgba(0,0,0,0.7);
   }
 
-  /* ============ STRIP (links + tasks) ============ */
-  .strip{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; min-height:0; }
+  /* ============ STRIP (links + tasks + captain's log) ============ */
+  .strip{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; min-height:0; }
   .strip .panel-body{ display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; }
+
+  /* ---- captain's log ---- */
+  .log-row{ display:flex; flex-direction:column; gap:1px; width:100%; padding:4px 0; border-bottom:1px solid var(--grid-soft); }
+  .log-row-top{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+  .log-ts{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12.5px; color:var(--text-dim); white-space:nowrap; }
+  .log-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:16px; flex:0 0 auto; }
+  .log-del:hover{ color:var(--bad); }
+  .log-text{ font-size:15.5px; color:var(--text); line-height:1.25; }
+  .log-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
+  .log-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:15px; min-width:0; }
+  .log-add button{ background:var(--teal); color:var(--teal-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
+
+  /* ============ FOOTER STRIP (ship status + market ticker) ============ */
+  .footer-strip{ display:flex; align-items:center; gap:14px; padding:0 6px; overflow:hidden; }
+  .ship-status{
+    flex:0 1 auto; min-width:0; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:13px; color:var(--text-dim); letter-spacing:0.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .ship-status b{ color:var(--good); font-weight:400; }
+  .ship-status::before{ content:"● "; color:var(--good); }
+  .footer-sep{ flex:0 0 auto; width:1px; align-self:stretch; background:var(--grid-line); }
+  .market-ticker{ flex:1 1 auto; min-width:0; overflow:hidden; white-space:nowrap; position:relative; }
+  .market-ticker-track{ display:inline-flex; gap:26px; animation:ticker-scroll 32s linear infinite; }
+  @keyframes ticker-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  .ticker-item{
+    display:inline-flex; align-items:center; gap:5px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:13px; white-space:nowrap; color:var(--text-dim);
+  }
+  .ticker-item .t-sym{ color:var(--text); }
+  .ticker-item .t-up{ color:var(--good); }
+  .ticker-item .t-down{ color:var(--bad); }
 
   .tile{
     display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--grid-line);
@@ -478,11 +549,11 @@
             <canvas id="weather-globe-canvas"></canvas>
             <div class="globe-tooltip" id="weather-globe-tooltip"></div>
             <div class="globe-legend">
-              <span><i class="legend-dot cyan"></i>Cloud cover</span>
-              <span><i class="legend-dot blue"></i>Precipitation</span>
+              <span><i class="legend-dot haze"></i>Cloud cover</span>
+              <span><i class="legend-dot precip-grad"></i>Precip (light→heavy)</span>
               <span><i class="legend-dot red"></i>Montreal</span>
             </div>
-            <div class="globe-hint">drag to rotate · live cloud cover</div>
+            <div class="globe-hint">drag to rotate &amp; tilt · live cloud cover</div>
           </div>
         </section>
 
@@ -498,18 +569,39 @@
               <span><i class="legend-dot amber"></i>News dateline</span>
               <span><i class="legend-dot red"></i>Montreal</span>
             </div>
-            <div class="globe-hint">drag to rotate · click a marker</div>
+            <div class="globe-hint">drag to rotate &amp; tilt · click a marker</div>
           </div>
         </section>
       </div>
 
-      <aside class="rail rail-right">
+      <aside class="rail rail-right" aria-label="Weather and conditions">
         <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
           <div class="panel-head"><span>Weather</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="wx-body">
             <div class="empty-state">Loading weather…</div>
           </div>
         </section>
+        <section class="panel" data-accent="teal" data-panel-key="skywatch" aria-label="Sky watch">
+          <div class="panel-head"><span>Sky Watch</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="skywatch-body">
+            <div class="empty-state">Loading sky data…</div>
+          </div>
+        </section>
+        <section class="panel" data-accent="frost" data-panel-key="bromont" aria-label="Bromont conditions">
+          <div class="panel-head"><span>Bromont</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="bromont-body">
+            <div class="empty-state">Loading conditions…</div>
+          </div>
+        </section>
+        <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Sports scores">
+          <div class="panel-head"><span>Sports</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="sports-body">
+            <div class="empty-state">Loading scores…</div>
+          </div>
+        </section>
+      </aside>
+
+      <aside class="rail rail-right" aria-label="Media and finance">
         <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
           <div class="panel-head"><span>Podcasts</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body" id="podcasts-body">
@@ -545,6 +637,16 @@
         <div class="panel-head"><span>Tasks</span></div>
         <div class="panel-body scroll" id="todo-body"></div>
       </section>
+      <section class="panel round-l" data-accent="teal" aria-label="Captain's log">
+        <div class="panel-head"><span>Captain's Log</span></div>
+        <div class="panel-body scroll" id="log-body"></div>
+      </section>
+    </div>
+
+    <div class="footer-strip">
+      <div class="ship-status" id="ship-status">Systems nominal</div>
+      <div class="footer-sep"></div>
+      <div class="market-ticker"><div class="market-ticker-track" id="market-ticker-track"></div></div>
     </div>
   </div>
 
@@ -695,6 +797,9 @@
   var DEFAULT_TODOS = [
     { id: "seed-1", text: "Point docdrew.ca at Netlify (DNS)", done: false }
   ];
+  var DEFAULT_LOG = [
+    { id: "seed-1", text: "Console fully operational. All systems nominal.", ts: new Date().toISOString() }
+  ];
 
   var LS = {
     symbols: "dds-symbols",
@@ -704,8 +809,29 @@
     wxCity: "dds-wx-city",
     links: "dds-links",
     todos: "dds-todos",
-    railCollapse: "dds-rail-collapse"
+    railCollapse: "dds-rail-collapse",
+    captainsLog: "dds-captains-log"
   };
+
+  var SHIP_STATUS_LINES = [
+    "Shields nominal · Warp core stable",
+    "Deflector array calibrated",
+    "Life support: optimal",
+    "Comm relays synced with Starfleet Command",
+    "Sensor sweep: no anomalies detected",
+    "Replicator queue: nominal",
+    "Structural integrity field: 100%",
+    "Impulse engines standing by",
+    "Navigational deflector: green",
+    "Auxiliary power: online",
+    "Long-range sensors: all clear",
+    "Holodeck safety protocols: engaged",
+    "Transporter buffer: stable",
+    "Subspace relay: strong signal",
+    "Bridge systems: fully operational",
+    "Environmental controls: within tolerance",
+    "Astrometric survey: in progress"
+  ];
 
   /* ============================================================
      UTILITIES
@@ -780,6 +906,44 @@
     var base = $("search-engine").value;
     window.location.href = base + encodeURIComponent(q);
   });
+
+  /* ============================================================
+     SHIP STATUS STRIP — decorative rotating flavor text
+  ============================================================ */
+  var shipStatusEl = $("ship-status");
+  var shipStatusIdx = Math.floor(Math.random() * SHIP_STATUS_LINES.length);
+  function rotateShipStatus(){
+    if(!shipStatusEl) return;
+    shipStatusEl.style.opacity = "0";
+    setTimeout(function(){
+      shipStatusIdx = (shipStatusIdx + 1) % SHIP_STATUS_LINES.length;
+      shipStatusEl.textContent = SHIP_STATUS_LINES[shipStatusIdx];
+      shipStatusEl.style.opacity = "1";
+    }, 400);
+  }
+  if(shipStatusEl){
+    shipStatusEl.style.transition = "opacity 0.4s ease";
+    shipStatusEl.textContent = SHIP_STATUS_LINES[shipStatusIdx];
+  }
+
+  /* ============================================================
+     MARKET TICKER — thin scrolling strip fed by the same quotes
+     data as the Markets panel.
+  ============================================================ */
+  function buildMarketTicker(quotes){
+    var track = $("market-ticker-track");
+    if(!track) return;
+    var valid = (quotes || []).filter(function(q){ return !q.error && !isNaN(q.price); });
+    if(!valid.length){ track.innerHTML = ""; return; }
+    var itemsHtml = valid.map(function(q){
+      var dir = q.change >= 0 ? "t-up" : "t-down";
+      var arrow = q.change >= 0 ? "▲" : "▼";
+      return '<span class="ticker-item"><span class="t-sym">' + escapeHtml(q.symbol) + "</span>" +
+        fmtMoney(q.price) + ' <span class="' + dir + '">' + arrow + " " + Math.abs(q.changePercent||0).toFixed(2) + "%</span></span>";
+    }).join("");
+    // duplicated once for a seamless -50% translateX loop
+    track.innerHTML = itemsHtml + itemsHtml;
+  }
 
   /* ============================================================
      DETAIL OVERLAY
@@ -907,6 +1071,7 @@
       stocksBody.appendChild(row);
     });
     if(stocksEditing) renderStocksEditor();
+    buildMarketTicker(quotes);
   }
 
   function renderStocksEditor(){
@@ -1281,6 +1446,240 @@
   }
 
   /* ============================================================
+     SKY WATCH — moon phase (pure client-side astronomy, no API)
+     + NOAA aurora Kp-index
+  ============================================================ */
+  var MOON_SYNODIC_DAYS = 29.53058867;
+  var MOON_KNOWN_NEW = Date.UTC(2000, 0, 6, 18, 14, 0); // a well-known reference new moon
+
+  function moonPhaseFraction(date){
+    var diffDays = (date.getTime() - MOON_KNOWN_NEW) / 86400000;
+    var phase = (diffDays % MOON_SYNODIC_DAYS) / MOON_SYNODIC_DAYS;
+    if(phase < 0) phase += 1;
+    return phase; // 0 = new, 0.5 = full
+  }
+
+  function moonPhaseName(phase){
+    var names = ["New Moon","Waxing Crescent","First Quarter","Waxing Gibbous","Full Moon","Waning Gibbous","Last Quarter","Waning Crescent"];
+    var idx = Math.round(phase * 8) % 8;
+    return names[idx];
+  }
+
+  function drawMoonIcon(canvasEl, phase){
+    var size = canvasEl.width;
+    var ctx = canvasEl.getContext("2d");
+    var r = size / 2 - 1.5;
+    var cx = size / 2, cy = size / 2;
+    var dark = "#0B1220", lit = "#E8ECF2";
+    var waxing = phase < 0.5;
+    var theta = phase * 2 * Math.PI;
+    var termRx = Math.abs(r * Math.cos(theta));
+    var isCrescent = phase < 0.25 || phase > 0.75;
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fillStyle = dark; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+
+    ctx.beginPath();
+    if(waxing) ctx.rect(cx, cy - r, r, r * 2);
+    else ctx.rect(cx - r, cy - r, r, r * 2);
+    ctx.fillStyle = lit;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, termRx, r, 0, 0, Math.PI*2);
+    ctx.fillStyle = isCrescent ? dark : lit;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = "rgba(232,236,242,0.35)"; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  function renderSkyWatch(auroraData){
+    var body = $("skywatch-body");
+    if(!body) return;
+    var phase = moonPhaseFraction(new Date());
+    var illum = Math.round((1 - Math.cos(phase * 2 * Math.PI)) / 2 * 100);
+
+    var html = '<div class="sky-row">' +
+      '<canvas class="moon-icon" id="moon-canvas" width="36" height="36"></canvas>' +
+      '<div><div class="sky-value">' + moonPhaseName(phase) + '</div><div class="sky-sub">' + illum + '% illuminated</div></div>' +
+    '</div>';
+
+    html += '<div class="sky-row">';
+    if(auroraData && typeof auroraData.kp === "number"){
+      var kpClass = auroraData.kp >= 7 ? "storm" : (auroraData.kp >= 5 ? "high" : "");
+      html += '<div class="kp-badge ' + kpClass + '">' + auroraData.kp.toFixed(1) + '</div>' +
+        '<div><div class="sky-value">Aurora · Kp ' + auroraData.kp.toFixed(1) + '</div><div class="sky-sub">' + escapeHtml(auroraData.hint || "") + '</div></div>';
+    } else {
+      html += '<div class="kp-badge">—</div><div><div class="sky-value">Aurora forecast</div><div class="sky-sub">Feed unavailable</div></div>';
+    }
+    html += '</div>';
+
+    body.innerHTML = html;
+    var moonCanvas = $("moon-canvas");
+    if(moonCanvas) drawMoonIcon(moonCanvas, phase);
+  }
+
+  var lastAuroraData = null;
+  async function loadAurora(){
+    try{
+      var data = await getJSON("/api/aurora");
+      lastAuroraData = data;
+    }catch(err){
+      lastAuroraData = null;
+    }
+    renderSkyWatch(lastAuroraData);
+  }
+
+  /* ============================================================
+     BROMONT — ski hill conditions, via the same weather backend
+     (there's no reliable public trail-status feed, so this is
+     honestly a weather/snowfall proxy for the mountain, not an
+     official piste report).
+  ============================================================ */
+  var BROMONT = { name: "Bromont", lat: 45.3086, lon: -72.6423 };
+
+  function renderBromont(data){
+    var body = $("bromont-body");
+    if(!body) return;
+    if(!data || !data.current){
+      body.innerHTML = '<div class="error-state">Conditions unavailable.</div>';
+      return;
+    }
+    var c = data.current;
+    var snow = typeof c.snowfall === "number" ? c.snowfall : 0;
+    var html = '<div class="wx-top">' +
+      '<div class="wx-icon">' + wxIconSvg(c.weather_code, 36) + "</div>" +
+      '<div><div class="wx-temp">' + Math.round(c.temperature_2m) + "°C</div>" +
+      '<div class="wx-place">Bromont</div>' +
+      '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
+      '<div class="wx-grid">' +
+        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m || 0) + "</b>km/h wind</div>" +
+        '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm snow</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.cloud_cover || 0) + "%</b>Cloud</div>" +
+      "</div>";
+    html += '<div class="bromont-caption">Weather-based proxy — not an official trail report.</div>';
+    body.innerHTML = html;
+  }
+
+  async function loadBromont(){
+    try{
+      var data = await getJSON("/api/weather?lat=" + BROMONT.lat + "&lon=" + BROMONT.lon + "&city=Bromont");
+      renderBromont(data);
+    }catch(err){
+      renderBromont(null);
+    }
+  }
+
+  /* ============================================================
+     SPORTS — Michigan (FB/MBB/WBB), UConn (MBB/WBB), ATP/WTA tennis
+  ============================================================ */
+  var SPORTS_TEAM_LABELS = {
+    "michigan-fb": "Michigan Football",
+    "michigan-mbb": "Michigan MBB",
+    "michigan-wbb": "Michigan WBB",
+    "uconn-mbb": "UConn MBB",
+    "uconn-wbb": "UConn WBB"
+  };
+
+  function sportLine(team){
+    if(!team) return "No data";
+    if(team.lastResult){
+      var g = team.lastResult;
+      var wl = g.win === true ? '<span class="w">W</span>' : (g.win === false ? '<span class="l">L</span>' : "");
+      return wl + " " + (g.teamScore != null ? g.teamScore + "-" + g.oppScore : "") + " vs " + escapeHtml(g.opponent);
+    }
+    if(team.nextGame){
+      var n = team.nextGame;
+      return "Next: vs " + escapeHtml(n.opponent) + " · " + escapeHtml(n.statusText || "");
+    }
+    return team.note || "Off-season";
+  }
+
+  function renderSports(data){
+    var body = $("sports-body");
+    if(!body) return;
+    if(!data){
+      body.innerHTML = '<div class="error-state">Sports feed unavailable.</div>';
+      return;
+    }
+    var html = "";
+    Object.keys(SPORTS_TEAM_LABELS).forEach(function(key){
+      var team = data.teams && data.teams[key];
+      html += '<div class="sport-row"><div class="sport-team">' + SPORTS_TEAM_LABELS[key] + '</div><div class="sport-line">' + sportLine(team) + "</div></div>";
+    });
+
+    ["atp","wta"].forEach(function(tour){
+      var t = data.tennis && data.tennis[tour];
+      html += '<div class="sport-tennis-head">' + tour.toUpperCase() + " Tennis</div>";
+      if(t && t.tournaments && t.tournaments.length){
+        var top = t.tournaments[0];
+        html += '<div class="sport-tennis-match">' + escapeHtml(top.name) + "</div>";
+        (top.matches || []).slice(0, 2).forEach(function(m){
+          html += '<div class="sport-tennis-match">' + escapeHtml(m.player1) + " vs " + escapeHtml(m.player2) + ' <span>' + escapeHtml(m.status || "") + "</span></div>";
+        });
+      } else {
+        html += '<div class="sport-tennis-match">No tournament in progress</div>';
+      }
+    });
+
+    body.innerHTML = html;
+  }
+
+  async function loadSports(){
+    try{
+      var data = await getJSON("/api/sports?feed=all");
+      renderSports(data);
+    }catch(err){
+      renderSports(null);
+    }
+  }
+
+  /* ============================================================
+     CAPTAIN'S LOG — freeform journal, localStorage-backed
+  ============================================================ */
+  var logBody = $("log-body");
+  var captainsLog = readLS(LS.captainsLog, DEFAULT_LOG);
+
+  function fmtLogTs(iso){
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  }
+
+  function renderLog(){
+    if(!logBody) return;
+    logBody.innerHTML = "";
+    captainsLog.slice().reverse().forEach(function(entry){
+      var row = el("div", "log-row");
+      row.innerHTML = '<div class="log-row-top"><span class="log-ts">' + escapeHtml(fmtLogTs(entry.ts)) + '</span><button type="button" class="log-del">✕</button></div>' +
+        '<div class="log-text">' + escapeHtml(entry.text) + "</div>";
+      row.querySelector(".log-del").addEventListener("click", function(){
+        captainsLog = captainsLog.filter(function(x){ return x.id !== entry.id; });
+        writeLS(LS.captainsLog, captainsLog);
+        renderLog();
+      });
+      logBody.appendChild(row);
+    });
+    var addRow = el("div", "log-add");
+    addRow.innerHTML = '<input type="text" id="log-input" placeholder="Log entry…"><button type="button" id="log-add-btn">Add</button>';
+    logBody.appendChild(addRow);
+    function addEntry(){
+      var input = $("log-input");
+      var text = input.value.trim();
+      if(!text) return;
+      captainsLog.push({ id: "log" + Date.now(), text: text, ts: new Date().toISOString() });
+      writeLS(LS.captainsLog, captainsLog);
+      renderLog();
+    }
+    $("log-add-btn").addEventListener("click", addEntry);
+    $("log-input").addEventListener("keydown", function(e){ if(e.key === "Enter") addEntry(); });
+  }
+
+  /* ============================================================
      NEWS — fetch all sources, feed the rail list & globe
   ============================================================ */
   var newsCache = {};      // key -> items[]
@@ -1431,7 +1830,7 @@
   var globeBody = $("globe-body");
   var tooltip = $("globe-tooltip");
 
-  var G = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 20, dragging: false, dragDist: 0, lastX: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
+  var G = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 20, tilt: -12, dragging: false, dragDist: 0, lastX: 0, lastY: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
   var stationMarkers = [];  // {name,lat,lon,wx}
   var newsMarkers = [];     // {place,lat,lon,items:[]}
   var renderedMarkers = []; // this-frame screen positions for hit testing
@@ -1513,6 +1912,67 @@
     return s;
   })();
 
+  /* ------------------------------------------------------------
+     DAY/NIGHT TERMINATOR — subsolar point via Spencer's approximation
+     (no API), shaded onto both globes as a coarse full-sphere
+     jittered lattice (ocean included, unlike landPoints) with a
+     soft twilight feather.
+  ------------------------------------------------------------ */
+  function getSubsolarPoint(date){
+    var now = date || new Date();
+    var start = Date.UTC(now.getUTCFullYear(), 0, 1);
+    var dayOfYear = (now.getTime() - start) / 86400000; // fractional, Jan 1 00:00 UTC = 0
+    var gamma = 2 * Math.PI / 365 * dayOfYear;
+
+    var eqtime = 229.18 * (0.000075 + 0.001868*Math.cos(gamma) - 0.032077*Math.sin(gamma)
+      - 0.014615*Math.cos(2*gamma) - 0.040849*Math.sin(2*gamma)); // minutes
+
+    var decl = 0.006918 - 0.399912*Math.cos(gamma) + 0.070257*Math.sin(gamma)
+      - 0.006758*Math.cos(2*gamma) + 0.000907*Math.sin(2*gamma)
+      - 0.002697*Math.cos(3*gamma) + 0.00148*Math.sin(3*gamma); // radians
+
+    var utcHours = now.getUTCHours() + now.getUTCMinutes()/60 + now.getUTCSeconds()/3600;
+    var lon = (720 - utcHours*60 - eqtime) / 4;
+    lon = ((lon + 180) % 360 + 360) % 360 - 180;
+
+    return { lat: decl * 180 / Math.PI, lon: lon };
+  }
+
+  function unitVec(lat, lon){
+    var la = lat * Math.PI / 180, lo = lon * Math.PI / 180;
+    return { x: Math.cos(la) * Math.cos(lo), y: Math.cos(la) * Math.sin(lo), z: Math.sin(la) };
+  }
+
+  var currentSubsolar = getSubsolarPoint();
+  var currentSubsolarVec = unitVec(currentSubsolar.lat, currentSubsolar.lon);
+  function updateSubsolar(){
+    currentSubsolar = getSubsolarPoint();
+    currentSubsolarVec = unitVec(currentSubsolar.lat, currentSubsolar.lon);
+  }
+
+  var TWILIGHT_BAND = 0.06;
+  function nightAlpha(lat, lon){
+    var v = unitVec(lat, lon);
+    var cosZ = v.x*currentSubsolarVec.x + v.y*currentSubsolarVec.y + v.z*currentSubsolarVec.z;
+    if(cosZ >= TWILIGHT_BAND) return 0;
+    if(cosZ <= -TWILIGHT_BAND) return 1;
+    return 1 - (cosZ + TWILIGHT_BAND) / (2 * TWILIGHT_BAND);
+  }
+
+  // coarse full-sphere lattice (ocean included), jittered in lat/lon space to avoid a
+  // mechanical grid look — shared by both globes since it's the same physical shading.
+  var nightSamplePoints = (function buildNightSamplePoints(){
+    var pts = [];
+    for(var lat = -84; lat <= 84; lat += 4){
+      for(var lon = -180; lon < 180; lon += 4){
+        var jlat = Math.max(-89, Math.min(89, lat + (Math.random()-0.5)*1.9));
+        var jlon = lon + (Math.random()-0.5)*1.9;
+        pts.push({ lat: jlat, lon: jlon });
+      }
+    }
+    return pts;
+  })();
+
   function resizeCanvas(){
     var rect = globeBody.getBoundingClientRect();
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1524,26 +1984,46 @@
     G.radius = Math.max(40, Math.min(rect.width, rect.height) * 0.42);
   }
 
-  function project(lat, lon, rotationDeg){
+  // full 3D orientation: yaw (rotationDeg, spin around the vertical axis) composed with
+  // pitch (tiltDeg, spin around the horizontal axis) — two degrees of freedom, driven by
+  // horizontal and vertical drag respectively, together giving free trackball-style rotation.
+  function project(lat, lon, rotationDeg, tiltDeg){
     var latRad = lat * Math.PI / 180;
     var lonRad = (lon + rotationDeg) * Math.PI / 180;
     var x3 = Math.cos(latRad) * Math.sin(lonRad);
     var y3 = Math.sin(latRad);
     var z3 = Math.cos(latRad) * Math.cos(lonRad);
+    if(tiltDeg){
+      var tRad = tiltDeg * Math.PI / 180;
+      var ct = Math.cos(tRad), st = Math.sin(tRad);
+      var y3t = y3 * ct - z3 * st;
+      var z3t = y3 * st + z3 * ct;
+      y3 = y3t; z3 = z3t;
+    }
     if(z3 < -0.06) return null;
     return { x: G.cx + x3 * G.radius, y: G.cy - y3 * G.radius, z: z3 };
   }
 
   // inverse of the orthographic projection above — screen point -> lat/lon on the sphere's
   // near face. Returns null if the point falls outside the rendered circle (clicked empty space).
-  function invertProject(mx, my, cx, cy, radius, rotationDeg){
+  function invertProject(mx, my, cx, cy, radius, rotationDeg, tiltDeg){
     if(radius < 1) return null;
-    var dx = (mx - cx) / radius;
-    var dy = (cy - my) / radius;
+    var dx = (mx - cx) / radius;   // = x3 (post-yaw, post-tilt frame)
+    var dy = (cy - my) / radius;   // = y3' (post-yaw, post-tilt frame)
     var distSq = dx*dx + dy*dy;
     if(distSq > 1) return null;
-    var lat = Math.asin(Math.max(-1, Math.min(1, dy))) * 180 / Math.PI;
-    var z3 = Math.sqrt(Math.max(0, 1 - distSq));
+    var z3p = Math.sqrt(Math.max(0, 1 - distSq)); // z3' (post-yaw, post-tilt frame)
+
+    // undo the tilt (pitch) rotation to get back to the post-yaw, pre-tilt frame
+    var y3 = dy, z3 = z3p;
+    if(tiltDeg){
+      var tRad = tiltDeg * Math.PI / 180;
+      var ct = Math.cos(tRad), st = Math.sin(tRad);
+      y3 = dy * ct + z3p * st;
+      z3 = -dy * st + z3p * ct;
+    }
+
+    var lat = Math.asin(Math.max(-1, Math.min(1, y3))) * 180 / Math.PI;
     var lonRad = Math.atan2(dx, z3);
     var lon = lonRad * 180 / Math.PI - rotationDeg;
     lon = ((lon + 180) % 360 + 360) % 360 - 180;
@@ -1620,7 +2100,7 @@
       ctx.beginPath();
       var started = false;
       for(var lat = -90; lat <= 90; lat += 4){
-        var p = project(lat, lon, G.rotation);
+        var p = project(lat, lon, G.rotation, G.tilt);
         if(!p){ started = false; continue; }
         if(!started){ ctx.moveTo(p.x, p.y); started = true; } else { ctx.lineTo(p.x, p.y); }
       }
@@ -1631,7 +2111,7 @@
       ctx.beginPath();
       var started2 = false;
       for(var lon2 = 0; lon2 <= 360; lon2 += 4){
-        var p2 = project(lat2, lon2, G.rotation);
+        var p2 = project(lat2, lon2, G.rotation, G.tilt);
         if(!p2){ started2 = false; continue; }
         if(!started2){ ctx.moveTo(p2.x, p2.y); started2 = true; } else { ctx.lineTo(p2.x, p2.y); }
       }
@@ -1642,7 +2122,7 @@
     ctx.beginPath();
     var started3 = false;
     for(var lon3 = 0; lon3 <= 360; lon3 += 3){
-      var p3 = project(0, lon3, G.rotation);
+      var p3 = project(0, lon3, G.rotation, G.tilt);
       if(!p3){ started3 = false; continue; }
       if(!started3){ ctx.moveTo(p3.x, p3.y); started3 = true; } else { ctx.lineTo(p3.x, p3.y); }
     }
@@ -1651,7 +2131,7 @@
     // landmasses — dense stippled terrain, tight enough at this size to read as a solid satellite-style surface
     for(var li = 0; li < landPoints.length; li++){
       var lp = landPoints[li];
-      var lpp = project(lp.lat, lp.lon, G.rotation);
+      var lpp = project(lp.lat, lp.lon, G.rotation, G.tilt);
       if(!lpp) continue;
       var lpScale = 0.5 + lpp.z * 0.5;
       var r = (0.62 + lp.tint * 0.42) * lpScale;
@@ -1661,12 +2141,26 @@
       ctx.fill();
     }
 
+    // day/night terminator — coarse full-sphere shading, ocean included
+    for(var ni = 0; ni < nightSamplePoints.length; ni++){
+      var np = nightSamplePoints[ni];
+      var alpha = nightAlpha(np.lat, np.lon);
+      if(alpha <= 0.01) continue;
+      var npp = project(np.lat, np.lon, G.rotation, G.tilt);
+      if(!npp) continue;
+      var npScale = 0.55 + npp.z * 0.45;
+      ctx.beginPath();
+      ctx.arc(npp.x, npp.y, 3.2 * npScale, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(3,6,14," + (alpha * 0.55 * npScale) + ")";
+      ctx.fill();
+    }
+
     renderedMarkers = [];
 
     // news star markers
     var pulse = 0.5 + 0.5 * Math.sin(Date.now() / 500);
     newsMarkers.forEach(function(nm){
-      var p = project(nm.lat, nm.lon, G.rotation);
+      var p = project(nm.lat, nm.lon, G.rotation, G.tilt);
       if(!p) return;
       var scale = 0.6 + p.z * 0.4;
       var baseR = 3.4 * scale;
@@ -1686,7 +2180,7 @@
 
     // home marker — Montreal
     (function(){
-      var p = project(HOME.lat, HOME.lon, G.rotation);
+      var p = project(HOME.lat, HOME.lon, G.rotation, G.tilt);
       if(!p) return;
       var scale = 0.6 + p.z * 0.4;
       var baseR = 3.8 * scale;
@@ -1721,7 +2215,7 @@
   }
 
   canvas.addEventListener("pointerdown", function(e){
-    G.dragging = true; G.dragDist = 0; G.lastX = e.clientX;
+    G.dragging = true; G.dragDist = 0; G.lastX = e.clientX; G.lastY = e.clientY;
     G.autoRotate = false;
     try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
   });
@@ -1741,8 +2235,12 @@
     }
     if(G.dragging){
       var dx = e.clientX - G.lastX; G.lastX = e.clientX;
-      G.dragDist += Math.abs(dx);
+      var dy = e.clientY - G.lastY; G.lastY = e.clientY;
+      G.dragDist += Math.abs(dx) + Math.abs(dy);
       G.rotation += dx * 0.4;
+      // vertical drag tilts the sphere on the horizontal axis — full 3D trackball rotation,
+      // unclamped just like rotation (both are periodic, so it can spin freely either way)
+      G.tilt -= dy * 0.4;
     }
   });
   function endDrag(){
@@ -1761,7 +2259,7 @@
       if(hit){
         handleMarkerClick(hit);
       } else {
-        var geo = invertProject(mx, my, G.cx, G.cy, G.radius, G.rotation);
+        var geo = invertProject(mx, my, G.cx, G.cy, G.radius, G.rotation, G.tilt);
         if(geo) openLocationDetail(geo.lat, geo.lon, {});
       }
     }
@@ -1821,9 +2319,34 @@
   var weatherGlobeBody = $("weather-globe-body");
   var tooltip2 = $("weather-globe-tooltip");
 
-  var G2 = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 200, dragging: false, dragDist: 0, lastX: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
+  var G2 = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 200, tilt: -12, dragging: false, dragDist: 0, lastX: 0, lastY: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
   var weatherGridPoints = []; // {lat,lon,cloud,precip,temp,wind} — the 60 real data cells from Open-Meteo
   var renderedMarkers2 = [];
+
+  // radar-style precipitation coloring (green = light, yellow = moderate, red = heavy) — an
+  // instantly-recognizable convention that reads as clearly distinct from the pale cloud haze,
+  // instead of both layers competing as similar-looking whitish/bluish dots.
+  var PRECIP_COLOR_STOPS = [
+    { t: 0,   c: [110, 220, 150] },
+    { t: 1.2, c: [235, 214, 80] },
+    { t: 3.5, c: [255, 110, 90] }
+  ];
+  function precipColor(mm){
+    var v = Math.max(0, mm);
+    if(v <= PRECIP_COLOR_STOPS[0].t) return PRECIP_COLOR_STOPS[0].c;
+    for(var i = 1; i < PRECIP_COLOR_STOPS.length; i++){
+      if(v <= PRECIP_COLOR_STOPS[i].t){
+        var a = PRECIP_COLOR_STOPS[i-1], b = PRECIP_COLOR_STOPS[i];
+        var f = (v - a.t) / (b.t - a.t);
+        return [
+          Math.round(a.c[0] + (b.c[0]-a.c[0]) * f),
+          Math.round(a.c[1] + (b.c[1]-a.c[1]) * f),
+          Math.round(a.c[2] + (b.c[2]-a.c[2]) * f)
+        ];
+      }
+    }
+    return PRECIP_COLOR_STOPS[PRECIP_COLOR_STOPS.length - 1].c;
+  }
 
   // cheap layered/warped sine turbulence — no gradient tables, just cross-modulated waves.
   // Good enough to read as organic swirling cloud contours instead of round blobs, and safe to reason about.
@@ -1885,12 +2408,19 @@
     G2.radius = Math.max(40, Math.min(rect.width, rect.height) * 0.42);
   }
 
-  function project2(lat, lon, rotationDeg){
+  function project2(lat, lon, rotationDeg, tiltDeg){
     var latRad = lat * Math.PI / 180;
     var lonRad = (lon + rotationDeg) * Math.PI / 180;
     var x3 = Math.cos(latRad) * Math.sin(lonRad);
     var y3 = Math.sin(latRad);
     var z3 = Math.cos(latRad) * Math.cos(lonRad);
+    if(tiltDeg){
+      var tRad = tiltDeg * Math.PI / 180;
+      var ct = Math.cos(tRad), st = Math.sin(tRad);
+      var y3t = y3 * ct - z3 * st;
+      var z3t = y3 * st + z3 * ct;
+      y3 = y3t; z3 = z3t;
+    }
     if(z3 < -0.06) return null;
     return { x: G2.cx + x3 * G2.radius, y: G2.cy - y3 * G2.radius, z: z3 };
   }
@@ -1944,7 +2474,7 @@
       ctx2.beginPath();
       var started = false;
       for(var lat = -90; lat <= 90; lat += 4){
-        var p = project2(lat, lon, G2.rotation);
+        var p = project2(lat, lon, G2.rotation, G2.tilt);
         if(!p){ started = false; continue; }
         if(!started){ ctx2.moveTo(p.x, p.y); started = true; } else { ctx2.lineTo(p.x, p.y); }
       }
@@ -1954,7 +2484,7 @@
       ctx2.beginPath();
       var started2 = false;
       for(var lon2 = 0; lon2 <= 360; lon2 += 4){
-        var p2 = project2(lat2, lon2, G2.rotation);
+        var p2 = project2(lat2, lon2, G2.rotation, G2.tilt);
         if(!p2){ started2 = false; continue; }
         if(!started2){ ctx2.moveTo(p2.x, p2.y); started2 = true; } else { ctx2.lineTo(p2.x, p2.y); }
       }
@@ -1964,7 +2494,7 @@
     ctx2.beginPath();
     var started3 = false;
     for(var lon3 = 0; lon3 <= 360; lon3 += 3){
-      var p3 = project2(0, lon3, G2.rotation);
+      var p3 = project2(0, lon3, G2.rotation, G2.tilt);
       if(!p3){ started3 = false; continue; }
       if(!started3){ ctx2.moveTo(p3.x, p3.y); started3 = true; } else { ctx2.lineTo(p3.x, p3.y); }
     }
@@ -1973,13 +2503,27 @@
     // landmasses for geographic context — same dense coastline dots, dimmer than the news globe
     for(var li = 0; li < landPoints.length; li++){
       var lp = landPoints[li];
-      var lpp = project2(lp.lat, lp.lon, G2.rotation);
+      var lpp = project2(lp.lat, lp.lon, G2.rotation, G2.tilt);
       if(!lpp) continue;
       var lpScale = 0.5 + lpp.z * 0.5;
       var r0 = (0.6 + lp.tint * 0.38) * lpScale;
       ctx2.beginPath();
       ctx2.arc(lpp.x + lp.jx, lpp.y + lp.jy, r0, 0, Math.PI*2);
       ctx2.fillStyle = "rgba(" + terrainColor(lp.lat, lp.tint) + "," + (0.5 * lpScale + 0.08) + ")";
+      ctx2.fill();
+    }
+
+    // day/night terminator — coarse full-sphere shading, ocean included
+    for(var ni2 = 0; ni2 < nightSamplePoints.length; ni2++){
+      var np2 = nightSamplePoints[ni2];
+      var alpha2 = nightAlpha(np2.lat, np2.lon);
+      if(alpha2 <= 0.01) continue;
+      var npp2 = project2(np2.lat, np2.lon, G2.rotation, G2.tilt);
+      if(!npp2) continue;
+      var npScale2 = 0.55 + npp2.z * 0.45;
+      ctx2.beginPath();
+      ctx2.arc(npp2.x, npp2.y, 3.2 * npScale2, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(3,6,14," + (alpha2 * 0.55 * npScale2) + ")";
       ctx2.fill();
     }
 
@@ -1993,7 +2537,7 @@
       var cp = cloudSamplePoints[ci];
       var coverage = cp.coverage;
       if(coverage < 0.12) continue;
-      var cpp = project2(cp.lat, cp.lon, G2.rotation);
+      var cpp = project2(cp.lat, cp.lon, G2.rotation, G2.tilt);
       if(!cpp) continue;
       var n = fbmNoise(cp.lon * 0.05, cp.lat * 0.07, tNoise);
       n = (n + 1) / 2; // remap roughly to 0..1
@@ -2007,21 +2551,34 @@
       var rC = (0.9 + edge * 1.5) * cScale;
       ctx2.beginPath();
       ctx2.arc(cpp.x, cpp.y, rC, 0, Math.PI*2);
-      ctx2.fillStyle = "rgba(232,240,245," + (0.1 + edge * 0.5 * (0.3 + covCurve * 0.7)) + ")";
+      // softened & slightly cooler than before, and capped lower — leaves more visual
+      // headroom for the glowing, radar-colored precipitation layer to read as distinct
+      ctx2.fillStyle = "rgba(205,222,230," + (0.08 + edge * 0.4 * (0.3 + covCurve * 0.7)) + ")";
       ctx2.fill();
     }
 
     // precipitation markers stay tied to the exact 60 data cells — precise, not noise-driven
     weatherGridPoints.forEach(function(gp){
-      var p = project2(gp.lat, gp.lon, G2.rotation);
+      var p = project2(gp.lat, gp.lon, G2.rotation, G2.tilt);
       if(!p) return;
       var scale = 0.55 + p.z * 0.45;
       var precip = typeof gp.precip === "number" ? gp.precip : 0;
       if(precip > 0.05){
-        var pr = (1.8 + Math.min(2.4, precip)) * scale;
+        var col = precipColor(precip);
+        var colStr = col[0] + "," + col[1] + "," + col[2];
+        var pr = (2.2 + Math.min(3.4, precip * 1.3)) * scale;
+        // soft glow + bright core — visually pops against the pale, glow-free cloud stipple
+        ctx2.save();
+        ctx2.shadowColor = "rgba(" + colStr + ",0.95)";
+        ctx2.shadowBlur = 9 * scale;
         ctx2.beginPath();
         ctx2.arc(p.x, p.y, pr, 0, Math.PI*2);
-        ctx2.fillStyle = "rgba(90,167,232," + (0.65 * scale) + ")";
+        ctx2.fillStyle = "rgba(" + colStr + "," + (0.88 * scale) + ")";
+        ctx2.fill();
+        ctx2.restore();
+        ctx2.beginPath();
+        ctx2.arc(p.x, p.y, pr * 0.45, 0, Math.PI*2);
+        ctx2.fillStyle = "rgba(255,255,255," + (0.55 * scale) + ")";
         ctx2.fill();
       }
       renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, G2.radius*0.09*scale + 6), type: "cell", ref: gp });
@@ -2029,7 +2586,7 @@
 
     // home marker — Montreal
     (function(){
-      var p = project2(HOME.lat, HOME.lon, G2.rotation);
+      var p = project2(HOME.lat, HOME.lon, G2.rotation, G2.tilt);
       if(!p) return;
       var scale = 0.6 + p.z * 0.4;
       var baseR = 3.8 * scale;
@@ -2065,7 +2622,7 @@
   }
 
   canvas2.addEventListener("pointerdown", function(e){
-    G2.dragging = true; G2.dragDist = 0; G2.lastX = e.clientX;
+    G2.dragging = true; G2.dragDist = 0; G2.lastX = e.clientX; G2.lastY = e.clientY;
     G2.autoRotate = false;
     try{ canvas2.setPointerCapture(e.pointerId); }catch(err){}
   });
@@ -2094,8 +2651,10 @@
     }
     if(G2.dragging){
       var dx = e.clientX - G2.lastX; G2.lastX = e.clientX;
-      G2.dragDist += Math.abs(dx);
+      var dy = e.clientY - G2.lastY; G2.lastY = e.clientY;
+      G2.dragDist += Math.abs(dx) + Math.abs(dy);
       G2.rotation += dx * 0.4;
+      G2.tilt -= dy * 0.4;
     }
   });
   function endDrag2(){
@@ -2117,7 +2676,7 @@
       } else if(hit && hit.type === "cell"){
         openLocationDetail(hit.ref.lat, hit.ref.lon, {});
       } else {
-        var geo = invertProject(mx, my, G2.cx, G2.cy, G2.radius, G2.rotation);
+        var geo = invertProject(mx, my, G2.cx, G2.cy, G2.radius, G2.rotation, G2.tilt);
         if(geo) openLocationDetail(geo.lat, geo.lon, {});
       }
     }
@@ -2216,6 +2775,12 @@
      each collapse or expand independently, remembered per-browser.
   ============================================================ */
   var railCollapse = readLS(LS.railCollapse, {});
+  // new widgets default to collapsed regardless of prior stored state — keeps the console
+  // compact by default per the "must fit without scrolling" constraint; once a user
+  // explicitly opens/closes one, that choice persists like the original four panels.
+  ["skywatch", "bromont", "sports"].forEach(function(k){
+    if(!(k in railCollapse)) railCollapse[k] = true;
+  });
 
   function applyPanelCollapse(section){
     var key = section.getAttribute("data-panel-key");
@@ -2247,6 +2812,8 @@
     renderFx();
     renderLinks();
     renderTodos();
+    renderLog();
+    renderSkyWatch(null);
 
     resizeCanvas();
     if(window.ResizeObserver){ new ResizeObserver(debounce(resizeCanvas, 120)).observe(globeBody); }
@@ -2267,6 +2834,9 @@
     loadAllNews();
     loadWeatherGrid();
     loadPodcasts();
+    loadAurora();
+    loadBromont();
+    loadSports();
 
     setInterval(loadQuotes, 90000);
     setInterval(loadFx, 300000);
@@ -2275,6 +2845,12 @@
     setInterval(loadStations, 900000);
     setInterval(loadWeatherGrid, 600000);
     setInterval(loadPodcasts, 1800000);
+    setInterval(loadAurora, 900000);
+    setInterval(loadBromont, 900000);
+    setInterval(loadSports, 600000);
+    setInterval(updateSubsolar, 60000);
+    setInterval(function(){ renderSkyWatch(lastAuroraData); }, 600000); // keep moon icon fresh
+    if(!REDUCED_MOTION) setInterval(rotateShipStatus, 9000);
   }
 
   init();
