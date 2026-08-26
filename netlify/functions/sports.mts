@@ -201,7 +201,7 @@ export default async (req: Request) => {
   } catch (err) {
     return new Response(JSON.stringify({ error: "fetch_failed", message: String(err) }), {
       status: 502,
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "cache-control": "no-store" },
     });
   }
 };
