@@ -462,9 +462,16 @@
 
   /* ============ FOOTER STRIP (ship status + market ticker) ============ */
   .footer-strip{ display:flex; align-items:center; gap:14px; padding:0 6px; overflow:hidden; }
+  /* Ship status flavor line rotates every 9s and can run long ("Comm relays synced with
+     Starfleet Command"); rather than truncate with an ellipsis on narrower screens, it
+     scrolls continuously — same duplicated-track/-50% technique as the market ticker
+     right next to it — so the full line always reads, on any viewport width. */
+  .ship-status-wrap{ flex:0 1 220px; min-width:0; overflow:hidden; white-space:nowrap; position:relative; }
+  .ship-status-track{ display:inline-flex; gap:40px; animation:ship-status-scroll 22s linear infinite; }
+  @keyframes ship-status-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
   .ship-status{
-    flex:0 1 auto; min-width:0; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size:13px; color:var(--text-dim); letter-spacing:0.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    display:inline-block; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:13px; color:var(--text-dim); letter-spacing:0.03em; white-space:nowrap;
   }
   .ship-status b{ color:var(--good); font-weight:400; }
   .ship-status::before{ content:"● "; color:var(--good); }
@@ -557,6 +564,43 @@
     .rail .panel{ flex:1 1 320px; max-height:none; }
     .globe-body{ min-height:360px; }
     .strip{ grid-template-columns:1fr; }
+  }
+
+  /* Topbar is a single-row flex layout of mostly fixed-width elements (brand, stardate,
+     clock, search) plus one flexible greeting block — on tablet-width screens (iPad
+     portrait/landscape) the fixed items alone can exceed the viewport, squeezing the
+     greeting/date text down to nothing via its min-width:0 ellipsis. Shrink everything
+     proportionally first, then drop the least essential piece (stardate) if still tight. */
+  @media (max-width: 1180px){
+    .topbar{ gap:10px; padding:0 10px; }
+    .brand-mark{ width:20px; height:20px; }
+    .brand-name{ font-size:18px; }
+    .brand-name-edit{ font-size:18px; width:130px; }
+    .stardate{ font-size:13.5px; padding-left:10px; }
+    .greeting{ font-size:17px; }
+    .greeting-name-edit{ font-size:17px; width:110px; }
+    .subline{ font-size:12.5px; }
+    .clock{ font-size:20px; }
+    .clock .zone{ font-size:11.5px; }
+    .search select, .search input{ font-size:14px; padding:6px 8px; }
+    .search input{ width:100px; }
+    .search button{ font-size:13px; padding:6px 10px; }
+    .lang-switch{ width:28px; height:26px; font-size:11px; }
+  }
+  @media (max-width: 900px){
+    .stardate{ display:none; }
+    .search select{ display:none; }
+    .topbar{ gap:6px; padding:0 8px; }
+    .brand-mark{ width:16px; height:16px; }
+    .brand-name{ font-size:15px; }
+    .greeting{ font-size:15px; }
+    .subline{ font-size:11.5px; }
+    .clock{ font-size:17px; }
+    .clock .zone{ font-size:10.5px; }
+    .search{ gap:4px; }
+    .search input{ width:64px; padding:5px 7px; }
+    .search button{ padding:5px 8px; }
+    .lang-switch{ width:24px; height:22px; font-size:10px; }
   }
 </style>
 </head>
@@ -720,7 +764,12 @@
     </div>
 
     <div class="footer-strip">
-      <div class="ship-status" id="ship-status">Systems nominal</div>
+      <div class="ship-status-wrap" aria-label="Ship status">
+        <div class="ship-status-track" id="ship-status-track">
+          <span class="ship-status" id="ship-status">Systems nominal</span>
+          <span class="ship-status" id="ship-status-dup" aria-hidden="true">Systems nominal</span>
+        </div>
+      </div>
       <div class="footer-sep"></div>
       <div class="market-ticker"><div class="market-ticker-track" id="market-ticker-track"></div></div>
     </div>
@@ -808,6 +857,7 @@
   // anyone and set up for their own city in a few seconds instead of staying hardcoded here.
   var WORLD_CITIES = [
     { name: "Montreal", region: "North America", lat: 45.5017, lon: -73.5673, tz: "America/Toronto" },
+    { name: "Granby, QC", region: "North America", lat: 45.4009, lon: -72.7284, tz: "America/Toronto" },
     { name: "New York", region: "North America", lat: 40.7128, lon: -74.0060, tz: "America/New_York" },
     { name: "Providence", region: "North America", lat: 41.8240, lon: -71.4128, tz: "America/New_York" },
     { name: "Washington, DC", region: "North America", lat: 38.9072, lon: -77.0369, tz: "America/New_York" },
@@ -873,7 +923,9 @@
   var homeCity = readLS(LS.homeCity, DEFAULT_HOME_CITY);
   var HOME = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
   var HOME_TZ = homeCity.tz;
-  var userName = readLS(LS.userName, "Andrew");
+  // Generic by default — a fresh visitor (any browser without LS.userName saved) sees a
+  // neutral greeting, not Andrew's name. Editable via the same greeting-text dblclick as before.
+  var userName = readLS(LS.userName, "Commander");
 
   // [name, lat, lon, extra match keywords...]
   var PLACES_RAW = [
@@ -1065,7 +1117,7 @@
       if(closed) return;
       closed = true;
       var typed = input.value.trim();
-      userName = typed || "Andrew";
+      userName = typed || "Commander";
       writeLS(LS.userName, userName);
       nameEditing = false;
       updateClock();
@@ -1195,19 +1247,27 @@
      SHIP STATUS STRIP — decorative rotating flavor text
   ============================================================ */
   var shipStatusEl = $("ship-status");
+  var shipStatusDupEl = $("ship-status-dup");
   var shipStatusIdx = Math.floor(Math.random() * SHIP_STATUS_LINES.length);
+  function setShipStatusText(text){
+    if(shipStatusEl) shipStatusEl.textContent = text;
+    if(shipStatusDupEl) shipStatusDupEl.textContent = text;
+  }
   function rotateShipStatus(){
     if(!shipStatusEl) return;
     shipStatusEl.style.opacity = "0";
+    if(shipStatusDupEl) shipStatusDupEl.style.opacity = "0";
     setTimeout(function(){
       shipStatusIdx = (shipStatusIdx + 1) % SHIP_STATUS_LINES.length;
-      shipStatusEl.textContent = SHIP_STATUS_LINES[shipStatusIdx];
+      setShipStatusText(SHIP_STATUS_LINES[shipStatusIdx]);
       shipStatusEl.style.opacity = "1";
+      if(shipStatusDupEl) shipStatusDupEl.style.opacity = "1";
     }, 400);
   }
   if(shipStatusEl){
     shipStatusEl.style.transition = "opacity 0.4s ease";
-    shipStatusEl.textContent = SHIP_STATUS_LINES[shipStatusIdx];
+    if(shipStatusDupEl) shipStatusDupEl.style.transition = "opacity 0.4s ease";
+    setShipStatusText(SHIP_STATUS_LINES[shipStatusIdx]);
   }
 
   /* ============================================================
@@ -1304,10 +1364,9 @@
      accepts a channel URL, an @handle, or a raw channel ID —
      youtube.mts resolves whichever one to a channel ID server-side.
   ============================================================ */
-  var DEFAULT_PODCASTS = [
-    { label: "MeidasTouch", channelId: "UC9r9HYFxEQOBXSopFS61ZWg" },
-    { label: "Tod Maffin", channelId: "UCy9djDjPbgW7chRBXK2TV1g" }
-  ];
+  // Generic by default — empty, not Andrew's own subscriptions, so a fresh visitor gets
+  // a blank slate (the panel already has an empty-state prompting "hit Edit to add one").
+  var DEFAULT_PODCASTS = [];
   var podcasts = readLS(LS.podcasts, DEFAULT_PODCASTS);
   var podcastsEditing = false;
 
@@ -1840,9 +1899,11 @@
      this is honestly a weather/snowfall proxy, not an official
      piste report — said plainly in the caption below).
   ============================================================ */
-  // Default is Bromont, but the region is a per-browser setting (LS.snowRegion) —
-  // double-click the snow report header to point it at any ski region/city.
-  var DEFAULT_SNOW_REGION = { name: "Bromont", lat: 45.3086, lon: -72.6423 };
+  // Generic by default — mirrors the home city (same pattern as DEFAULT_WX_PLACE below)
+  // rather than Andrew's personal ski spot, so a fresh visitor isn't handed his region.
+  // The region is a per-browser setting (LS.snowRegion) — double-click the snow report
+  // header to point it at any ski region/city.
+  var DEFAULT_SNOW_REGION = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
   var snowRegion = readLS(LS.snowRegion, DEFAULT_SNOW_REGION);
   var lastBromontData = null;
   var snowEditing = false;
@@ -1918,15 +1979,10 @@
     { key: "mlb", label: "MLB", sport: "baseball" },
     { key: "nhl", label: "NHL", sport: "hockey" }
   ];
-  // Preserves the original lineup as the starting default — fully editable
-  // per-browser via LS.sportsTeams from here on.
-  var DEFAULT_SPORTS_TEAMS = [
-    { sport: "football", league: "college-football", teamId: "130", label: "Michigan Football" },
-    { sport: "basketball", league: "mens-college-basketball", teamId: "130", label: "Michigan Men's Basketball" },
-    { sport: "basketball", league: "womens-college-basketball", teamId: "130", label: "Michigan Women's Basketball" },
-    { sport: "basketball", league: "mens-college-basketball", teamId: "41", label: "UConn Men's Basketball" },
-    { sport: "basketball", league: "womens-college-basketball", teamId: "41", label: "UConn Women's Basketball" }
-  ];
+  // Generic by default — empty, not Andrew's own team picks, so a fresh visitor gets a
+  // blank slate (the panel already has an empty-state prompting "hit Edit to pick some").
+  // Fully editable per-browser via LS.sportsTeams from here on.
+  var DEFAULT_SPORTS_TEAMS = [];
   var sportsTeams = readLS(LS.sportsTeams, DEFAULT_SPORTS_TEAMS);
   var sportsEditing = false;
   var teamCatalogCache = {}; // league -> [{id,name}], fetched on demand for the Add-team picker
