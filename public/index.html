@@ -74,7 +74,7 @@
     width:100vw;
     padding:10px 12px 8px;
     display:grid;
-    grid-template-rows: 60px 1fr 100px 30px;
+    grid-template-rows: auto 1fr 100px 30px;
     gap:8px;
   }
 
@@ -141,7 +141,7 @@
 
   .clock{
     flex:0 0 auto; text-align:right; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color:var(--amber); font-size:34px; letter-spacing:0.03em; line-height:1.1;
+    color:var(--amber); font-size:38px; letter-spacing:0.03em; line-height:1.1;
   }
   .greeting-name-edit{
     display:inline-block; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -155,12 +155,10 @@
   }
 
   .search{ flex:0 0 auto; display:flex; align-items:center; gap:6px; }
-  .search select, .search input{
+  .search input{
     background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
-    border-radius:20px; padding:7px 12px; font-size:18px;
+    border-radius:20px; padding:7px 12px; font-size:18px; width:200px;
   }
-  .search select{ color:var(--text-dim); }
-  .search input{ width:170px; }
   .search input::placeholder{ color:var(--text-dim); }
   .lang-switch{
     flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
@@ -472,7 +470,7 @@
      Starfleet Command"); rather than truncate with an ellipsis on narrower screens, it
      scrolls continuously — same duplicated-track/-50% technique as the market ticker
      right next to it — so the full line always reads, on any viewport width. */
-  .ship-status-wrap{ flex:0 1 220px; min-width:0; overflow:hidden; white-space:nowrap; position:relative; }
+  .ship-status-wrap{ flex:0 1 340px; min-width:0; overflow:hidden; white-space:nowrap; position:relative; }
   .ship-status-track{ display:inline-flex; gap:40px; animation:ship-status-scroll 22s linear infinite; }
   @keyframes ship-status-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
   .ship-status{
@@ -589,8 +587,7 @@
     .greeting-name-edit{ font-size:17px; width:110px; }
     .subline{ font-size:11.5px; }
     .clock{ font-size:26px; }
-    .search select, .search input{ font-size:14px; padding:6px 8px; }
-    .search input{ width:100px; }
+    .search input{ font-size:14px; padding:6px 8px; width:130px; }
     .search button{ font-size:13px; padding:6px 10px; }
     .lang-switch{ width:28px; height:26px; font-size:11px; }
   }
@@ -598,7 +595,6 @@
     .stardate{ display:none; }
     .subline{ display:none; }
     .subline-short{ display:block; font-size:11px; }
-    .search select{ display:none; }
     .topbar{ gap:5px; padding:0 8px; }
     .brand-mark{ width:16px; height:16px; }
     .brand-name{ font-size:14px; }
@@ -607,9 +603,25 @@
     .greeting{ font-size:14px; }
     .clock{ font-size:19px; }
     .search{ gap:4px; }
-    .search input{ width:48px; padding:5px 6px; }
+    .search input{ width:76px; padding:5px 6px; }
     .search button{ padding:5px 7px; font-size:12px; }
     .lang-switch{ width:22px; height:20px; font-size:9.5px; }
+  }
+  /* Below ~1020px, even the shrunk single-row layout has too many rigid pieces (brand+city,
+     stardate+date, greeting, clock, search, language switch) to fit without either forcing
+     a horizontal scrollbar (below ~680px) or truncating the greeting with an ellipsis
+     (the 700-980px gap). Wrap into a stable 3-row layout instead — greeting gets a
+     full-width row of its own, so it never needs to truncate or scroll. */
+  @media (max-width: 1020px){
+    .topbar{ flex-wrap:wrap; row-gap:6px; padding:8px; }
+    .brand-block{ order:1; }
+    .stardate-block{ order:2; }
+    .lang-switch{ order:3; margin-left:auto; }
+    .greeting-block{ order:4; flex-basis:100%; }
+    .greeting{ font-size:16px; }
+    .clock{ order:5; font-size:22px; }
+    .search{ order:6; flex:1 1 auto; justify-content:flex-end; }
+    .search input{ flex:1 1 auto; min-width:0; width:auto; }
   }
 </style>
 </head>
@@ -636,11 +648,6 @@
         --:--:--
       </div>
       <form class="search" id="search-form" role="search">
-        <select id="search-engine" aria-label="Search engine">
-          <option value="https://www.google.com/search?q=">Google</option>
-          <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
-          <option value="https://www.bing.com/search?q=">Bing</option>
-        </select>
         <input type="text" id="search-input" placeholder="Search…" autocomplete="off">
         <button type="submit">Go</button>
       </form>
@@ -1257,8 +1264,7 @@
     e.preventDefault();
     var q = $("search-input").value.trim();
     if(!q) return;
-    var base = $("search-engine").value;
-    window.location.href = base + encodeURIComponent(q);
+    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
   });
 
   /* ============================================================
