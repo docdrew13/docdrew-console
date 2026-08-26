@@ -233,6 +233,21 @@
   .wx-stat b{ display:block; color:var(--text); font-size:15px; }
   .wx-city-edit{ display:flex; gap:6px; margin-top:8px; }
   .wx-city-edit input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:12.5px; }
+  .wx-more-link{
+    display:inline-flex; align-items:center; gap:4px; background:none; border:none; color:var(--cyan);
+    font-family:"Share Tech Mono", monospace; font-size:11px; letter-spacing:0.04em; text-transform:uppercase;
+    cursor:pointer; padding:8px 0 0; text-align:left; width:100%;
+  }
+  .wx-more-link:hover{ color:var(--text); }
+  .wx-forecast{ display:flex; justify-content:space-between; gap:4px; margin-top:10px; padding-top:8px; border-top:1px solid var(--grid-line); }
+  .wx-fday{ flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-family:"Share Tech Mono", monospace; }
+  .wx-fday-label{ font-size:10.5px; color:var(--text-dim); text-transform:uppercase; }
+  .wx-fday svg{ width:20px; height:20px; }
+  .wx-fday-hi{ font-size:12px; color:var(--text); }
+  .wx-fday-lo{ font-size:11px; color:var(--text-dim); }
+  .wx-news-row{ padding:7px 0; border-bottom:1px solid var(--grid-line); font-size:12.5px; color:var(--text); cursor:pointer; line-height:1.35; }
+  .wx-news-row:last-child{ border-bottom:0; }
+  .wx-news-row:hover{ color:var(--cyan); }
 
   /* ---- news list (rail) ---- */
   .news-item{
@@ -892,6 +907,8 @@
   var DEFAULT_WX_PLACE = { name: "Granby, QC", lat: 45.4001, lon: -72.7280 };
   var wxPlace = readLS(LS.wxCity, DEFAULT_WX_PLACE);
   var wxEditing = false;
+  var wxViewMode = "home"; // "home" | "location"
+  var lastHomeWxData = null;
 
   var WX_ICONS = {
     clear: '<circle cx="20" cy="20" r="9" fill="var(--gold)"/>',
@@ -922,6 +939,7 @@
   }
 
   function renderWx(data){
+    wxViewMode = "home";
     if(!data || !data.current){ wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>'; return; }
     var c = data.current;
     var html = '<div class="wx-top">' +
@@ -937,8 +955,191 @@
     if(data.today && typeof data.today.max === "number"){
       html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>High</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Low</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synced</div></div>";
     }
+    html += '<button type="button" class="wx-more-link" id="wx-more-btn">Full forecast &amp; nearby news →</button>';
     wxBody.innerHTML = html;
     if(wxEditing) renderWxEditor();
+    var moreBtn = $("wx-more-btn");
+    if(moreBtn) moreBtn.addEventListener("click", function(){
+      if(data.place && typeof data.place.latitude === "number"){
+        openLocationDetail(data.place.latitude, data.place.longitude, { name: data.place.name });
+      }
+    });
+  }
+
+  /* ------------------------------------------------------------
+     LOCATION DETAIL — click anywhere on either globe, or "full
+     forecast" from the home box, to get a richer report + any
+     nearby headlines, all rendered inline in this same panel.
+  ------------------------------------------------------------ */
+  function wxBackButton(onClick){
+    var back = el("button", "news-back");
+    back.type = "button";
+    back.textContent = "← Back";
+    back.addEventListener("click", onClick);
+    return back;
+  }
+
+  function goHomeWx(){
+    wxViewMode = "home";
+    renderWx(lastHomeWxData);
+  }
+
+  function openLocationDetail(lat, lon, opts){
+    opts = opts || {};
+    wxViewMode = "location";
+    var near = nearestPlace(lat, lon);
+    var displayName = opts.name || null;
+    var items = opts.items || null;
+
+    if(!displayName){
+      displayName = (near && near.distKm < 500)
+        ? near.place.name
+        : (Math.abs(lat).toFixed(1) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lon).toFixed(1) + "°" + (lon >= 0 ? "E" : "W"));
+    }
+    if(!items){
+      items = (near && near.distKm < 900)
+        ? newsMarkers.filter(function(nm){ return nm.place === near.place.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, [])
+        : [];
+    }
+
+    renderLocationLoading(displayName);
+    getJSON("/api/weather?lat=" + lat + "&lon=" + lon + "&city=" + encodeURIComponent(displayName)).then(function(data){
+      renderLocationDetail(displayName, data, items);
+    }).catch(function(){
+      renderLocationError(displayName);
+    });
+  }
+
+  function renderLocationLoading(name){
+    var wrap = el("div");
+    wrap.appendChild(wxBackButton(goHomeWx));
+    var msg = el("div");
+    msg.style.padding = "6px 2px";
+    msg.innerHTML = '<div class="detail-meta">Loading forecast for ' + escapeHtml(name) + "…</div>";
+    wrap.appendChild(msg);
+    wxBody.innerHTML = "";
+    wxBody.appendChild(wrap);
+  }
+
+  function renderLocationError(name){
+    var wrap = el("div");
+    wrap.appendChild(wxBackButton(goHomeWx));
+    var msg = el("div");
+    msg.style.padding = "6px 2px";
+    msg.innerHTML = '<div class="error-state">Couldn\'t load weather for ' + escapeHtml(name) + ".</div>";
+    wrap.appendChild(msg);
+    wxBody.innerHTML = "";
+    wxBody.appendChild(wrap);
+  }
+
+  function renderLocationDetail(name, data, items){
+    wxViewMode = "location";
+    var wrap = el("div");
+    wrap.appendChild(wxBackButton(goHomeWx));
+
+    var content = el("div");
+    content.style.padding = "2px 2px 4px";
+
+    if(!data || !data.current){
+      content.innerHTML = '<div class="error-state">No weather data for ' + escapeHtml(name) + ".</div>";
+      wrap.appendChild(content);
+      wxBody.innerHTML = "";
+      wxBody.appendChild(wrap);
+      return;
+    }
+
+    var c = data.current;
+    var html = '<div class="wx-top">' +
+      '<div class="wx-icon">' + wxIconSvg(c.weather_code, 36) + "</div>" +
+      '<div><div class="wx-temp">' + Math.round(c.temperature_2m) + "°C</div>" +
+      '<div class="wx-place">' + escapeHtml(name) + "</div>" +
+      '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
+      '<div class="wx-grid">' +
+        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Feels</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidity</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h wind</div>" +
+      "</div>";
+
+    html += '<div class="wx-grid" style="margin-top:2px;">';
+    html += '<div class="wx-stat"><b>' + Math.round(c.wind_gusts_10m || 0) + "</b>Gusts</div>";
+    html += '<div class="wx-stat"><b>' + Math.round(c.pressure_msl || 0) + "</b>hPa</div>";
+    html += '<div class="wx-stat"><b>' + Math.round(c.cloud_cover || 0) + "%</b>Cloud</div>";
+    html += "</div>";
+
+    if(data.daily && data.daily.length){
+      html += '<div class="wx-forecast">';
+      data.daily.forEach(function(d, idx){
+        var dayLabel = idx === 0 ? "Today" : (d.date ? new Date(d.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" }) : "");
+        html += '<div class="wx-fday">' +
+          '<div class="wx-fday-label">' + escapeHtml(dayLabel) + "</div>" +
+          wxIconSvg(d.code, 20) +
+          '<div class="wx-fday-hi">' + Math.round(d.max) + "°</div>" +
+          '<div class="wx-fday-lo">' + Math.round(d.min) + "°</div>" +
+        "</div>";
+      });
+      html += "</div>";
+    }
+
+    if(data.daily && data.daily[0] && data.daily[0].sunrise){
+      var sr = new Date(data.daily[0].sunrise), ss = new Date(data.daily[0].sunset);
+      html += '<div class="wx-grid" style="margin-top:8px;">' +
+        '<div class="wx-stat"><b>' + sr.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Sunrise</div>" +
+        '<div class="wx-stat"><b>' + ss.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Sunset</div>";
+      html += '<div class="wx-stat"><b>' + Math.round(data.daily[0].uvMax || 0) + "</b>UV index</div>";
+      html += "</div>";
+    }
+
+    content.innerHTML = html;
+    wrap.appendChild(content);
+
+    if(items && items.length){
+      var newsWrap = el("div");
+      newsWrap.style.padding = "2px 2px 2px";
+      var head = el("div", "detail-meta");
+      head.style.marginTop = "2px";
+      head.textContent = "Nearby headlines";
+      newsWrap.appendChild(head);
+      items.slice(0, 6).forEach(function(it){
+        var row = el("div", "wx-news-row");
+        row.textContent = it.title;
+        row.addEventListener("click", function(){ renderLocationArticle(name, data, items, it); });
+        newsWrap.appendChild(row);
+      });
+      wrap.appendChild(newsWrap);
+    }
+
+    wxBody.innerHTML = "";
+    wxBody.appendChild(wrap);
+    wxBody.scrollTop = 0;
+  }
+
+  function renderLocationArticle(name, data, items, item){
+    wxViewMode = "location";
+    var wrap = el("div");
+    wrap.appendChild(wxBackButton(function(){ renderLocationDetail(name, data, items); }));
+
+    var content = el("div");
+    content.style.padding = "4px 2px 10px";
+    content.innerHTML = '<h2 class="detail-title" style="font-size:16.5px;">' + escapeHtml(item.title) + "</h2>" +
+      '<div class="detail-meta">' + escapeHtml(item.sourceLabel || "") + " · " + escapeHtml(timeAgo(item.pubDate)) + "</div>" +
+      '<p class="detail-snippet" style="font-size:13px;">Loading full story…</p>';
+    wrap.appendChild(content);
+    wxBody.innerHTML = "";
+    wxBody.appendChild(wrap);
+    wxBody.scrollTop = 0;
+
+    getJSON("/api/article?url=" + encodeURIComponent(item.link)).then(function(articleData){
+      var html = "";
+      html += '<h2 class="detail-title" style="font-size:16.5px;">' + escapeHtml(articleData.title || item.title) + "</h2>";
+      html += '<div class="detail-meta">' + escapeHtml(item.sourceLabel || "") + " · " + escapeHtml(timeAgo(item.pubDate)) + "</div>";
+      var paras = articleData.paragraphs && articleData.paragraphs.length ? articleData.paragraphs : (item.snippet ? [item.snippet] : []);
+      paras.forEach(function(p){ html += '<p class="detail-snippet" style="font-size:13px;">' + escapeHtml(p) + "</p>"; });
+      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">View original source ↗</a>';
+      content.innerHTML = html;
+    }).catch(function(){
+      content.innerHTML = '<p class="detail-snippet" style="font-size:13px;">Couldn\'t load the full article.</p>' +
+        '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open on original site ↗</a>';
+    });
   }
 
   function renderWxEditor(){
@@ -956,7 +1157,10 @@
       }
     });
   }
-  wxBody.addEventListener("dblclick", function(){ wxEditing = true; renderWxEditor(); });
+  wxBody.addEventListener("dblclick", function(){
+    if(wxViewMode !== "home") return;
+    wxEditing = true; renderWxEditor();
+  });
 
   async function loadHomeWeather(){
     try{
@@ -964,9 +1168,10 @@
         ? "/api/weather?lat=" + wxPlace.lat + "&lon=" + wxPlace.lon + "&city=" + encodeURIComponent(wxPlace.name)
         : "/api/weather?city=" + encodeURIComponent(wxPlace.name);
       var data = await getJSON(url);
-      renderWx(data);
+      lastHomeWxData = data;
+      if(wxViewMode === "home") renderWx(data);
     }catch(err){
-      wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>';
+      if(wxViewMode === "home") wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>';
     }
   }
 
@@ -1233,6 +1438,39 @@
     return { x: G.cx + x3 * G.radius, y: G.cy - y3 * G.radius, z: z3 };
   }
 
+  // inverse of the orthographic projection above — screen point -> lat/lon on the sphere's
+  // near face. Returns null if the point falls outside the rendered circle (clicked empty space).
+  function invertProject(mx, my, cx, cy, radius, rotationDeg){
+    if(radius < 1) return null;
+    var dx = (mx - cx) / radius;
+    var dy = (cy - my) / radius;
+    var distSq = dx*dx + dy*dy;
+    if(distSq > 1) return null;
+    var lat = Math.asin(Math.max(-1, Math.min(1, dy))) * 180 / Math.PI;
+    var z3 = Math.sqrt(Math.max(0, 1 - distSq));
+    var lonRad = Math.atan2(dx, z3);
+    var lon = lonRad * 180 / Math.PI - rotationDeg;
+    lon = ((lon + 180) % 360 + 360) % 360 - 180;
+    return { lat: lat, lon: lon };
+  }
+
+  function haversineKm(lat1, lon1, lat2, lon2){
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function nearestPlace(lat, lon){
+    var best = null, bestDist = Infinity;
+    PLACES.forEach(function(p){
+      var d = haversineKm(lat, lon, p.lat, p.lon);
+      if(d < bestDist){ bestDist = d; best = p; }
+    });
+    return best ? { place: best, distKm: bestDist } : null;
+  }
+
   function drawGlobe(){
     ctx.clearRect(0, 0, G.w, G.h);
     if(G.radius < 10) return;
@@ -1422,8 +1660,14 @@
     endDrag();
     if(wasClick){
       var rect = canvas.getBoundingClientRect();
-      var hit = hitTest(e.clientX - rect.left, e.clientY - rect.top);
-      if(hit) handleMarkerClick(hit);
+      var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      var hit = hitTest(mx, my);
+      if(hit){
+        handleMarkerClick(hit);
+      } else {
+        var geo = invertProject(mx, my, G.cx, G.cy, G.radius, G.rotation);
+        if(geo) openLocationDetail(geo.lat, geo.lon, {});
+      }
     }
   });
   canvas.addEventListener("pointercancel", endDrag);
@@ -1433,12 +1677,12 @@
     if(hit.type === "station"){
       var st = hit.ref;
       var relatedItems = newsMarkers.filter(function(nm){ return nm.place === st.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
-      openPlaceDetail(st.name, relatedItems, true, st.wx);
+      openLocationDetail(st.lat, st.lon, { name: st.name, items: relatedItems });
     } else if(hit.type === "home"){
       var relatedHome = newsMarkers.filter(function(nm){ return nm.place === hit.ref.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
-      openPlaceDetail(hit.ref.name, relatedHome, false, null);
+      openLocationDetail(hit.ref.lat, hit.ref.lon, { name: hit.ref.name, items: relatedHome });
     } else {
-      openPlaceDetail(hit.ref.place, hit.ref.items, false, null);
+      openLocationDetail(hit.ref.lat, hit.ref.lon, { name: hit.ref.place, items: hit.ref.items });
     }
   }
 
@@ -1759,7 +2003,24 @@
     clearTimeout(G2.idleTimer);
     G2.idleTimer = setTimeout(function(){ G2.autoRotate = true; }, 5000);
   }
-  canvas2.addEventListener("pointerup", endDrag2);
+  canvas2.addEventListener("pointerup", function(e){
+    var wasClick = G2.dragDist < 6;
+    endDrag2();
+    if(wasClick){
+      var rect = canvas2.getBoundingClientRect();
+      var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      var hit = hitTest2(mx, my);
+      if(hit && hit.type === "home"){
+        var relatedHome2 = newsMarkers.filter(function(nm){ return nm.place === hit.ref.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
+        openLocationDetail(hit.ref.lat, hit.ref.lon, { name: hit.ref.name, items: relatedHome2 });
+      } else if(hit && hit.type === "cell"){
+        openLocationDetail(hit.ref.lat, hit.ref.lon, {});
+      } else {
+        var geo = invertProject(mx, my, G2.cx, G2.cy, G2.radius, G2.rotation);
+        if(geo) openLocationDetail(geo.lat, geo.lon, {});
+      }
+    }
+  });
   canvas2.addEventListener("pointercancel", endDrag2);
   canvas2.addEventListener("pointerleave", function(){ tooltip2.style.display = "none"; });
 
