@@ -2367,18 +2367,21 @@
 
   /* ============================================================
      SPORTS — user-configurable team list (LS.sportsTeams), plus ATP/WTA tennis
-     which stays neutral/global for everyone. The team catalog for the Add-team
-     picker is fetched live from ESPN (see teams.mts) rather than hand-maintained,
-     so it's always accurate and any visitor can point this at their own teams.
+     which stays neutral/global for everyone. Team catalog, schedules, and tennis
+     scores are all fetched directly from ESPN's public site.api from the browser
+     (not proxied through a Netlify function) — ESPN's edge appears to block
+     requests coming from Netlify's own servers, but this same hidden API is what
+     ESPN's own site calls client-side, so a real browser fetching it directly
+     works fine and isn't subject to that block.
   ============================================================ */
   var LEAGUE_CATALOG = [
-    { key: "nfl", label: "NFL", sport: "football" },
-    { key: "college-football", label: "Football universitaire", sport: "football" },
-    { key: "nba", label: "NBA", sport: "basketball" },
-    { key: "mens-college-basketball", label: "Basketball universitaire masculin", sport: "basketball" },
-    { key: "womens-college-basketball", label: "Basketball universitaire féminin", sport: "basketball" },
-    { key: "mlb", label: "MLB", sport: "baseball" },
-    { key: "nhl", label: "NHL", sport: "hockey" }
+    { key: "nfl", label: "NFL", sport: "football", espnPath: "football/nfl" },
+    { key: "college-football", label: "Football universitaire", sport: "football", espnPath: "football/college-football" },
+    { key: "nba", label: "NBA", sport: "basketball", espnPath: "basketball/nba" },
+    { key: "mens-college-basketball", label: "Basketball universitaire masculin", sport: "basketball", espnPath: "basketball/mens-college-basketball" },
+    { key: "womens-college-basketball", label: "Basketball universitaire féminin", sport: "basketball", espnPath: "basketball/womens-college-basketball" },
+    { key: "mlb", label: "MLB", sport: "baseball", espnPath: "baseball/mlb" },
+    { key: "nhl", label: "NHL", sport: "hockey", espnPath: "hockey/nhl" }
   ];
   // Générique par défaut — vide, pas les équipes personnelles d'Andrew, pour qu'un
   // nouveau visiteur parte d'une page blanche (le panneau a déjà un état vide invitant
@@ -2415,14 +2418,23 @@
     }
     function loadTeamOptions(){
       var league = leagueSel.value;
+      var meta = LEAGUE_CATALOG.find(function(l){ return l.key === league; });
       teamSel.innerHTML = '<option value="">Chargement des équipes…</option>';
       if(teamCatalogCache[league]){ fillTeamOptions(teamCatalogCache[league]); return; }
-      getJSON("/api/teams?league=" + encodeURIComponent(league)).then(function(data){
-        teamCatalogCache[league] = data.teams || [];
-        fillTeamOptions(teamCatalogCache[league]);
-      }).catch(function(){
-        teamSel.innerHTML = '<option value="">Indisponible</option>';
-      });
+      if(!meta){ teamSel.innerHTML = '<option value="">Indisponible</option>'; return; }
+      fetch("https://site.api.espn.com/apis/site/v2/sports/" + meta.espnPath + "/teams?limit=999")
+        .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
+        .then(function(data){
+          var groups = (data && data.sports && data.sports[0] && data.sports[0].leagues && data.sports[0].leagues[0] && data.sports[0].leagues[0].teams) || [];
+          var teams = groups.map(function(g){ return g.team; }).filter(Boolean).map(function(t){
+            return { id: String(t.id), name: t.displayName || t.name || t.shortDisplayName || "" };
+          }).filter(function(t){ return t.id && t.name; }).sort(function(a, b){ return a.name.localeCompare(b.name); });
+          teamCatalogCache[league] = teams;
+          fillTeamOptions(teams);
+        })
+        .catch(function(){
+          teamSel.innerHTML = '<option value="">Indisponible</option>';
+        });
     }
     leagueSel.addEventListener("change", loadTeamOptions);
     loadTeamOptions();
@@ -2502,11 +2514,81 @@
     renderSports(lastSportsData);
   });
 
+  function espnTeamSchedule(spec){
+    return fetch("https://site.api.espn.com/apis/site/v2/sports/" + spec.sport + "/" + spec.league + "/teams/" + spec.teamId + "/schedule")
+      .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
+      .then(function(data){
+        var events = (data && data.events) || [];
+        var games = events.map(function(ev){
+          var comp = ev.competitions && ev.competitions[0];
+          var status = (comp && comp.status && comp.status.type) || {};
+          var competitors = (comp && comp.competitors) || [];
+          var self = competitors.find(function(c){ return String(c.team && c.team.id) === String(spec.teamId); });
+          var opp = competitors.find(function(c){ return String(c.team && c.team.id) !== String(spec.teamId); });
+          return {
+            date: ev.date,
+            completed: !!status.completed,
+            statusText: status.shortDetail || status.description || "",
+            opponent: (opp && opp.team && opp.team.displayName) || "TBD",
+            teamScore: self && self.score != null ? self.score : null,
+            oppScore: opp && opp.score != null ? opp.score : null,
+            win: typeof (self && self.winner) === "boolean" ? self.winner : null
+          };
+        });
+        var now = Date.now();
+        var past = games.filter(function(g){ return g.completed; });
+        var upcoming = games.filter(function(g){ return !g.completed && new Date(g.date).getTime() >= now - 86400000; });
+        return {
+          label: spec.label,
+          lastResult: past.length ? past[past.length - 1] : null,
+          nextGame: upcoming.length ? upcoming[0] : null,
+          note: games.length ? undefined : "Aucun match programmé (probablement hors saison)."
+        };
+      })
+      .catch(function(){
+        return { label: spec.label, lastResult: null, nextGame: null, note: "Indisponible" };
+      });
+  }
+
+  function espnTennis(tour){
+    return fetch("https://site.api.espn.com/apis/site/v2/sports/tennis/" + tour + "/scoreboard")
+      .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
+      .then(function(data){
+        var events = (data && data.events) || [];
+        var tournaments = events.slice(0, 3).map(function(ev){
+          var matches = [];
+          (ev.groupings || []).forEach(function(g){
+            (g.competitions || []).slice(0, 4).forEach(function(c){
+              var a = c.competitors && c.competitors[0];
+              var b = c.competitors && c.competitors[1];
+              matches.push({
+                status: (c.status && c.status.type && c.status.type.description) || "",
+                player1: (a && a.athlete && a.athlete.displayName) || "TBD",
+                player2: (b && b.athlete && b.athlete.displayName) || "TBD"
+              });
+            });
+          });
+          return { name: ev.name, matches: matches };
+        });
+        return { tour: tour.toUpperCase(), tournaments: tournaments };
+      })
+      .catch(function(){
+        return { tour: tour.toUpperCase(), tournaments: [] };
+      });
+  }
+
   async function loadSports(){
     try{
-      var specs = sportsTeams.map(function(t){ return { sport: t.sport, league: t.league, teamId: t.teamId, label: t.label }; });
-      var data = await getJSON("/api/sports?feed=custom&specs=" + encodeURIComponent(JSON.stringify(specs)));
-      renderSports(data);
+      var teamPromises = sportsTeams.map(function(t){
+        return espnTeamSchedule({ sport: t.sport, league: t.league, teamId: t.teamId, label: t.label });
+      });
+      var results = await Promise.all(teamPromises.concat([espnTennis("atp"), espnTennis("wta")]));
+      var teamResults = results.slice(0, sportsTeams.length);
+      var atp = results[sportsTeams.length];
+      var wta = results[sportsTeams.length + 1];
+      var teams = {};
+      sportsTeams.forEach(function(t, i){ teams[t.league + ":" + t.teamId + ":" + i] = teamResults[i]; });
+      renderSports({ teams: teams, tennis: { atp: atp, wta: wta } });
     }catch(err){
       renderSports(null);
     }
