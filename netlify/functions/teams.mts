@@ -28,7 +28,11 @@ export default async (req: Request) => {
 
   try {
     const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${path}/teams?limit=999`, {
-      headers: { "user-agent": "Mozilla/5.0 (compatible; DocdrewConsole/1.0; +https://docdrew.ca)" },
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        accept: "application/json, text/plain, */*",
+      },
     });
     if (!res.ok) throw new Error("upstream status " + res.status);
     const data = await res.json();
