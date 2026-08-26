@@ -695,7 +695,7 @@
       <div class="brand-block">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-name" id="brand-name">DOCDREW<span class="dim">.CA</span></span>
+          <span class="brand-name" id="brand-name">CENTRAL COMMAND</span>
         </div>
         <select class="brand-city-select" id="home-city-select" aria-label="Ville de résidence"></select>
       </div>
@@ -770,7 +770,7 @@
       <aside class="rail rail-right" aria-label="Météo et conditions">
         <div class="rail-spacer" aria-hidden="true"></div>
         <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Météo">
-          <div class="panel-head"><span>Météo</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-head"><span>Météo</span><button class="head-btn" id="wx-unit-btn" type="button" title="Basculer °C / °F">°F</button><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="wx-body">
             <div class="empty-state">Chargement de la météo…</div>
           </div>
@@ -912,7 +912,8 @@
     brandName: "dds-brand-name",
     snowRegion: "dds-snow-region",
     sportsTeams: "dds-sports-teams",
-    podcasts: "dds-podcasts"
+    podcasts: "dds-podcasts",
+    wxUnit: "dds-wx-unit"
   };
 
   // "Top Stories" is pinned first (the default/home tab, catching general news that
@@ -1411,7 +1412,7 @@
     detailEyebrow.textContent = "Origine — " + place;
     var html = '<h2 class="detail-title">' + escapeHtml(place) + "</h2>";
     if(station && wx){
-      html += '<div class="detail-meta"><b>Conditions locales</b> · ' + Math.round(wx.current.temperature_2m) + "°C · " + wxLabel(wx.current.weather_code) + "</div>";
+      html += '<div class="detail-meta"><b>Conditions locales</b> · ' + fmtTemp(wx.current.temperature_2m) + tempUnit() + " · " + wxLabel(wx.current.weather_code) + "</div>";
     }
     if(items && items.length){
       html += '<div class="detail-meta" style="margin-top:10px;">' + items.length + " nouvelle" + (items.length===1?"":"s") + " associée" + (items.length===1?"":"s") + " à cet endroit</div>";
@@ -1990,19 +1991,63 @@
     return '<svg viewBox="0 0 40 40" width="' + size + '" height="' + size + '">' + (WX_ICONS[wxCategory(code)] || WX_ICONS.cloudy) + "</svg>";
   }
 
+  // Bascule d'unités — le serveur renvoie toujours le métrique (°C, km/h, cm) ; le passage
+  // en impérial se fait entièrement côté client, indépendamment pour chaque navigateur. Le
+  // bouton dans l'en-tête du panneau Météo bascule ce navigateur en °F/mph/po et s'en souvient.
+  var wxUnit = readLS(LS.wxUnit, "metric"); // "metric" | "imperial"
+  var lastLocationDetail = null; // {name,data,items,lat,lon} — pour redessiner la bonne vue après une bascule
+  function fmtTemp(c){
+    if(typeof c !== "number" || isNaN(c)) return "—";
+    return Math.round(wxUnit === "imperial" ? (c * 9 / 5 + 32) : c);
+  }
+  function tempUnit(){ return wxUnit === "imperial" ? "°F" : "°C"; }
+  function fmtWind(kmh){
+    if(typeof kmh !== "number" || isNaN(kmh)) kmh = 0;
+    return Math.round(wxUnit === "imperial" ? (kmh * 0.621371) : kmh);
+  }
+  function windUnit(){ return wxUnit === "imperial" ? "mph" : "km/h"; }
+  function fmtSnow(cm){
+    if(typeof cm !== "number" || isNaN(cm)) cm = 0;
+    return (wxUnit === "imperial" ? (cm / 2.54) : cm).toFixed(1);
+  }
+  function snowUnit(){ return wxUnit === "imperial" ? "po" : "cm"; }
+  function renderWxUnitBtn(){
+    var btn = $("wx-unit-btn");
+    if(btn) btn.textContent = wxUnit === "imperial" ? "°C" : "°F";
+  }
+  function redrawWxPanel(){
+    if(wxViewMode === "location" && lastLocationDetail){
+      renderLocationDetail(lastLocationDetail.name, lastLocationDetail.data, lastLocationDetail.items, lastLocationDetail.lat, lastLocationDetail.lon);
+    } else if(lastHomeWxData){
+      renderWx(lastHomeWxData);
+    }
+  }
+  function toggleWxUnit(){
+    wxUnit = wxUnit === "imperial" ? "metric" : "imperial";
+    writeLS(LS.wxUnit, wxUnit);
+    renderWxUnitBtn();
+    redrawWxPanel();
+  }
+  renderWxUnitBtn();
+  var wxUnitBtn = $("wx-unit-btn");
+  if(wxUnitBtn) wxUnitBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    toggleWxUnit();
+  });
+
   function renderWx(data){
     wxViewMode = "home";
     if(!data || !data.current){ wxBody.innerHTML = '<div class="error-state">Flux météo indisponible.</div>'; return; }
     var c = data.current;
     var html = '<div class="wx-top">' +
       '<div class="wx-icon">' + wxIconSvg(c.weather_code, 40) + "</div>" +
-      '<div><div class="wx-temp">' + Math.round(c.temperature_2m) + "°C</div>" +
+      '<div><div class="wx-temp">' + fmtTemp(c.temperature_2m) + tempUnit() + "</div>" +
       '<div class="wx-place">' + escapeHtml(data.place.name) + (data.place.country ? ", " + escapeHtml(data.place.country) : "") + "</div>" +
       '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
       '<div class="wx-grid">' +
-        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Ressenti</div>" +
+        '<div class="wx-stat"><b>' + fmtTemp(c.apparent_temperature) + "°</b>Ressenti</div>" +
         '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidité</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h vent</div>" +
+        '<div class="wx-stat"><b>' + fmtWind(c.wind_speed_10m) + "</b>" + windUnit() + " vent</div>" +
       "</div>";
     if(data.today && typeof data.today.max === "number"){
       html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>Max</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Min</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synchro</div></div>";
@@ -2133,17 +2178,17 @@
     var c = data.current;
     var html = '<div class="wx-top">' +
       '<div class="wx-icon">' + wxIconSvg(c.weather_code, 36) + "</div>" +
-      '<div><div class="wx-temp">' + Math.round(c.temperature_2m) + "°C</div>" +
+      '<div><div class="wx-temp">' + fmtTemp(c.temperature_2m) + tempUnit() + "</div>" +
       '<div class="wx-place">' + escapeHtml(name) + "</div>" + coordSub +
       '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
       '<div class="wx-grid">' +
-        '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Ressenti</div>" +
+        '<div class="wx-stat"><b>' + fmtTemp(c.apparent_temperature) + "°</b>Ressenti</div>" +
         '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidité</div>" +
-        '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m) + "</b>km/h vent</div>" +
+        '<div class="wx-stat"><b>' + fmtWind(c.wind_speed_10m) + "</b>" + windUnit() + " vent</div>" +
       "</div>";
 
     html += '<div class="wx-grid" style="margin-top:2px;">';
-    html += '<div class="wx-stat"><b>' + Math.round(c.wind_gusts_10m || 0) + "</b>Rafales</div>";
+    html += '<div class="wx-stat"><b>' + fmtWind(c.wind_gusts_10m || 0) + "</b>Rafales</div>";
     html += '<div class="wx-stat"><b>' + Math.round(c.pressure_msl || 0) + "</b>hPa</div>";
     html += '<div class="wx-stat"><b>' + Math.round(c.cloud_cover || 0) + "%</b>Nuages</div>";
     html += "</div>";
@@ -2155,8 +2200,8 @@
         html += '<div class="wx-fday">' +
           '<div class="wx-fday-label">' + escapeHtml(dayLabel) + "</div>" +
           wxIconSvg(d.code, 20) +
-          '<div class="wx-fday-hi">' + Math.round(d.max) + "°</div>" +
-          '<div class="wx-fday-lo">' + Math.round(d.min) + "°</div>" +
+          '<div class="wx-fday-hi">' + fmtTemp(d.max) + "°</div>" +
+          '<div class="wx-fday-lo">' + fmtTemp(d.min) + "°</div>" +
         "</div>";
       });
       html += "</div>";
@@ -2338,9 +2383,9 @@
     var html = '<div class="snow-report">';
     html += head;
     html += '<div class="wx-grid">' +
-      '<div class="wx-stat"><b>' + Math.round(c.temperature_2m) + "°</b>Temp</div>" +
-      '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m || 0) + "</b>km/h vent</div>" +
-      '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm neige</div>" +
+      '<div class="wx-stat"><b>' + fmtTemp(c.temperature_2m) + "°</b>Temp</div>" +
+      '<div class="wx-stat"><b>' + fmtWind(c.wind_speed_10m || 0) + "</b>" + windUnit() + " vent</div>" +
+      '<div class="wx-stat"><b>' + fmtSnow(snow) + "</b>" + snowUnit() + " neige</div>" +
     "</div>";
     html += '<div class="snow-report-caption">Estimation basée sur la météo — pas un bulletin officiel des pistes.</div>';
     html += '<button type="button" class="wx-more-link" id="snow-toggle-btn">▲ Masquer</button>';
@@ -3778,7 +3823,7 @@
         var gp = hit.ref;
         var parts = [];
         if(typeof gp.cloud === "number") parts.push(Math.round(gp.cloud) + "% nuages");
-        if(typeof gp.temp === "number") parts.push(Math.round(gp.temp) + "°C");
+        if(typeof gp.temp === "number") parts.push(fmtTemp(gp.temp) + tempUnit());
         if(typeof gp.precip === "number" && gp.precip > 0.05) parts.push(gp.precip.toFixed(1) + "mm précip");
         tooltip2.textContent = parts.join(" · ") || "aucune donnée";
       }

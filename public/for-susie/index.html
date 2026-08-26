@@ -3,34 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Peter's Console</title>
-<meta name="description" content="A full-screen live console — weather, markets and world news plotted on a rotating globe. Preconfigured for Peter.">
+<title>Susie's Console</title>
+<meta name="description" content="A full-screen live console — weather, markets and world news plotted on a rotating globe. Preconfigured for Susie.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305070C'/%3E%3Cpath d='M32 10 54 46H10Z' fill='none' stroke='%23FFA94D' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='36' r='4.5' fill='%2352D8DE'/%3E%3C/svg%3E">
 <style>
   /* ============ TOKENS ============ */
   :root{
-    --void:#05070C;
-    --panel:#0D1420;
-    --panel-2:#121C2C;
-    --grid-line:#1E2B3D;
-    --grid-soft:#16202E;
-    --text:#DCE7F2;
-    --text-dim:#7A93A8;
+    /* Warm "reading lamp" palette for Susie — same tokens, same panels, same functions
+       as the main console, just retuned from the cool cyan "starship bridge" look to a
+       warm copper/amber/sage one. --frost is deliberately left blue: it's the "cold" cue
+       for the snow report and ISS marker, and stays legible as "cold" even in a warm page. */
+    --void:#0B0805;
+    --panel:#1C140F;
+    --panel-2:#241A12;
+    --grid-line:#3C2D1E;
+    --grid-soft:#2A2015;
+    --text:#F0E6D8;
+    --text-dim:#A6927A;
     --amber:#FFA94D;
     --amber-ink:#3A2408;
     --amber-dim:#8A5A28;
     --gold:#FFD166;
     --gold-ink:#3A2C05;
-    --cyan:#52D8DE;
-    --cyan-ink:#052B2D;
-    --cyan-dim:#2B6E72;
-    --violet:#B98CE8;
-    --violet-ink:#241535;
-    --good:#4FD68C;
+    --cyan:#FF8A5C;
+    --cyan-ink:#3A1810;
+    --cyan-dim:#8A4A32;
+    --violet:#D89AC2;
+    --violet-ink:#331828;
+    --good:#8FCB6F;
     --bad:#FF6B5E;
-    --teal:#4FD6B0;
-    --teal-ink:#06342A;
+    --teal:#C99A4A;
+    --teal-ink:#2E2408;
     --frost:#8EC9FF;
     --frost-ink:#0B2A44;
     --crimson:#FF6F91;
@@ -50,8 +54,8 @@
   }
   body{
     background:
-      radial-gradient(1200px 700px at 18% -10%, rgba(82,216,222,0.06), transparent 60%),
-      radial-gradient(900px 600px at 100% 110%, rgba(185,140,232,0.06), transparent 60%),
+      radial-gradient(1200px 700px at 18% -10%, rgba(255,138,92,0.06), transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, rgba(216,154,194,0.06), transparent 60%),
       var(--void);
   }
   ::selection{ background:var(--amber); color:var(--amber-ink); }
@@ -123,8 +127,9 @@
     border-left:1px solid var(--grid-line); padding-left:16px; line-height:1.2;
   }
   .stardate{
-    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size:16px; color:var(--cyan); letter-spacing:0.04em;
+    /* Hidden on Peter's page — no "stardate" sci-fi flourish, just the plain warm
+       date shown on the line below (.subline) still displays. */
+    display:none;
   }
 
   .greeting-block{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; line-height:1.15; }
@@ -487,7 +492,7 @@
   .legend-dot.frost{ background:var(--frost); box-shadow:0 0 6px var(--frost); }
   .legend-dot.gold{ background:var(--gold); box-shadow:0 0 6px var(--gold); }
   .legend-dot.green{ background:var(--good); box-shadow:0 0 6px var(--good); }
-  .legend-dot.haze{ background:rgba(205,222,230,0.85); }
+  .legend-dot.haze{ background:rgba(230,220,205,0.85); }
   .legend-dot.precip-grad{
     width:20px; border-radius:4px;
     background:linear-gradient(90deg, rgb(110,220,150), rgb(235,214,80), rgb(255,110,90));
@@ -575,7 +580,7 @@
   /* ============ TICKER ============ */
   /* ============ DETAIL OVERLAY ============ */
   .overlay{
-    position:fixed; inset:0; background:rgba(3,5,9,0.72); backdrop-filter:blur(3px);
+    position:fixed; inset:0; background:rgba(10,7,5,0.72); backdrop-filter:blur(3px);
     display:flex; align-items:center; justify-content:center; z-index:50; padding:24px;
   }
   .overlay[hidden]{ display:none; }
@@ -697,12 +702,12 @@
       <div class="brand-block">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-name" id="brand-name">PETER'S CONSOLE</span>
+          <span class="brand-name" id="brand-name">SUSIE'S CONSOLE</span>
         </div>
         <select class="brand-city-select" id="home-city-select" aria-label="Home city"></select>
       </div>
       <div class="stardate-block">
-        <span class="stardate" id="stardate">STARDATE —</span>
+        <span class="stardate" id="stardate"></span>
         <div class="subline" id="date-text">—</div>
         <div class="subline subline-short" id="date-text-short">—</div>
       </div>
@@ -772,7 +777,7 @@
       <aside class="rail rail-right" aria-label="Weather and conditions">
         <div class="rail-spacer" aria-hidden="true"></div>
         <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
-          <div class="panel-head"><span>Weather</span><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°C</button><i class="panel-chevron">▾</i></div>
+          <div class="panel-head"><span>Weather</span><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°F</button><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="wx-body">
             <div class="empty-state">Loading weather…</div>
           </div>
@@ -807,8 +812,8 @@
           <div class="panel-head"><span>Tasks</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="todo-body"></div>
         </section>
-        <section class="panel" data-accent="teal" data-panel-key="log" aria-label="Captain's log">
-          <div class="panel-head"><span>Captain's Log</span><i class="panel-chevron">▾</i></div>
+        <section class="panel" data-accent="teal" data-panel-key="log" aria-label="Notes">
+          <div class="panel-head"><span>Notes</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="log-body"></div>
         </section>
         <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
@@ -859,8 +864,8 @@
     <div class="footer-strip">
       <div class="ship-status-wrap" aria-label="Ship status">
         <div class="ship-status-track" id="ship-status-track">
-          <span class="ship-status" id="ship-status">Systems nominal</span>
-          <span class="ship-status" id="ship-status-dup" aria-hidden="true">Systems nominal</span>
+          <span class="ship-status" id="ship-status">Coffee's on — take your time</span>
+          <span class="ship-status" id="ship-status-dup" aria-hidden="true">Coffee's on — take your time</span>
         </div>
       </div>
       <div class="footer-sep"></div>
@@ -899,26 +904,26 @@
 
   // Declared early (before WORLD_CITIES/homeCity below) since that code reads LS.homeCity
   // at definition time, not just inside a function called later.
-  // Namespaced "dds-peter-*" (instead of "dds-*") so this page's saved settings never
+  // Namespaced "dds-susie-*" (instead of "dds-*") so this page's saved settings never
   // collide with the main console's, even when both are opened in the same browser —
   // e.g. while Andrew is previewing this page before handing it off.
   var LS = {
-    symbols: "dds-peter-symbols",
-    fxFrom: "dds-peter-fx-from",
-    fxTo: "dds-peter-fx-to",
-    fxAmt: "dds-peter-fx-amt",
-    wxCity: "dds-peter-wx-city",
-    links: "dds-peter-links",
-    todos: "dds-peter-todos",
-    railCollapse: "dds-peter-rail-collapse",
-    captainsLog: "dds-peter-captains-log",
-    homeCity: "dds-peter-home-city",
-    userName: "dds-peter-user-name",
-    brandName: "dds-peter-brand-name",
-    snowRegion: "dds-peter-snow-region",
-    sportsTeams: "dds-peter-sports-teams",
-    podcasts: "dds-peter-podcasts",
-    wxUnit: "dds-peter-wx-unit"
+    symbols: "dds-susie-symbols",
+    fxFrom: "dds-susie-fx-from",
+    fxTo: "dds-susie-fx-to",
+    fxAmt: "dds-susie-fx-amt",
+    wxCity: "dds-susie-wx-city",
+    links: "dds-susie-links",
+    todos: "dds-susie-todos",
+    railCollapse: "dds-susie-rail-collapse",
+    captainsLog: "dds-susie-captains-log",
+    homeCity: "dds-susie-home-city",
+    userName: "dds-susie-user-name",
+    brandName: "dds-susie-brand-name",
+    snowRegion: "dds-susie-snow-region",
+    sportsTeams: "dds-susie-sports-teams",
+    podcasts: "dds-susie-podcasts",
+    wxUnit: "dds-susie-wx-unit"
   };
 
   // "Top Stories" is pinned first (the default/home tab, catching general news that
@@ -1016,13 +1021,13 @@
     { name: "Melbourne", region: "Oceania", lat: -37.8136, lon: 144.9631, tz: "Australia/Melbourne" },
     { name: "Auckland", region: "Oceania", lat: -36.8485, lon: 174.7633, tz: "Pacific/Auckland" }
   ];
-  // Preset for Peter — Wakefield, RI (part of South Kingstown, near Providence).
-  var DEFAULT_HOME_CITY = { name: "Wakefield, RI", region: "North America", lat: 41.4334, lon: -71.4970, tz: "America/New_York" };
+  // Preset for Susie — Granby, QC.
+  var DEFAULT_HOME_CITY = { name: "Granby, QC", region: "North America", lat: 45.4009, lon: -72.7284, tz: "America/Toronto" };
   var homeCity = readLS(LS.homeCity, DEFAULT_HOME_CITY);
   var HOME = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
   var HOME_TZ = homeCity.tz;
-  // Preset for Peter — still editable via the same greeting-text dblclick as before.
-  var userName = readLS(LS.userName, "Peter");
+  // Preset for Susie — still editable via the same greeting-text dblclick as before.
+  var userName = readLS(LS.userName, "Susie");
 
   // [name, lat, lon, extra match keywords...]
   var PLACES_RAW = [
@@ -1114,27 +1119,29 @@
   ];
   var DEFAULT_TODOS = [];
   var DEFAULT_LOG = [
-    { id: "seed-1", text: "Console fully operational. All systems nominal.", ts: new Date().toISOString() }
+    { id: "seed-1", text: "Welcome, Susie — everything's set up and ready to go. Feel better soon.", ts: new Date().toISOString() }
   ];
 
+  // Warm, comforting lines instead of the main console's sci-fi "ship status" flourishes —
+  // fits the cozy, mom-approved feel rather than a futuristic bridge readout.
   var SHIP_STATUS_LINES = [
-    "Shields nominal · Warp core stable",
-    "Deflector array calibrated",
-    "Life support: optimal",
-    "Comm relays synced with Starfleet Command",
-    "Sensor sweep: no anomalies detected",
-    "Replicator queue: nominal",
-    "Structural integrity field: 100%",
-    "Impulse engines standing by",
-    "Navigational deflector: green",
-    "Auxiliary power: online",
-    "Long-range sensors: all clear",
-    "Holodeck safety protocols: engaged",
-    "Transporter buffer: stable",
-    "Subspace relay: strong signal",
-    "Bridge systems: fully operational",
-    "Environmental controls: within tolerance",
-    "Astrometric survey: in progress"
+    "Coffee's on — take your time",
+    "Nothing urgent today, just take it easy",
+    "Weather's tracked, so you don't have to think about it",
+    "Wolverines and Huskies loaded and ready",
+    "All quiet here — rest up",
+    "Home base set to Wakefield, RI",
+    "News, weather, and scores, all in one place",
+    "Feel better soon",
+    "Everything's set up — just click around",
+    "One less thing to worry about today",
+    "Sending good thoughts your way",
+    "Take all the time you need",
+    "Rooting for a speedy recovery",
+    "Glad you're here — make yourself comfortable",
+    "Snow report's tucked away till winter",
+    "Tennis scores updating live when there's a match on",
+    "Just for you, Susie"
   ];
 
   /* ============================================================
@@ -1192,7 +1199,7 @@
     var hourFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "numeric", hour12: false });
     var hour = parseInt(hourFmt.format(now), 10);
     var part = hour < 5 ? "night watch" : hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
-    var greetWord = hour < 5 ? "Systems nominal," : "Good " + part + ",";
+    var greetWord = hour < 5 ? "Quiet night," : "Good " + part + ",";
     if(!nameEditing) $("greeting-text").textContent = greetWord + " " + userName;
 
     // simple pseudo-stardate: YYYY.DDD.tenths-of-day
@@ -1218,7 +1225,7 @@
       if(closed) return;
       closed = true;
       var typed = input.value.trim();
-      userName = typed || "Commander";
+      userName = typed || "Susie";
       writeLS(LS.userName, userName);
       nameEditing = false;
       updateClock();
@@ -1239,9 +1246,9 @@
   setInterval(updateClock, 1000);
 
   /* ============================================================
-     BRAND NAME (editable, top-left "PETER'S CONSOLE")
+     BRAND NAME (editable, top-left "SUSIE'S CONSOLE")
   ============================================================ */
-  var brandName = readLS(LS.brandName, "PETER'S CONSOLE");
+  var brandName = readLS(LS.brandName, "SUSIE'S CONSOLE");
   var brandEditing = false;
   function renderBrandName(){
     if(brandEditing) return;
@@ -1269,7 +1276,7 @@
       if(closed) return;
       closed = true;
       var typed = input.value.trim();
-      brandName = typed || "PETER'S CONSOLE";
+      brandName = typed || "SUSIE'S CONSOLE";
       writeLS(LS.brandName, brandName);
       brandEditing = false;
       renderBrandName();
@@ -1464,7 +1471,7 @@
      accepts a channel URL, an @handle, or a raw channel ID —
      youtube.mts resolves whichever one to a channel ID server-side.
   ============================================================ */
-  // Preset for Peter — channel ids confirmed live against each channel's About page.
+  // Preset for Susie — channel ids confirmed live against each channel's About page.
   var DEFAULT_PODCASTS = [
     { label: "MeidasTouch", channelId: "UC9r9HYFxEQOBXSopFS61ZWg" },
     { label: "Tod Maffin", channelId: "UCy9djDjPbgW7chRBXK2TV1g" }
@@ -1628,7 +1635,7 @@
      MARKETS (stocks)
   ============================================================ */
   var stocksBody = $("stocks-body");
-  // Generic picks for Peter, plus the Nasdaq and Dow indices he asked for — editable
+  // Generic picks for Susie, plus the Nasdaq and Dow indices he asked for — editable
   // any time via LS.symbols once he hits Edit.
   var currentSymbols = readLS(LS.symbols, ["AAPL","MSFT","NVDA","BTC-USD","ETH-USD","^IXIC","^DJI"]);
   var stocksEditing = false;
@@ -1989,9 +1996,9 @@
   }
 
   // Units toggle — the backend always returns metric (°C, km/h, cm); everything imperial
-  // happens client-side so every page/browser can flip independently. Defaults to imperial
-  // here (Peter's in Wakefield, RI) — the button still lets him flip back to °C any time.
-  var wxUnit = readLS(LS.wxUnit, "imperial"); // "metric" | "imperial"
+  // happens client-side so every page/browser can flip independently. Susie's in Granby, QC,
+  // so this defaults to metric like the main console — the button is there if she ever wants °F.
+  var wxUnit = readLS(LS.wxUnit, "metric"); // "metric" | "imperial"
   var lastLocationDetail = null; // {name,data,items,lat,lon} — so a unit toggle can redraw whichever view is open
   function fmtTemp(c){
     if(typeof c !== "number" || isNaN(c)) return "—";
@@ -2307,7 +2314,7 @@
     ctx.restore();
 
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
-    ctx.strokeStyle = "rgba(232,236,242,0.35)"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = "rgba(240,232,218,0.35)"; ctx.lineWidth = 1; ctx.stroke();
   }
 
   function renderSkyWatch(auroraData){
@@ -2354,7 +2361,7 @@
      this is honestly a weather/snowfall proxy, not an official
      piste report — said plainly in the caption below).
   ============================================================ */
-  // Preset for Peter — Southern Vermont (pinned near Stratton Mountain for accurate
+  // Preset for Susie — Southern Vermont (pinned near Stratton Mountain for accurate
   // conditions). The region is still a per-browser setting (LS.snowRegion) — double-click
   // the snow report header to point it at any other ski region/city.
   var DEFAULT_SNOW_REGION = { name: "Southern Vermont", lat: 43.1127, lon: -72.9081 };
@@ -2444,7 +2451,7 @@
     { key: "mlb", label: "MLB", sport: "baseball", espnPath: "baseball/mlb" },
     { key: "nhl", label: "NHL", sport: "hockey", espnPath: "hockey/nhl" }
   ];
-  // Preset for Peter — team ids confirmed live against ESPN's teams endpoint.
+  // Preset for Susie — team ids confirmed live against ESPN's teams endpoint.
   // Still fully editable per-browser via LS.sportsTeams from here on.
   var DEFAULT_SPORTS_TEAMS = [
     { sport: "football", league: "college-football", teamId: "130", label: "Michigan Wolverines" },
@@ -2726,7 +2733,7 @@
   }
 
   /* ============================================================
-     CAPTAIN'S LOG — freeform journal, localStorage-backed
+     NOTES — freeform journal, localStorage-backed
   ============================================================ */
   var logBody = $("log-body");
   var captainsLog = readLS(LS.captainsLog, DEFAULT_LOG);
@@ -2752,7 +2759,7 @@
       logBody.appendChild(row);
     });
     var addRow = el("div", "log-add");
-    addRow.innerHTML = '<input type="text" id="log-input" placeholder="Log entry…"><button type="button" id="log-add-btn">Add</button>';
+    addRow.innerHTML = '<input type="text" id="log-input" placeholder="Write a note…"><button type="button" id="log-add-btn">Add</button>';
     logBody.appendChild(addRow);
     function addEntry(){
       var input = $("log-input");
@@ -3148,16 +3155,16 @@
       var tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * st2.speed + st2.phase));
       ctx.beginPath();
       ctx.arc(sx, sy, st2.r, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(210,230,240," + (tw*0.85) + ")";
+      ctx.fillStyle = "rgba(235,222,205," + (tw*0.85) + ")";
       ctx.fill();
     }
 
     // sphere shading — deep lit-ocean look, brighter upper-left "sunlit" limb, dark falloff at the rim
     var grad = ctx.createRadialGradient(G.cx - G.radius*0.4, G.cy - G.radius*0.45, G.radius*0.05, G.cx, G.cy, G.radius*1.04);
-    grad.addColorStop(0, "rgba(120,196,214,0.42)");
-    grad.addColorStop(0.35, "rgba(48,120,150,0.4)");
-    grad.addColorStop(0.72, "rgba(14,46,64,0.55)");
-    grad.addColorStop(1, "rgba(3,8,14,0.75)");
+    grad.addColorStop(0, "rgba(224,150,90,0.42)");
+    grad.addColorStop(0.35, "rgba(120,72,40,0.4)");
+    grad.addColorStop(0.72, "rgba(48,28,16,0.55)");
+    grad.addColorStop(1, "rgba(10,6,4,0.75)");
     ctx.beginPath();
     ctx.arc(G.cx, G.cy, G.radius, 0, Math.PI*2);
     ctx.fillStyle = grad;
@@ -3168,20 +3175,20 @@
     ctx.beginPath();
     ctx.arc(G.cx, G.cy, G.radius + 1.5, 0, Math.PI*2);
     ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(120,220,235,0.35)";
-    ctx.shadowColor = "rgba(82,216,222,0.9)";
+    ctx.strokeStyle = "rgba(255,168,130,0.35)";
+    ctx.shadowColor = "rgba(255,138,92,0.9)";
     ctx.shadowBlur = 14;
     ctx.stroke();
     ctx.restore();
 
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(82,216,222,0.5)";
+    ctx.strokeStyle = "rgba(255,138,92,0.5)";
     ctx.beginPath();
     ctx.arc(G.cx, G.cy, G.radius, 0, Math.PI*2);
     ctx.stroke();
 
     // wireframe meridians
-    ctx.strokeStyle = "rgba(82,216,222,0.09)";
+    ctx.strokeStyle = "rgba(255,138,92,0.09)";
     ctx.lineWidth = 1;
     for(var lon = 0; lon < 360; lon += 30){
       ctx.beginPath();
@@ -3205,7 +3212,7 @@
       ctx.stroke();
     }
     // equator, emphasized
-    ctx.strokeStyle = "rgba(82,216,222,0.16)";
+    ctx.strokeStyle = "rgba(255,138,92,0.16)";
     ctx.beginPath();
     var started3 = false;
     for(var lon3 = 0; lon3 <= 360; lon3 += 3){
@@ -3238,7 +3245,7 @@
       var npScale = 0.55 + npp.z * 0.45;
       ctx.beginPath();
       ctx.arc(npp.x, npp.y, 3.2 * npScale, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(3,6,14," + (alpha * 0.55 * npScale) + ")";
+      ctx.fillStyle = "rgba(10,7,5," + (alpha * 0.55 * npScale) + ")";
       ctx.fill();
     }
 
@@ -3609,15 +3616,15 @@
       var tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * st3.speed + st3.phase + 1.7));
       ctx2.beginPath();
       ctx2.arc(sx, sy, st3.r, 0, Math.PI*2);
-      ctx2.fillStyle = "rgba(210,230,240," + (tw*0.85) + ")";
+      ctx2.fillStyle = "rgba(235,222,205," + (tw*0.85) + ")";
       ctx2.fill();
     }
 
     var grad2 = ctx2.createRadialGradient(G2.cx - G2.radius*0.4, G2.cy - G2.radius*0.45, G2.radius*0.05, G2.cx, G2.cy, G2.radius*1.04);
-    grad2.addColorStop(0, "rgba(120,196,214,0.42)");
-    grad2.addColorStop(0.35, "rgba(48,120,150,0.4)");
-    grad2.addColorStop(0.72, "rgba(14,46,64,0.55)");
-    grad2.addColorStop(1, "rgba(3,8,14,0.75)");
+    grad2.addColorStop(0, "rgba(224,150,90,0.42)");
+    grad2.addColorStop(0.35, "rgba(120,72,40,0.4)");
+    grad2.addColorStop(0.72, "rgba(48,28,16,0.55)");
+    grad2.addColorStop(1, "rgba(10,6,4,0.75)");
     ctx2.beginPath();
     ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
     ctx2.fillStyle = grad2;
@@ -3627,19 +3634,19 @@
     ctx2.beginPath();
     ctx2.arc(G2.cx, G2.cy, G2.radius + 1.5, 0, Math.PI*2);
     ctx2.lineWidth = 3;
-    ctx2.strokeStyle = "rgba(120,220,235,0.35)";
-    ctx2.shadowColor = "rgba(82,216,222,0.9)";
+    ctx2.strokeStyle = "rgba(255,168,130,0.35)";
+    ctx2.shadowColor = "rgba(255,138,92,0.9)";
     ctx2.shadowBlur = 14;
     ctx2.stroke();
     ctx2.restore();
 
     ctx2.lineWidth = 1;
-    ctx2.strokeStyle = "rgba(82,216,222,0.5)";
+    ctx2.strokeStyle = "rgba(255,138,92,0.5)";
     ctx2.beginPath();
     ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
     ctx2.stroke();
 
-    ctx2.strokeStyle = "rgba(82,216,222,0.09)";
+    ctx2.strokeStyle = "rgba(255,138,92,0.09)";
     ctx2.lineWidth = 1;
     for(var lon = 0; lon < 360; lon += 30){
       ctx2.beginPath();
@@ -3661,7 +3668,7 @@
       }
       ctx2.stroke();
     }
-    ctx2.strokeStyle = "rgba(82,216,222,0.16)";
+    ctx2.strokeStyle = "rgba(255,138,92,0.16)";
     ctx2.beginPath();
     var started3 = false;
     for(var lon3 = 0; lon3 <= 360; lon3 += 3){
@@ -3694,7 +3701,7 @@
       var npScale2 = 0.55 + npp2.z * 0.45;
       ctx2.beginPath();
       ctx2.arc(npp2.x, npp2.y, 3.2 * npScale2, 0, Math.PI*2);
-      ctx2.fillStyle = "rgba(3,6,14," + (alpha2 * 0.55 * npScale2) + ")";
+      ctx2.fillStyle = "rgba(10,7,5," + (alpha2 * 0.55 * npScale2) + ")";
       ctx2.fill();
     }
 
@@ -3731,7 +3738,7 @@
           ctx2.arc(cpp.x, cpp.y, rC, 0, Math.PI*2);
           // softened & slightly cooler than before, and capped lower — leaves more visual
           // headroom for the glowing, radar-colored precipitation layer to read as distinct
-          ctx2.fillStyle = "rgba(205,222,230," + (0.08 + edge * 0.4 * (0.3 + covCurve * 0.7)) + ")";
+          ctx2.fillStyle = "rgba(230,220,205," + (0.08 + edge * 0.4 * (0.3 + covCurve * 0.7)) + ")";
           ctx2.fill();
         }
       }
