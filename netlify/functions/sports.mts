@@ -19,6 +19,19 @@ const TEAM_FEEDS: Record<string, { sport: string; league: string; teamId: string
   "uconn-wbb": { sport: "basketball", league: "womens-college-basketball", teamId: "41", label: "UConn Women's Basketball" },
 };
 
+// Sport/league slug pairs the client is allowed to request via feed=custom — mirrors the
+// catalog teams.mts exposes for its team-picker dropdown, so any team a user can pick
+// there is guaranteed fetchable here too.
+const ALLOWED_LEAGUES: Record<string, string> = {
+  nfl: "football",
+  "college-football": "football",
+  nba: "basketball",
+  "mens-college-basketball": "basketball",
+  "womens-college-basketball": "basketball",
+  mlb: "baseball",
+  nhl: "hockey",
+};
+
 async function fetchTeamSchedule(feed: { sport: string; league: string; teamId: string; label: string }) {
   const res = await fetch(
     `https://site.api.espn.com/apis/site/v2/sports/${feed.sport}/${feed.league}/teams/${feed.teamId}/schedule`,
@@ -110,6 +123,47 @@ export default async (req: Request) => {
       ]);
       const teams: Record<string, any> = {};
       teamKeys.forEach((k, i) => (teams[k] = teamResults[i]));
+      return new Response(JSON.stringify({ teams, tennis: { atp, wta }, updated: new Date().toISOString() }), {
+        headers: { "content-type": "application/json", "cache-control": "public, max-age=600" },
+      });
+    }
+
+    if (feed === "custom") {
+      let specs: any[] = [];
+      try {
+        specs = JSON.parse(url.searchParams.get("specs") || "[]");
+      } catch {
+        specs = [];
+      }
+      if (!Array.isArray(specs)) specs = [];
+      // Cap and validate — each spec must name an allowed sport/league pair and a
+      // numeric-looking team id; anything else is dropped rather than fetched.
+      const clean = specs
+        .slice(0, 12)
+        .filter(
+          (s) =>
+            s &&
+            typeof s.league === "string" &&
+            ALLOWED_LEAGUES[s.league] === s.sport &&
+            typeof s.teamId === "string" &&
+            /^\d+$/.test(s.teamId) &&
+            typeof s.label === "string" &&
+            s.label.length > 0 &&
+            s.label.length <= 60
+        )
+        .map((s) => ({ sport: s.sport, league: s.league, teamId: s.teamId, label: s.label.slice(0, 60) }));
+
+      const [teamResults, atp, wta] = await Promise.all([
+        Promise.all(
+          clean.map((spec) =>
+            fetchTeamSchedule(spec).catch(() => ({ label: spec.label, lastResult: null, nextGame: null, note: "Unavailable" }))
+          )
+        ),
+        fetchTennis("atp").catch(() => ({ tour: "ATP", tournaments: [], note: "Unavailable" })),
+        fetchTennis("wta").catch(() => ({ tour: "WTA", tournaments: [], note: "Unavailable" })),
+      ]);
+      const teams: Record<string, any> = {};
+      clean.forEach((spec, i) => (teams[spec.league + ":" + spec.teamId + ":" + i] = teamResults[i]));
       return new Response(JSON.stringify({ teams, tennis: { atp, wta }, updated: new Date().toISOString() }), {
         headers: { "content-type": "application/json", "cache-control": "public, max-age=600" },
       });

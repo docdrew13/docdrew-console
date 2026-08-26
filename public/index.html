@@ -253,7 +253,7 @@
   .kp-badge.storm{ border-color:var(--bad); color:var(--bad); }
 
   /* ---- bromont ---- */
-  .bromont-caption{ font-size:12.5px; color:var(--text-dim); opacity:0.75; margin-top:8px; font-style:italic; }
+  .snow-report-caption{ font-size:12.5px; color:var(--text-dim); opacity:0.75; margin-top:8px; font-style:italic; }
 
   /* ---- sports ---- */
   .sport-row{ padding:5px 0; border-bottom:1px solid var(--grid-soft); }
@@ -265,6 +265,15 @@
   .sport-tennis-head{ font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; margin-top:8px; padding-top:8px; border-top:1px solid var(--grid-line); }
   .sport-tennis-match{ font-size:15px; color:var(--text); margin-top:3px; }
   .sport-tennis-match span{ color:var(--text-dim); font-size:13px; }
+  .sport-team{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .sport-team-x{ cursor:pointer; color:var(--text-dim); font-size:13px; flex:0 0 auto; }
+  .sport-team-x:hover{ color:var(--bad); }
+  .sport-add{ display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; padding-top:9px; border-top:1px solid var(--grid-line); }
+  .sport-add select{
+    flex:1 1 100px; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:6px; padding:5px 6px; font-size:13.5px;
+  }
+  .sport-add button{ flex:0 0 auto; background:var(--crimson); color:var(--crimson-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:14px; cursor:pointer; }
 
   /* ---- podcast video tiles ---- */
   .video-tiles{ display:flex; gap:8px; }
@@ -621,7 +630,11 @@
           </div>
         </section>
         <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Sports scores">
-          <div class="panel-head"><span>Sports</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-head">
+            <span>Sports</span>
+            <button class="head-btn" id="sports-edit-btn" type="button">Edit</button>
+            <i class="panel-chevron">▾</i>
+          </div>
           <div class="panel-body scroll" id="sports-body">
             <div class="empty-state">Loading scores…</div>
           </div>
@@ -721,7 +734,9 @@
     captainsLog: "dds-captains-log",
     homeCity: "dds-home-city",
     userName: "dds-user-name",
-    brandName: "dds-brand-name"
+    brandName: "dds-brand-name",
+    snowRegion: "dds-snow-region",
+    sportsTeams: "dds-sports-teams"
   };
 
   // "Top Stories" is pinned first (the default/home tab, catching general news that
@@ -907,14 +922,12 @@
   // longer / more specific keys first so "hong kong" beats a looser later match
   PLACES.sort(function(a,b){ return b.keys[0].length - a.keys[0].length; });
 
+  // Kept as the one default Quick Link for new visitors — everything else here is
+  // per-browser (see LS.links), so a fresh visitor never sees anyone else's bookmarks.
   var DEFAULT_LINKS = [
-    { name: "Foodie Collection", url: "https://docdrewfood.netlify.app/" },
-    { name: "Sonos", url: "https://play.sonos.com/en-us/web-app" },
-    { name: "Travel Planner", url: "file:///Users/amsnyder/Library/Mobile%20Documents/com~apple~CloudDocs/AMS/AMS%20Personal/Food%20and%20Travel/Travel/travel-planner.html" }
+    { name: "Foodie Collection", url: "https://docdrewfood.netlify.app/" }
   ];
-  var DEFAULT_TODOS = [
-    { id: "seed-1", text: "Point docdrew.ca at Netlify (DNS)", done: false }
-  ];
+  var DEFAULT_TODOS = [];
   var DEFAULT_LOG = [
     { id: "seed-1", text: "Console fully operational. All systems nominal.", ts: new Date().toISOString() }
   ];
@@ -1285,7 +1298,9 @@
      MARKETS (stocks)
   ============================================================ */
   var stocksBody = $("stocks-body");
-  var currentSymbols = readLS(LS.symbols, ["AVXL","NWBO","CVM","NVDA","ETH-USD","BTC-USD"]);
+  // Neutral, widely-recognized default for a fresh visitor — anyone's actual portfolio
+  // lives only in their own browser's localStorage (LS.symbols) once they hit Edit.
+  var currentSymbols = readLS(LS.symbols, ["AAPL","MSFT","NVDA","BTC-USD","ETH-USD"]);
   var stocksEditing = false;
 
   function renderQuotes(quotes){
@@ -1442,6 +1457,7 @@
     html += '<button type="button" class="wx-more-link" id="wx-more-btn">Full forecast →</button>';
     wxBody.innerHTML = html;
     if(wxEditing) renderWxEditor();
+    if(snowEditing) renderSnowEditor();
     var moreBtn = $("wx-more-btn");
     if(moreBtn) moreBtn.addEventListener("click", function(){
       if(data.place && typeof data.place.latitude === "number"){
@@ -1618,8 +1634,12 @@
       }
     });
   }
-  wxBody.addEventListener("dblclick", function(){
+  wxBody.addEventListener("dblclick", function(e){
     if(wxViewMode !== "home") return;
+    if(e.target.closest && e.target.closest("#snow-report-head")){
+      snowEditing = true; renderSnowEditor();
+      return;
+    }
     wxEditing = true; renderWxEditor();
   });
 
@@ -1732,30 +1752,62 @@
      this is honestly a weather/snowfall proxy, not an official
      piste report — said plainly in the caption below).
   ============================================================ */
-  var BROMONT = { name: "Bromont", lat: 45.3086, lon: -72.6423 };
+  // Default is Bromont, but the region is a per-browser setting (LS.snowRegion) —
+  // double-click the snow report header to point it at any ski region/city.
+  var DEFAULT_SNOW_REGION = { name: "Bromont", lat: 45.3086, lon: -72.6423 };
+  var snowRegion = readLS(LS.snowRegion, DEFAULT_SNOW_REGION);
   var lastBromontData = null;
+  var snowEditing = false;
 
   function buildSnowReportHtml(data){
+    var head = '<div class="snow-report-head" id="snow-report-head" title="Double-click to change region">❄ Snow Report — ' + escapeHtml(snowRegion.name) + "</div>";
     if(!data || !data.current){
-      return '<div class="snow-report"><div class="snow-report-head">❄ Snow Report — Bromont</div><div class="error-state">Conditions unavailable.</div></div>';
+      return '<div class="snow-report">' + head + '<div class="error-state">Conditions unavailable.</div></div>';
     }
     var c = data.current;
     var snow = typeof c.snowfall === "number" ? c.snowfall : 0;
     var html = '<div class="snow-report">';
-    html += '<div class="snow-report-head">❄ Snow Report — Bromont</div>';
+    html += head;
     html += '<div class="wx-grid">' +
       '<div class="wx-stat"><b>' + Math.round(c.temperature_2m) + "°</b>Temp</div>" +
       '<div class="wx-stat"><b>' + Math.round(c.wind_speed_10m || 0) + "</b>km/h wind</div>" +
       '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm snow</div>" +
     "</div>";
-    html += '<div class="bromont-caption">Weather-based proxy — not an official trail report.</div>';
+    html += '<div class="snow-report-caption">Weather-based proxy — not an official trail report.</div>';
     html += "</div>";
     return html;
   }
 
+  function renderSnowEditor(){
+    var head = $("snow-report-head");
+    if(!head) return;
+    var wrap = el("div", "wx-city-edit");
+    wrap.innerHTML = '<input type="text" id="snow-region-input" placeholder="Ski region / city name">';
+    head.insertAdjacentElement("afterend", wrap);
+    var input = $("snow-region-input");
+    input.value = snowRegion.name;
+    input.focus();
+    input.select();
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        var typed = e.target.value.trim();
+        snowRegion = typed ? { name: typed, lat: null, lon: null } : DEFAULT_SNOW_REGION;
+        writeLS(LS.snowRegion, snowRegion);
+        snowEditing = false;
+        loadBromont();
+      } else if(e.key === "Escape"){
+        snowEditing = false;
+        if(wxViewMode === "home" && lastHomeWxData) renderWx(lastHomeWxData);
+      }
+    });
+  }
+
   async function loadBromont(){
     try{
-      lastBromontData = await getJSON("/api/weather?lat=" + BROMONT.lat + "&lon=" + BROMONT.lon + "&city=Bromont");
+      var url = (typeof snowRegion.lat === "number" && typeof snowRegion.lon === "number")
+        ? "/api/weather?lat=" + snowRegion.lat + "&lon=" + snowRegion.lon + "&city=" + encodeURIComponent(snowRegion.name)
+        : "/api/weather?city=" + encodeURIComponent(snowRegion.name);
+      lastBromontData = await getJSON(url);
     }catch(err){
       lastBromontData = null;
     }
@@ -1764,15 +1816,33 @@
   }
 
   /* ============================================================
-     SPORTS — Michigan (FB/MBB/WBB), UConn (MBB/WBB), ATP/WTA tennis
+     SPORTS — user-configurable team list (LS.sportsTeams), plus ATP/WTA tennis
+     which stays neutral/global for everyone. The team catalog for the Add-team
+     picker is fetched live from ESPN (see teams.mts) rather than hand-maintained,
+     so it's always accurate and any visitor can point this at their own teams.
   ============================================================ */
-  var SPORTS_TEAM_LABELS = {
-    "michigan-fb": "Michigan Football",
-    "michigan-mbb": "Michigan MBB",
-    "michigan-wbb": "Michigan WBB",
-    "uconn-mbb": "UConn MBB",
-    "uconn-wbb": "UConn WBB"
-  };
+  var LEAGUE_CATALOG = [
+    { key: "nfl", label: "NFL", sport: "football" },
+    { key: "college-football", label: "College Football", sport: "football" },
+    { key: "nba", label: "NBA", sport: "basketball" },
+    { key: "mens-college-basketball", label: "Men's College Basketball", sport: "basketball" },
+    { key: "womens-college-basketball", label: "Women's College Basketball", sport: "basketball" },
+    { key: "mlb", label: "MLB", sport: "baseball" },
+    { key: "nhl", label: "NHL", sport: "hockey" }
+  ];
+  // Preserves the original lineup as the starting default — fully editable
+  // per-browser via LS.sportsTeams from here on.
+  var DEFAULT_SPORTS_TEAMS = [
+    { sport: "football", league: "college-football", teamId: "130", label: "Michigan Football" },
+    { sport: "basketball", league: "mens-college-basketball", teamId: "130", label: "Michigan Men's Basketball" },
+    { sport: "basketball", league: "womens-college-basketball", teamId: "130", label: "Michigan Women's Basketball" },
+    { sport: "basketball", league: "mens-college-basketball", teamId: "41", label: "UConn Men's Basketball" },
+    { sport: "basketball", league: "womens-college-basketball", teamId: "41", label: "UConn Women's Basketball" }
+  ];
+  var sportsTeams = readLS(LS.sportsTeams, DEFAULT_SPORTS_TEAMS);
+  var sportsEditing = false;
+  var teamCatalogCache = {}; // league -> [{id,name}], fetched on demand for the Add-team picker
+  var lastSportsData = null;
 
   function sportLine(team){
     if(!team) return "No data";
@@ -1788,21 +1858,63 @@
     return team.note || "Off-season";
   }
 
+  function wireSportAddRow(){
+    var leagueSel = $("sport-league-select");
+    var teamSel = $("sport-team-select");
+    if(!leagueSel || !teamSel) return;
+    leagueSel.innerHTML = LEAGUE_CATALOG.map(function(l){ return '<option value="' + l.key + '">' + escapeHtml(l.label) + "</option>"; }).join("");
+
+    function fillTeamOptions(teams){
+      if(!teams.length){ teamSel.innerHTML = '<option value="">No teams found</option>'; return; }
+      teamSel.innerHTML = teams.map(function(t){ return '<option value="' + escapeHtml(t.id) + '">' + escapeHtml(t.name) + "</option>"; }).join("");
+    }
+    function loadTeamOptions(){
+      var league = leagueSel.value;
+      teamSel.innerHTML = '<option value="">Loading teams…</option>';
+      if(teamCatalogCache[league]){ fillTeamOptions(teamCatalogCache[league]); return; }
+      getJSON("/api/teams?league=" + encodeURIComponent(league)).then(function(data){
+        teamCatalogCache[league] = data.teams || [];
+        fillTeamOptions(teamCatalogCache[league]);
+      }).catch(function(){
+        teamSel.innerHTML = '<option value="">Unavailable</option>';
+      });
+    }
+    leagueSel.addEventListener("change", loadTeamOptions);
+    loadTeamOptions();
+
+    $("sport-team-add-btn").addEventListener("click", function(){
+      var league = leagueSel.value;
+      var meta = LEAGUE_CATALOG.find(function(l){ return l.key === league; });
+      var teamId = teamSel.value;
+      var opt = teamSel.options[teamSel.selectedIndex];
+      var teamName = opt ? opt.textContent : "";
+      if(!meta || !teamId || !teamName) return;
+      sportsTeams.push({ sport: meta.sport, league: league, teamId: teamId, label: teamName });
+      writeLS(LS.sportsTeams, sportsTeams);
+      renderSports(lastSportsData);
+      loadSports();
+    });
+  }
+
   function renderSports(data){
     var body = $("sports-body");
     if(!body) return;
-    if(!data){
-      body.innerHTML = '<div class="error-state">Sports feed unavailable.</div>';
-      return;
-    }
+    lastSportsData = data;
+    var results = (data && data.teams) ? Object.keys(data.teams).map(function(k){ return data.teams[k]; }) : [];
     var html = "";
-    Object.keys(SPORTS_TEAM_LABELS).forEach(function(key){
-      var team = data.teams && data.teams[key];
-      html += '<div class="sport-row"><div class="sport-team">' + SPORTS_TEAM_LABELS[key] + '</div><div class="sport-line">' + sportLine(team) + "</div></div>";
-    });
+
+    if(!sportsTeams.length){
+      html += '<div class="empty-state">No teams added — hit Edit to pick some.</div>';
+    } else {
+      sportsTeams.forEach(function(t, idx){
+        html += '<div class="sport-row"><div class="sport-team">' + escapeHtml(t.label) +
+          (sportsEditing ? '<span class="sport-team-x" data-idx="' + idx + '">✕</span>' : "") +
+          '</div><div class="sport-line">' + (data ? sportLine(results[idx]) : "Sports feed unavailable.") + "</div></div>";
+      });
+    }
 
     ["atp","wta"].forEach(function(tour){
-      var t = data.tennis && data.tennis[tour];
+      var t = data && data.tennis && data.tennis[tour];
       html += '<div class="sport-tennis-head">' + tour.toUpperCase() + " Tennis</div>";
       if(t && t.tournaments && t.tournaments.length){
         var top = t.tournaments[0];
@@ -1815,12 +1927,40 @@
       }
     });
 
+    if(sportsEditing){
+      html += '<div class="sport-add" id="sport-add-row">' +
+        '<select id="sport-league-select"></select>' +
+        '<select id="sport-team-select"><option value="">Loading teams…</option></select>' +
+        '<button type="button" id="sport-team-add-btn">Add</button>' +
+        "</div>";
+    }
+
     body.innerHTML = html;
+
+    if(sportsEditing){
+      Array.prototype.forEach.call(body.querySelectorAll(".sport-team-x"), function(x){
+        x.addEventListener("click", function(){
+          sportsTeams.splice(parseInt(x.getAttribute("data-idx"), 10), 1);
+          writeLS(LS.sportsTeams, sportsTeams);
+          renderSports(lastSportsData);
+          loadSports();
+        });
+      });
+      wireSportAddRow();
+    }
   }
+
+  var sportsEditBtn = $("sports-edit-btn");
+  if(sportsEditBtn) sportsEditBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    sportsEditing = !sportsEditing;
+    renderSports(lastSportsData);
+  });
 
   async function loadSports(){
     try{
-      var data = await getJSON("/api/sports?feed=all");
+      var specs = sportsTeams.map(function(t){ return { sport: t.sport, league: t.league, teamId: t.teamId, label: t.label }; });
+      var data = await getJSON("/api/sports?feed=custom&specs=" + encodeURIComponent(JSON.stringify(specs)));
       renderSports(data);
     }catch(err){
       renderSports(null);
