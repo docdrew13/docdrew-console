@@ -275,6 +275,15 @@
   }
   .sport-add button{ flex:0 0 auto; background:var(--crimson); color:var(--crimson-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:14px; cursor:pointer; }
 
+  .podcast-edit-list{ margin-top:10px; padding-top:9px; border-top:1px solid var(--grid-line); }
+  .podcast-edit-row{ display:flex; align-items:center; justify-content:space-between; gap:6px; padding:4px 0; font-size:14px; color:var(--text); }
+  .podcast-edit-x{ cursor:pointer; color:var(--text-dim); font-size:13px; flex:0 0 auto; }
+  .podcast-edit-x:hover{ color:var(--bad); }
+  .podcast-empty{ font-size:14px; color:var(--text-dim); padding:6px 0; }
+  .podcast-add{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .podcast-add input{ flex:1 1 90px; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:14px; }
+  .podcast-add button{ flex:0 0 auto; background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:14px; cursor:pointer; }
+
   /* ---- podcast video tiles ---- */
   .video-tiles{ display:flex; gap:8px; }
   .video-tile{
@@ -652,7 +661,11 @@
           <div class="panel-body scroll" id="log-body"></div>
         </section>
         <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
-          <div class="panel-head"><span>Podcasts</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-head">
+            <span>Podcasts</span>
+            <button class="head-btn" id="podcasts-edit-btn" type="button">Edit</button>
+            <i class="panel-chevron">▾</i>
+          </div>
           <div class="panel-body" id="podcasts-body">
             <div class="video-tiles" id="video-tiles">
               <div class="video-tile unavailable"><div class="video-tile-title">Loading…</div></div>
@@ -736,7 +749,8 @@
     userName: "dds-user-name",
     brandName: "dds-brand-name",
     snowRegion: "dds-snow-region",
-    sportsTeams: "dds-sports-teams"
+    sportsTeams: "dds-sports-teams",
+    podcasts: "dds-podcasts"
   };
 
   // "Top Stories" is pinned first (the default/home tab, catching general news that
@@ -1264,17 +1278,25 @@
 
   /* ============================================================
      PODCASTS — most recent upload from each channel, as small
-     clickable thumbnail tiles
+     clickable thumbnail tiles. User-configurable (LS.podcasts):
+     accepts a channel URL, an @handle, or a raw channel ID —
+     youtube.mts resolves whichever one to a channel ID server-side.
   ============================================================ */
-  var PODCASTS = [
-    { key: "meidastouch", label: "MeidasTouch", channelId: "UC9r9HYFxEQOBXSopFS61ZWg" },
-    { key: "todmaffin", label: "Tod Maffin", channelId: "UCy9djDjPbgW7chRBXK2TV1g" }
+  var DEFAULT_PODCASTS = [
+    { label: "MeidasTouch", channelId: "UC9r9HYFxEQOBXSopFS61ZWg" },
+    { label: "Tod Maffin", channelId: "UCy9djDjPbgW7chRBXK2TV1g" }
   ];
+  var podcasts = readLS(LS.podcasts, DEFAULT_PODCASTS);
+  var podcastsEditing = false;
 
   async function loadPodcasts(){
     var container = $("video-tiles");
-    var results = await Promise.allSettled(PODCASTS.map(function(p){
-      return getJSON("/api/youtube?channel=" + p.channelId).then(function(data){ return { meta: p, data: data }; });
+    if(!podcasts.length){
+      container.innerHTML = '<div class="podcast-empty">No channels added — hit Edit to add one.</div>';
+      return;
+    }
+    var results = await Promise.allSettled(podcasts.map(function(p){
+      return getJSON("/api/youtube?channel=" + encodeURIComponent(p.channelId)).then(function(data){ return { meta: p, data: data }; });
     }));
     container.innerHTML = "";
     results.forEach(function(r, idx){
@@ -1288,11 +1310,55 @@
         tile.addEventListener("click", function(){ openVideo(d.videoId); });
       } else {
         tile.className = "video-tile unavailable";
-        tile.innerHTML = '<div class="video-tile-title">' + escapeHtml(PODCASTS[idx].label) + " unavailable</div>";
+        tile.innerHTML = '<div class="video-tile-title">' + escapeHtml(podcasts[idx].label) + " unavailable</div>";
       }
       container.appendChild(tile);
     });
   }
+
+  function renderPodcastEditor(){
+    var body = $("podcasts-body");
+    if(!body) return;
+    var existing = body.querySelector(".podcast-edit-list");
+    if(existing) existing.remove();
+    if(!podcastsEditing) return;
+
+    var wrap = el("div", "podcast-edit-list");
+    var rowsHtml = podcasts.map(function(p, idx){
+      return '<div class="podcast-edit-row"><span>' + escapeHtml(p.label) + '</span><span class="podcast-edit-x" data-idx="' + idx + '">✕</span></div>';
+    }).join("");
+    wrap.innerHTML = rowsHtml +
+      '<div class="podcast-add">' +
+        '<input type="text" id="podcast-name-input" placeholder="Name">' +
+        '<input type="text" id="podcast-channel-input" placeholder="Channel URL, @handle, or ID">' +
+        '<button type="button" id="podcast-add-btn">Add</button>' +
+      "</div>";
+    body.appendChild(wrap);
+
+    Array.prototype.forEach.call(wrap.querySelectorAll(".podcast-edit-x"), function(x){
+      x.addEventListener("click", function(){
+        podcasts.splice(parseInt(x.getAttribute("data-idx"), 10), 1);
+        writeLS(LS.podcasts, podcasts);
+        renderPodcastEditor();
+        loadPodcasts();
+      });
+    });
+    $("podcast-add-btn").addEventListener("click", function(){
+      var name = $("podcast-name-input").value.trim();
+      var chan = $("podcast-channel-input").value.trim();
+      if(!name || !chan) return;
+      podcasts.push({ label: name, channelId: chan });
+      writeLS(LS.podcasts, podcasts);
+      renderPodcastEditor();
+      loadPodcasts();
+    });
+  }
+  var podcastsEditBtn = $("podcasts-edit-btn");
+  if(podcastsEditBtn) podcastsEditBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    podcastsEditing = !podcastsEditing;
+    renderPodcastEditor();
+  });
 
   /* ============================================================
      MARKETS (stocks)
