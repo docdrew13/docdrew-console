@@ -360,28 +360,6 @@
   .todo-add button{ background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:12.5px; cursor:pointer; }
 
   /* ============ TICKER ============ */
-  .ticker{
-    overflow:hidden; background:var(--panel); border:1px solid var(--grid-line); border-radius:14px;
-    display:flex; align-items:center;
-  }
-  .ticker-label{
-    flex:0 0 auto; background:var(--amber); color:var(--amber-ink); font-family:"Rajdhani",sans-serif;
-    font-weight:700; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; height:100%;
-    display:flex; align-items:center; padding:0 12px;
-  }
-  .ticker-viewport{ flex:1; overflow:hidden; height:100%; display:flex; align-items:center; }
-  .ticker-track{
-    display:flex; gap:44px; white-space:nowrap; padding-left:20px;
-    animation: ticker-scroll 90s linear infinite;
-    font-family:"Share Tech Mono", monospace; font-size:13px; color:var(--text-dim);
-  }
-  .ticker-track span b{ color:var(--cyan); font-weight:400; }
-  @keyframes ticker-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
-  @media (prefers-reduced-motion: reduce){
-    .ticker-track{ animation:none; }
-    .ticker-viewport{ overflow-x:auto; }
-  }
-
   /* ============ DETAIL OVERLAY ============ */
   .overlay{
     position:fixed; inset:0; background:rgba(3,5,9,0.72); backdrop-filter:blur(3px);
@@ -554,13 +532,6 @@
         <div class="panel-body scroll" id="todo-body"></div>
       </section>
     </div>
-
-    <div class="ticker">
-      <span class="ticker-label">Wire</span>
-      <div class="ticker-viewport">
-        <div class="ticker-track" id="ticker-track"><span>Standing by for headlines…</span></div>
-      </div>
-    </div>
   </div>
 
   <div class="overlay" id="detail-overlay" hidden>
@@ -702,12 +673,9 @@
   PLACES.sort(function(a,b){ return b.keys[0].length - a.keys[0].length; });
 
   var DEFAULT_LINKS = [
-    { name: "Gmail", url: "https://mail.google.com" },
-    { name: "Netlify", url: "https://app.netlify.com" },
-    { name: "GitHub", url: "https://github.com" },
-    { name: "Calendar", url: "https://calendar.google.com" },
-    { name: "Drive", url: "https://drive.google.com" },
-    { name: "YouTube", url: "https://youtube.com" }
+    { name: "Foodie Collection", url: "https://docdrewfood.netlify.app/" },
+    { name: "Sonos", url: "https://play.sonos.com/en-us/web-app" },
+    { name: "Travel Planner", url: "file:///Users/amsnyder/Library/Mobile%20Documents/com~apple~CloudDocs/AMS/AMS%20Personal/Food%20and%20Travel/Travel/travel-planner.html" }
   ];
   var DEFAULT_TODOS = [
     { id: "seed-1", text: "Point docdrew.ca at Netlify (DNS)", done: false }
@@ -1275,10 +1243,10 @@
   }
 
   /* ============================================================
-     NEWS — fetch all sources, feed the rail list, ticker & globe
+     NEWS — fetch all sources, feed the rail list & globe
   ============================================================ */
   var newsCache = {};      // key -> items[]
-  var allItemsFlat = [];   // merged, deduped, for ticker + globe matching
+  var allItemsFlat = [];   // merged, deduped, for globe matching
   var activeTab = "us-politics";
 
   function buildTabs(){
@@ -1378,14 +1346,6 @@
     });
   }
 
-  function buildTicker(){
-    var track = $("ticker-track");
-    if(!allItemsFlat.length){ return; }
-    var sorted = allItemsFlat.slice().sort(function(a,b){ return new Date(b.pubDate) - new Date(a.pubDate); }).slice(0, 24);
-    var frag = sorted.map(function(it){ return "<span><b>" + escapeHtml(it.sourceLabel.toUpperCase()) + "</b> " + escapeHtml(it.title) + "</span>"; }).join("");
-    track.innerHTML = frag + frag; // duplicate for seamless loop
-  }
-
   function findPlace(text){
     var lower = (" " + text + " ").toLowerCase();
     for(var i=0; i<PLACES.length; i++){
@@ -1422,7 +1382,6 @@
     });
 
     renderNewsList();
-    buildTicker();
     populateNewsMarkers();
   }
 
