@@ -18,6 +18,7 @@ const SOURCES: Record<string, { name: string; url: string }> = {
   "health-medicine": { name: "BBC Health", url: "http://feeds.bbci.co.uk/news/health/rss.xml" },
   canada: { name: "Global News", url: "https://globalnews.ca/feed/" },
   quebec: { name: "Global News Montreal", url: "https://globalnews.ca/montreal/feed/" },
+  entertainment: { name: "BBC Entertainment", url: "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml" },
 };
 
 function extractTag(block: string, tag: string): string {
