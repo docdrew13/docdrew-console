@@ -93,14 +93,14 @@
   }
   .brand-name{
     font-family:"Rajdhani", sans-serif; font-weight:700; letter-spacing:0.08em;
-    text-transform:uppercase; font-size:18.5px; color:var(--text);
+    text-transform:uppercase; font-size:23px; color:var(--text);
   }
   .brand-name .dim{ color:var(--text-dim); font-weight:600; }
 
   .stardate{
     flex:0 0 auto;
     font-family:"Share Tech Mono", monospace;
-    font-size:14px;
+    font-size:17.5px;
     color:var(--cyan);
     letter-spacing:0.04em;
     border-left:1px solid var(--grid-line);
@@ -109,7 +109,7 @@
 
   .greeting-block{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; line-height:1.15; }
   .greeting{
-    font-family:"Rajdhani", sans-serif; font-weight:700; font-size:18.5px;
+    font-family:"Rajdhani", sans-serif; font-weight:700; font-size:23px;
     letter-spacing:0.03em; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .greeting .status-dot{
@@ -118,25 +118,25 @@
     animation: blink 2.4s ease-in-out infinite;
   }
   @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
-  .subline{ font-family:"Share Tech Mono", monospace; font-size:12.5px; color:var(--text-dim); }
+  .subline{ font-family:"Share Tech Mono", monospace; font-size:15.5px; color:var(--text-dim); }
 
   .clock{
     flex:0 0 auto; text-align:right; font-family:"Share Tech Mono", monospace;
-    color:var(--amber); font-size:23px; letter-spacing:0.03em; line-height:1.1;
+    color:var(--amber); font-size:29px; letter-spacing:0.03em; line-height:1.1;
   }
-  .clock .zone{ display:block; font-size:11.5px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; }
+  .clock .zone{ display:block; font-size:14.5px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; }
 
   .search{ flex:0 0 auto; display:flex; align-items:center; gap:6px; }
   .search select, .search input{
     background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
-    border-radius:20px; padding:7px 12px; font-size:14.5px;
+    border-radius:20px; padding:7px 12px; font-size:18px;
   }
   .search select{ color:var(--text-dim); }
   .search input{ width:170px; }
   .search input::placeholder{ color:var(--text-dim); }
   .search button{
     background:var(--cyan); color:var(--cyan-ink); border:0; border-radius:20px;
-    padding:7px 14px; font-weight:700; font-size:14px; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
+    padding:7px 14px; font-weight:700; font-size:17.5px; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
   }
   .search button:hover{ filter:brightness(1.1); }
 
@@ -152,18 +152,18 @@
     flex:0 0 auto;
     display:flex; align-items:center; justify-content:space-between; gap:8px;
     padding:6px 8px 6px 16px;
-    font-family:"Rajdhani", sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.09em; font-size:14.5px;
+    font-family:"Rajdhani", sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.09em; font-size:18px;
     color:var(--amber-ink);
     background:var(--amber);
   }
-  .panel-head .n{ font-family:"Share Tech Mono", monospace; font-size:12.5px; opacity:0.75; text-transform:none; letter-spacing:0; }
+  .panel-head .n{ font-family:"Share Tech Mono", monospace; font-size:15.5px; opacity:0.75; text-transform:none; letter-spacing:0; }
   .panel[data-accent="cyan"] .panel-head{ background:var(--cyan); color:var(--cyan-ink); }
   .panel[data-accent="violet"] .panel-head{ background:var(--violet); color:var(--violet-ink); }
   .panel[data-accent="gold"] .panel-head{ background:var(--gold); color:var(--gold-ink); }
 
   .head-btn{
     appearance:none; border:0; background:rgba(0,0,0,0.18); color:inherit;
-    border-radius:999px; font-size:12px; font-weight:700; letter-spacing:0.04em;
+    border-radius:999px; font-size:15px; font-weight:700; letter-spacing:0.04em;
     padding:4px 9px; cursor:pointer; text-transform:uppercase;
   }
   .head-btn:hover{ background:rgba(0,0,0,0.32); }
@@ -174,7 +174,7 @@
   .tabs{ display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; max-width:310px; }
   .tab{
     appearance:none; border:0; background:rgba(0,0,0,0.16); color:inherit; opacity:0.7;
-    border-radius:999px; font-size:11.5px; font-weight:700; padding:4px 8px; cursor:pointer; letter-spacing:0.02em;
+    border-radius:999px; font-size:14.5px; font-weight:700; padding:4px 8px; cursor:pointer; letter-spacing:0.02em;
     white-space:nowrap;
   }
   .tab.active{ opacity:1; background:rgba(0,0,0,0.34); }
@@ -206,9 +206,9 @@
   .video-tile-title{
     position:absolute; left:0; right:0; bottom:0; padding:5px 7px 6px;
     background:linear-gradient(transparent, rgba(0,0,0,0.88));
-    font-family:"Share Tech Mono", monospace; font-size:10px; line-height:1.3; color:#fff;
+    font-family:"Share Tech Mono", monospace; font-size:12.5px; line-height:1.3; color:#fff;
   }
-  .video-tile-title b{ display:block; font-size:9.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--cyan); font-weight:400; }
+  .video-tile-title b{ display:block; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--cyan); font-weight:400; }
   .video-tile.unavailable{ display:flex; align-items:center; justify-content:center; cursor:default; }
   .video-tile.unavailable .video-tile-title{ position:static; background:none; text-align:center; }
   .video-panel{
@@ -222,78 +222,79 @@
   /* ---- stock list ---- */
   .quote-row{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:7px 0; border-bottom:1px solid var(--grid-soft);
+    padding:5px 0; border-bottom:1px solid var(--grid-soft);
   }
   .quote-row:last-child{ border-bottom:0; }
   .q-id{ min-width:0; }
-  .q-sym{ font-family:"Share Tech Mono", monospace; font-size:14.5px; color:var(--text); }
-  .q-name{ font-size:12px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
-  .q-nums{ text-align:right; font-family:"Share Tech Mono", monospace; font-size:14px; font-variant-numeric:tabular-nums; }
+  .q-sym{ font-family:"Share Tech Mono", monospace; font-size:18px; color:var(--text); }
+  .q-name{ font-size:15px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+  .q-nums{ text-align:right; font-family:"Share Tech Mono", monospace; font-size:17.5px; font-variant-numeric:tabular-nums; }
   .q-price{ color:var(--text); }
   .q-chg.up{ color:var(--good); }
   .q-chg.down{ color:var(--bad); }
   .edit-row{ margin-top:6px; }
   .edit-row input{
     width:100%; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
-    border-radius:6px; padding:6px 8px; font-family:"Share Tech Mono", monospace; font-size:12.5px;
+    border-radius:6px; padding:6px 8px; font-family:"Share Tech Mono", monospace; font-size:15.5px;
   }
-  .edit-hint{ font-size:11.5px; color:var(--text-dim); margin-top:4px; }
+  .edit-hint{ font-size:14.5px; color:var(--text-dim); margin-top:4px; }
 
   /* ---- currency ---- */
   .fx-row{ display:flex; align-items:center; gap:6px; margin-bottom:8px; }
   .fx-row select, .fx-row input{
     background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
-    border-radius:6px; padding:6px 8px; font-size:14px;
+    border-radius:6px; padding:6px 8px; font-size:17.5px;
   }
   .fx-row input{ width:76px; font-family:"Share Tech Mono", monospace; }
   .fx-swap{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--cyan); border-radius:6px; width:28px; height:28px; cursor:pointer; }
   .fx-swap:hover{ background:var(--panel-2); }
-  .fx-result{ font-family:"Share Tech Mono", monospace; font-size:25.5px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
-  .fx-meta{ text-align:center; font-size:12px; color:var(--text-dim); }
+  .fx-result{ font-family:"Share Tech Mono", monospace; font-size:32px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
+  .fx-meta{ text-align:center; font-size:15px; color:var(--text-dim); }
 
   /* ---- weather compact ---- */
   .wx-top{ display:flex; align-items:center; gap:10px; }
   .wx-icon{ width:40px; height:40px; flex:none; }
-  .wx-temp{ font-family:"Share Tech Mono", monospace; font-size:30px; color:var(--text); }
-  .wx-place{ font-size:12.5px; color:var(--text-dim); }
-  .wx-cond{ font-size:13px; color:var(--cyan); }
+  .wx-temp{ font-family:"Share Tech Mono", monospace; font-size:37.5px; color:var(--text); }
+  .wx-place{ font-size:15.5px; color:var(--text-dim); }
+  .wx-place-coord{ font-family:"Share Tech Mono", monospace; font-size:11px; color:var(--text-dim); opacity:0.7; margin-top:1px; }
+  .wx-cond{ font-size:16px; color:var(--cyan); }
   .wx-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
-  .wx-stat{ text-align:center; font-family:"Share Tech Mono", monospace; font-size:12.5px; color:var(--text-dim); }
-  .wx-stat b{ display:block; color:var(--text); font-size:15px; }
+  .wx-stat{ text-align:center; font-family:"Share Tech Mono", monospace; font-size:15.5px; color:var(--text-dim); }
+  .wx-stat b{ display:block; color:var(--text); font-size:19px; }
   .wx-city-edit{ display:flex; gap:6px; margin-top:8px; }
-  .wx-city-edit input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:12.5px; }
+  .wx-city-edit input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:15.5px; }
   .wx-more-link{
     display:inline-flex; align-items:center; gap:4px; background:none; border:none; color:var(--cyan);
-    font-family:"Share Tech Mono", monospace; font-size:11px; letter-spacing:0.04em; text-transform:uppercase;
+    font-family:"Share Tech Mono", monospace; font-size:14px; letter-spacing:0.04em; text-transform:uppercase;
     cursor:pointer; padding:8px 0 0; text-align:left; width:100%;
   }
   .wx-more-link:hover{ color:var(--text); }
   .wx-forecast{ display:flex; justify-content:space-between; gap:4px; margin-top:10px; padding-top:8px; border-top:1px solid var(--grid-line); }
   .wx-fday{ flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-family:"Share Tech Mono", monospace; }
-  .wx-fday-label{ font-size:10.5px; color:var(--text-dim); text-transform:uppercase; }
+  .wx-fday-label{ font-size:13px; color:var(--text-dim); text-transform:uppercase; }
   .wx-fday svg{ width:20px; height:20px; }
-  .wx-fday-hi{ font-size:12px; color:var(--text); }
-  .wx-fday-lo{ font-size:11px; color:var(--text-dim); }
-  .wx-news-row{ padding:7px 0; border-bottom:1px solid var(--grid-line); font-size:12.5px; color:var(--text); cursor:pointer; line-height:1.35; }
+  .wx-fday-hi{ font-size:15px; color:var(--text); }
+  .wx-fday-lo{ font-size:14px; color:var(--text-dim); }
+  .wx-news-row{ padding:5px 0; border-bottom:1px solid var(--grid-line); font-size:15.5px; color:var(--text); cursor:pointer; line-height:1.2; }
   .wx-news-row:last-child{ border-bottom:0; }
   .wx-news-row:hover{ color:var(--cyan); }
 
   /* ---- news list (rail) ---- */
   .news-item{
-    display:flex; gap:8px; padding:8px 0; border-bottom:1px solid var(--grid-soft); cursor:pointer;
+    display:flex; gap:8px; padding:5px 0; border-bottom:1px solid var(--grid-soft); cursor:pointer;
   }
   .news-item:last-child{ border-bottom:0; }
   .news-item:hover .news-title{ color:var(--cyan); }
   .news-thumb{ width:56px; height:56px; border-radius:6px; object-fit:cover; flex:none; background:var(--panel-2); }
-  .news-thumb.empty{ display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:18.5px; }
+  .news-thumb.empty{ display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:23px; }
   .news-back{
     display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--cyan);
-    font-family:"Share Tech Mono", monospace; font-size:12px; letter-spacing:0.05em; text-transform:uppercase;
+    font-family:"Share Tech Mono", monospace; font-size:15px; letter-spacing:0.05em; text-transform:uppercase;
     cursor:pointer; padding:12px 14px 4px; text-align:left; width:100%;
   }
   .news-back:hover{ color:var(--text); }
-  .news-title{ font-size:14px; line-height:1.32; color:var(--text); }
-  .news-meta{ font-size:11px; color:var(--text-dim); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
+  .news-title{ font-size:17.5px; line-height:1.18; color:var(--text); }
+  .news-meta{ font-size:14px; color:var(--text-dim); margin-top:2px; text-transform:uppercase; letter-spacing:0.04em; }
 
   /* ---- globe panel ---- */
   .globe-panel{
@@ -302,14 +303,14 @@
   }
   .globe-head{
     flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
-    padding:10px 16px; font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:14.5px; color:var(--cyan);
+    padding:10px 16px; font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:18px; color:var(--cyan);
   }
-  .globe-head .n{ font-family:"Share Tech Mono", monospace; font-size:12px; color:var(--text-dim); letter-spacing:0; text-transform:none; }
+  .globe-head .n{ font-family:"Share Tech Mono", monospace; font-size:15px; color:var(--text-dim); letter-spacing:0; text-transform:none; }
   .globe-body{ flex:1; min-height:0; position:relative; }
   .globe-body canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
   .globe-body canvas:active{ cursor:grabbing; }
   .globe-legend{
-    position:absolute; left:14px; bottom:32px; display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--text-dim);
+    position:absolute; left:14px; bottom:32px; display:flex; flex-direction:column; gap:4px; font-size:14px; color:var(--text-dim);
     font-family:"Share Tech Mono", monospace; pointer-events:none;
   }
   .globe-legend span{ display:flex; align-items:center; gap:5px; }
@@ -319,13 +320,13 @@
   .legend-dot.blue{ background:#5AA7E8; box-shadow:0 0 6px #5AA7E8; }
   .legend-dot.red{ background:#FF6B5E; box-shadow:0 0 6px #FF6B5E; }
   .globe-hint{
-    position:absolute; left:14px; bottom:12px; font-size:10.5px; color:var(--text-dim);
+    position:absolute; left:14px; bottom:12px; font-size:13px; color:var(--text-dim);
     font-family:"Share Tech Mono", monospace; pointer-events:none; text-align:left;
   }
   .globe-tooltip{
     position:absolute; pointer-events:none; transform:translate(-50%,-130%);
     background:var(--panel-2); border:1px solid var(--cyan-dim); border-radius:6px;
-    padding:5px 9px; font-size:12.5px; color:var(--text); white-space:nowrap; display:none;
+    padding:5px 9px; font-size:15.5px; color:var(--text); white-space:nowrap; display:none;
     font-family:"Rajdhani", sans-serif; font-weight:600; letter-spacing:0.02em;
     box-shadow:0 8px 20px -8px rgba(0,0,0,0.7);
   }
@@ -336,28 +337,28 @@
 
   .tile{
     display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--grid-line);
-    border-radius:8px; padding:6px 10px; font-size:13px; color:var(--text); text-decoration:none;
+    border-radius:8px; padding:6px 10px; font-size:16px; color:var(--text); text-decoration:none;
     position:relative;
   }
   .tile:hover{ border-color:var(--amber); color:var(--amber); }
   .tile .tile-x{
     position:absolute; top:-6px; right:-6px; width:16px; height:16px; border-radius:50%;
-    background:var(--bad); color:#2A0A06; font-size:11.5px; line-height:16px; text-align:center; cursor:pointer; display:none;
+    background:var(--bad); color:#2A0A06; font-size:14.5px; line-height:16px; text-align:center; cursor:pointer; display:none;
   }
   .tile:hover .tile-x{ display:block; }
   .tile-add{ display:flex; gap:6px; width:100%; margin-top:4px; }
-  .tile-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:12.5px; min-width:0; }
-  .tile-add button{ background:var(--amber); color:var(--amber-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:12.5px; cursor:pointer; }
+  .tile-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:15.5px; min-width:0; }
+  .tile-add button{ background:var(--amber); color:var(--amber-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
 
-  .todo-row{ display:flex; align-items:center; gap:8px; width:100%; padding:5px 0; border-bottom:1px solid var(--grid-soft); }
+  .todo-row{ display:flex; align-items:center; gap:8px; width:100%; padding:4px 0; border-bottom:1px solid var(--grid-soft); }
   .todo-row input[type="checkbox"]{ accent-color:var(--violet); width:15px; height:15px; flex:none; }
-  .todo-text{ flex:1; font-size:14px; color:var(--text); }
+  .todo-text{ flex:1; font-size:17.5px; color:var(--text); }
   .todo-row.done .todo-text{ color:var(--text-dim); text-decoration:line-through; }
-  .todo-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:15px; }
+  .todo-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:19px; }
   .todo-del:hover{ color:var(--bad); }
   .todo-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
-  .todo-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:13px; }
-  .todo-add button{ background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:12.5px; cursor:pointer; }
+  .todo-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:16px; }
+  .todo-add button{ background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
 
   /* ============ TICKER ============ */
   /* ============ DETAIL OVERLAY ============ */
@@ -375,31 +376,31 @@
     flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:10px 10px 10px 18px; background:var(--cyan); color:var(--cyan-ink);
   }
-  .detail-eyebrow{ font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:13px; }
+  .detail-eyebrow{ font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:16px; }
   .detail-close{
     appearance:none; border:0; background:rgba(0,0,0,0.2); color:inherit; width:26px; height:26px;
-    border-radius:50%; cursor:pointer; font-size:15px; line-height:1;
+    border-radius:50%; cursor:pointer; font-size:19px; line-height:1;
   }
   .detail-close:hover{ background:rgba(0,0,0,0.36); }
   .detail-body{ flex:1; min-height:0; overflow-y:auto; padding:18px 20px 22px; }
   .detail-img{ width:100%; max-height:220px; object-fit:cover; border-radius:8px; margin-bottom:14px; background:var(--panel); }
-  .detail-title{ font-family:"Rajdhani", sans-serif; font-weight:700; font-size:24px; line-height:1.25; margin:0 0 8px; text-wrap:balance; }
-  .detail-meta{ font-family:"Share Tech Mono", monospace; font-size:12.5px; color:var(--text-dim); margin-bottom:12px; }
+  .detail-title{ font-family:"Rajdhani", sans-serif; font-weight:700; font-size:30px; line-height:1.25; margin:0 0 8px; text-wrap:balance; }
+  .detail-meta{ font-family:"Share Tech Mono", monospace; font-size:15.5px; color:var(--text-dim); margin-bottom:12px; }
   .detail-meta b{ color:var(--cyan); font-weight:400; }
-  .detail-snippet{ font-size:16px; line-height:1.6; color:var(--text); margin:0 0 16px; }
+  .detail-snippet{ font-size:20px; line-height:1.45; color:var(--text); margin:0 0 12px; }
   .detail-link{
     display:inline-block; background:var(--amber); color:var(--amber-ink); text-decoration:none;
-    font-weight:700; font-size:14.5px; letter-spacing:0.03em; padding:9px 16px; border-radius:20px;
+    font-weight:700; font-size:18px; letter-spacing:0.03em; padding:9px 16px; border-radius:20px;
   }
   .detail-link:hover{ filter:brightness(1.08); }
   .detail-list-item{
-    padding:10px 0; border-bottom:1px solid var(--grid-line); cursor:pointer;
+    padding:7px 0; border-bottom:1px solid var(--grid-line); cursor:pointer;
   }
   .detail-list-item:hover .detail-title-sm{ color:var(--cyan); }
-  .detail-title-sm{ font-size:15px; color:var(--text); line-height:1.4; }
-  .detail-src{ font-size:11.5px; color:var(--text-dim); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
+  .detail-title-sm{ font-size:19px; color:var(--text); line-height:1.25; }
+  .detail-src{ font-size:14.5px; color:var(--text-dim); margin-top:2px; text-transform:uppercase; letter-spacing:0.04em; }
 
-  .empty-state, .error-state{ font-size:13px; color:var(--text-dim); padding:10px 0; }
+  .empty-state, .error-state{ font-size:16px; color:var(--text-dim); padding:10px 0; }
   .error-state{ color:var(--bad); }
 
   /* ============ RESPONSIVE FALLBACK ============ */
@@ -1052,6 +1053,10 @@
     renderWx(lastHomeWxData);
   }
 
+  function coordLabel(lat, lon){
+    return Math.abs(lat).toFixed(1) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lon).toFixed(1) + "°" + (lon >= 0 ? "E" : "W");
+  }
+
   function openLocationDetail(lat, lon, opts){
     opts = opts || {};
     wxViewMode = "location";
@@ -1060,9 +1065,11 @@
     var items = opts.items || null;
 
     if(!displayName){
-      displayName = (near && near.distKm < 500)
-        ? near.place.name
-        : (Math.abs(lat).toFixed(1) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lon).toFixed(1) + "°" + (lon >= 0 ? "E" : "W"));
+      // always resolve to the nearest known city so there's a human label, not just raw coordinates —
+      // "Near X" makes clear it's the closest reference point, not necessarily exact.
+      displayName = near
+        ? (near.distKm < 40 ? near.place.name : ("Near " + near.place.name))
+        : coordLabel(lat, lon);
     }
     if(!items){
       items = (near && near.distKm < 900)
@@ -1072,7 +1079,7 @@
 
     renderLocationLoading(displayName);
     getJSON("/api/weather?lat=" + lat + "&lon=" + lon + "&city=" + encodeURIComponent(displayName)).then(function(data){
-      renderLocationDetail(displayName, data, items);
+      renderLocationDetail(displayName, data, items, lat, lon);
     }).catch(function(){
       renderLocationError(displayName);
     });
@@ -1100,7 +1107,7 @@
     wxBody.appendChild(wrap);
   }
 
-  function renderLocationDetail(name, data, items){
+  function renderLocationDetail(name, data, items, lat, lon){
     wxViewMode = "location";
     var wrap = el("div");
     wrap.appendChild(wxBackButton(goHomeWx));
@@ -1116,11 +1123,15 @@
       return;
     }
 
+    var coordSub = (typeof lat === "number" && typeof lon === "number")
+      ? '<div class="wx-place-coord">' + coordLabel(lat, lon) + "</div>"
+      : "";
+
     var c = data.current;
     var html = '<div class="wx-top">' +
       '<div class="wx-icon">' + wxIconSvg(c.weather_code, 36) + "</div>" +
       '<div><div class="wx-temp">' + Math.round(c.temperature_2m) + "°C</div>" +
-      '<div class="wx-place">' + escapeHtml(name) + "</div>" +
+      '<div class="wx-place">' + escapeHtml(name) + "</div>" + coordSub +
       '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
       '<div class="wx-grid">' +
         '<div class="wx-stat"><b>' + Math.round(c.apparent_temperature) + "°</b>Feels</div>" +
@@ -1188,9 +1199,9 @@
 
     var content = el("div");
     content.style.padding = "4px 2px 10px";
-    content.innerHTML = '<h2 class="detail-title" style="font-size:16.5px;">' + escapeHtml(item.title) + "</h2>" +
+    content.innerHTML = '<h2 class="detail-title" style="font-size:20.5px;">' + escapeHtml(item.title) + "</h2>" +
       '<div class="detail-meta">' + escapeHtml(item.sourceLabel || "") + " · " + escapeHtml(timeAgo(item.pubDate)) + "</div>" +
-      '<p class="detail-snippet" style="font-size:13px;">Loading full story…</p>';
+      '<p class="detail-snippet" style="font-size:16px;">Loading full story…</p>';
     wrap.appendChild(content);
     wxBody.innerHTML = "";
     wxBody.appendChild(wrap);
@@ -1198,14 +1209,14 @@
 
     getJSON("/api/article?url=" + encodeURIComponent(item.link)).then(function(articleData){
       var html = "";
-      html += '<h2 class="detail-title" style="font-size:16.5px;">' + escapeHtml(articleData.title || item.title) + "</h2>";
+      html += '<h2 class="detail-title" style="font-size:20.5px;">' + escapeHtml(articleData.title || item.title) + "</h2>";
       html += '<div class="detail-meta">' + escapeHtml(item.sourceLabel || "") + " · " + escapeHtml(timeAgo(item.pubDate)) + "</div>";
       var paras = articleData.paragraphs && articleData.paragraphs.length ? articleData.paragraphs : (item.snippet ? [item.snippet] : []);
-      paras.forEach(function(p){ html += '<p class="detail-snippet" style="font-size:13px;">' + escapeHtml(p) + "</p>"; });
+      paras.forEach(function(p){ html += '<p class="detail-snippet" style="font-size:16px;">' + escapeHtml(p) + "</p>"; });
       html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">View original source ↗</a>';
       content.innerHTML = html;
     }).catch(function(){
-      content.innerHTML = '<p class="detail-snippet" style="font-size:13px;">Couldn\'t load the full article.</p>' +
+      content.innerHTML = '<p class="detail-snippet" style="font-size:16px;">Couldn\'t load the full article.</p>' +
         '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open on original site ↗</a>';
     });
   }
