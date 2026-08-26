@@ -2422,13 +2422,30 @@
       teamSel.innerHTML = '<option value="">Chargement des équipes…</option>';
       if(teamCatalogCache[league]){ fillTeamOptions(teamCatalogCache[league]); return; }
       if(!meta){ teamSel.innerHTML = '<option value="">Indisponible</option>'; return; }
-      fetch("https://site.api.espn.com/apis/site/v2/sports/" + meta.espnPath + "/teams?limit=999")
+      // Le point de terminaison ESPN dédié aux « équipes » n'a aucun en-tête CORS, mais
+      // celui des classements en a un (il alimente des widgets publics de classement) et
+      // contient tout de même l'id + le nom de chaque équipe, imbriqués sous children
+      // (conférences, parfois divisions) — on récupère donc l'effectif à partir de là.
+      fetch("https://site.api.espn.com/apis/v2/sports/" + meta.espnPath + "/standings")
         .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
         .then(function(data){
-          var groups = (data && data.sports && data.sports[0] && data.sports[0].leagues && data.sports[0].leagues[0] && data.sports[0].leagues[0].teams) || [];
-          var teams = groups.map(function(g){ return g.team; }).filter(Boolean).map(function(t){
-            return { id: String(t.id), name: t.displayName || t.name || t.shortDisplayName || "" };
-          }).filter(function(t){ return t.id && t.name; }).sort(function(a, b){ return a.name.localeCompare(b.name); });
+          var out = [];
+          (function walk(node){
+            if(!node) return;
+            if(node.standings && node.standings.entries){
+              node.standings.entries.forEach(function(e){
+                var t = e.team;
+                if(t) out.push({ id: String(t.id), name: t.displayName || t.name || t.shortDisplayName || "" });
+              });
+            }
+            if(node.children) node.children.forEach(walk);
+          })(data);
+          var seen = {};
+          var teams = out.filter(function(t){
+            if(!t.id || !t.name || seen[t.id]) return false;
+            seen[t.id] = true;
+            return true;
+          }).sort(function(a, b){ return a.name.localeCompare(b.name); });
           teamCatalogCache[league] = teams;
           fillTeamOptions(teams);
         })
