@@ -26,14 +26,23 @@ export default async (req: Request) => {
     });
   }
 
+  const startedAt = Date.now();
   try {
-    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${path}/teams?limit=999`, {
-      headers: {
-        "user-agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        accept: "application/json, text/plain, */*",
-      },
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    let res: Response;
+    try {
+      res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${path}/teams?limit=999`, {
+        headers: {
+          "user-agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          accept: "application/json, text/plain, */*",
+        },
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
     if (!res.ok) {
       const bodyText = await res.text().catch(() => "");
       return new Response(
@@ -62,6 +71,7 @@ export default async (req: Request) => {
     return new Response(
       JSON.stringify({
         error: "diag_fetch_threw",
+        elapsedMs: Date.now() - startedAt,
         message: String(err),
         errName: err instanceof Error ? err.name : typeof err,
         errStack: err instanceof Error ? String(err.stack).slice(0, 800) : null,
