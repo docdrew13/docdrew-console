@@ -180,12 +180,14 @@
   .tab.active{ opacity:1; background:rgba(0,0,0,0.34); }
 
   /* ============ DECK (main 3-col area) ============ */
-  .deck{ display:grid; grid-template-columns: 320px 1fr 1fr 260px; gap:8px; min-height:0; }
+  .deck{ display:grid; grid-template-columns: 400px 1fr 280px; gap:8px; min-height:0; }
   .rail{ display:flex; flex-direction:column; gap:8px; min-height:0; }
   .rail-left .panel:nth-child(1){ flex:1; }
-  .rail-right .panel:nth-child(1){ flex:1.3; }
-  .rail-right .panel:nth-child(2){ flex:0 0 auto; max-height:27%; }
-  .rail-right .panel:nth-child(3){ flex:0 0 auto; max-height:27%; }
+  .globes-stack{ display:flex; flex-direction:column; gap:8px; min-height:0; }
+  .globes-stack .globe-panel{ flex:1; min-height:0; }
+  .rail-right .panel:nth-child(1){ flex:0 0 auto; max-height:32%; }
+  .rail-right .panel:nth-child(2){ flex:1.1; }
+  .rail-right .panel:nth-child(3){ flex:0 0 auto; max-height:26%; }
 
   /* ---- stock list ---- */
   .quote-row{
@@ -423,39 +425,47 @@
         </section>
       </aside>
 
-      <section class="globe-panel" aria-label="Live global feed">
-        <div class="globe-head">
-          <span>Live Global Feed</span>
-          <span class="n" id="globe-count">0 markers tracked</span>
-        </div>
-        <div class="globe-body" id="globe-body">
-          <canvas id="globe-canvas"></canvas>
-          <div class="globe-tooltip" id="globe-tooltip"></div>
-          <div class="globe-legend">
-            <span><i class="legend-dot cyan"></i>Weather station</span>
-            <span><i class="legend-dot amber"></i>News dateline</span>
+      <div class="globes-stack">
+        <section class="globe-panel" aria-label="Live global feed">
+          <div class="globe-head">
+            <span>Live Global Feed</span>
+            <span class="n" id="globe-count">0 markers tracked</span>
           </div>
-          <div class="globe-hint">drag to rotate · click a marker</div>
-        </div>
-      </section>
+          <div class="globe-body" id="globe-body">
+            <canvas id="globe-canvas"></canvas>
+            <div class="globe-tooltip" id="globe-tooltip"></div>
+            <div class="globe-legend">
+              <span><i class="legend-dot cyan"></i>Weather station</span>
+              <span><i class="legend-dot amber"></i>News dateline</span>
+            </div>
+            <div class="globe-hint">drag to rotate · click a marker</div>
+          </div>
+        </section>
 
-      <section class="globe-panel" aria-label="Live weather systems" data-accent="weather">
-        <div class="globe-head">
-          <span>Weather Systems</span>
-          <span class="n" id="weather-globe-count">syncing…</span>
-        </div>
-        <div class="globe-body" id="weather-globe-body">
-          <canvas id="weather-globe-canvas"></canvas>
-          <div class="globe-tooltip" id="weather-globe-tooltip"></div>
-          <div class="globe-legend">
-            <span><i class="legend-dot cyan"></i>Cloud cover</span>
-            <span><i class="legend-dot blue"></i>Precipitation</span>
+        <section class="globe-panel" aria-label="Live weather systems" data-accent="weather">
+          <div class="globe-head">
+            <span>Weather Systems</span>
+            <span class="n" id="weather-globe-count">syncing…</span>
           </div>
-          <div class="globe-hint">drag to rotate · live cloud cover</div>
-        </div>
-      </section>
+          <div class="globe-body" id="weather-globe-body">
+            <canvas id="weather-globe-canvas"></canvas>
+            <div class="globe-tooltip" id="weather-globe-tooltip"></div>
+            <div class="globe-legend">
+              <span><i class="legend-dot cyan"></i>Cloud cover</span>
+              <span><i class="legend-dot blue"></i>Precipitation</span>
+            </div>
+            <div class="globe-hint">drag to rotate · live cloud cover</div>
+          </div>
+        </section>
+      </div>
 
       <aside class="rail rail-right">
+        <section class="panel" data-accent="cyan" aria-label="Weather">
+          <div class="panel-head"><span>Weather</span></div>
+          <div class="panel-body scroll" id="wx-body">
+            <div class="empty-state">Loading weather…</div>
+          </div>
+        </section>
         <section class="panel round-l" data-accent="amber" aria-label="Stock quotes">
           <div class="panel-head">
             <span>Markets</span>
@@ -468,12 +478,6 @@
         <section class="panel round-l" data-accent="gold" aria-label="Currency converter">
           <div class="panel-head"><span>Currency</span></div>
           <div class="panel-body scroll" id="fx-body"></div>
-        </section>
-        <section class="panel" data-accent="cyan" aria-label="Weather">
-          <div class="panel-head"><span>Weather</span></div>
-          <div class="panel-body scroll" id="wx-body">
-            <div class="empty-state">Loading weather…</div>
-          </div>
         </section>
       </aside>
     </main>
@@ -1111,13 +1115,25 @@
 
   var landPoints = (function buildLandPoints(){
     var pts = [];
-    for(var lat = -84; lat <= 84; lat += 2.5){
-      for(var lon = -180; lon < 180; lon += 2.5){
-        if(isLand(lon, lat)) pts.push({ lat: lat, lon: lon, jx: (Math.random()-0.5)*1.4, jy: (Math.random()-0.5)*1.4, tint: Math.random() });
+    for(var lat = -84; lat <= 84; lat += 1.4){
+      for(var lon = -180; lon < 180; lon += 1.4){
+        if(isLand(lon, lat)) pts.push({ lat: lat, lon: lon, jx: (Math.random()-0.5)*1.1, jy: (Math.random()-0.5)*1.1, tint: Math.random() });
       }
     }
     return pts;
   })();
+
+  // land dot color — greens/tans by terrain, fading to snow/tundra near the poles
+  function terrainColor(lat, tint){
+    var polar = Math.max(0, (Math.abs(lat) - 55) / 30); // 0 below 55°, 1 by 85°
+    var rr = Math.round(150 + tint * 60);
+    var gg = Math.round(196 - tint * 40);
+    var bb = Math.round(120 - tint * 50);
+    rr = Math.round(rr + (235 - rr) * polar);
+    gg = Math.round(gg + (240 - gg) * polar);
+    bb = Math.round(bb + (245 - bb) * polar);
+    return rr + "," + gg + "," + bb;
+  }
 
   // fixed background starfield (deep-space ambience behind the sphere)
   var STARS = (function buildStars(){
@@ -1196,7 +1212,7 @@
     ctx.stroke();
 
     // wireframe meridians
-    ctx.strokeStyle = "rgba(82,216,222,0.22)";
+    ctx.strokeStyle = "rgba(82,216,222,0.09)";
     ctx.lineWidth = 1;
     for(var lon = 0; lon < 360; lon += 30){
       ctx.beginPath();
@@ -1220,7 +1236,7 @@
       ctx.stroke();
     }
     // equator, emphasized
-    ctx.strokeStyle = "rgba(82,216,222,0.4)";
+    ctx.strokeStyle = "rgba(82,216,222,0.16)";
     ctx.beginPath();
     var started3 = false;
     for(var lon3 = 0; lon3 <= 360; lon3 += 3){
@@ -1230,20 +1246,16 @@
     }
     ctx.stroke();
 
-    // landmasses — stippled dot terrain, warm green/tan tint reads distinctly from the blue ocean
+    // landmasses — dense stippled terrain, tight enough at this size to read as a solid satellite-style surface
     for(var li = 0; li < landPoints.length; li++){
       var lp = landPoints[li];
       var lpp = project(lp.lat, lp.lon, G.rotation);
       if(!lpp) continue;
       var lpScale = 0.5 + lpp.z * 0.5;
-      var r = (0.85 + lp.tint * 0.6) * lpScale;
-      var terrainMix = lp.tint; // 0..1 — blend between deep green (forest/plains) and tan (arid)
-      var rr = Math.round(150 + terrainMix * 60);
-      var gg = Math.round(196 - terrainMix * 40);
-      var bb = Math.round(120 - terrainMix * 50);
+      var r = (0.62 + lp.tint * 0.42) * lpScale;
       ctx.beginPath();
       ctx.arc(lpp.x + lp.jx, lpp.y + lp.jy, r, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(" + rr + "," + gg + "," + bb + "," + (0.62 * lpScale + 0.1) + ")";
+      ctx.fillStyle = "rgba(" + terrainColor(lp.lat, lp.tint) + "," + (0.72 * lpScale + 0.14) + ")";
       ctx.fill();
     }
 
@@ -1465,7 +1477,7 @@
     ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
     ctx2.stroke();
 
-    ctx2.strokeStyle = "rgba(82,216,222,0.22)";
+    ctx2.strokeStyle = "rgba(82,216,222,0.09)";
     ctx2.lineWidth = 1;
     for(var lon = 0; lon < 360; lon += 30){
       ctx2.beginPath();
@@ -1487,7 +1499,7 @@
       }
       ctx2.stroke();
     }
-    ctx2.strokeStyle = "rgba(82,216,222,0.4)";
+    ctx2.strokeStyle = "rgba(82,216,222,0.16)";
     ctx2.beginPath();
     var started3 = false;
     for(var lon3 = 0; lon3 <= 360; lon3 += 3){
@@ -1497,47 +1509,50 @@
     }
     ctx2.stroke();
 
-    // landmasses for geographic context — same coastline dots, dimmer than the news globe
+    // landmasses for geographic context — same dense coastline dots, dimmer than the news globe
     for(var li = 0; li < landPoints.length; li++){
       var lp = landPoints[li];
       var lpp = project2(lp.lat, lp.lon, G2.rotation);
       if(!lpp) continue;
       var lpScale = 0.5 + lpp.z * 0.5;
-      var r0 = (0.8 + lp.tint * 0.5) * lpScale;
-      var terrainMix = lp.tint;
-      var rr = Math.round(150 + terrainMix * 60);
-      var gg = Math.round(196 - terrainMix * 40);
-      var bb = Math.round(120 - terrainMix * 50);
+      var r0 = (0.6 + lp.tint * 0.38) * lpScale;
       ctx2.beginPath();
       ctx2.arc(lpp.x + lp.jx, lpp.y + lp.jy, r0, 0, Math.PI*2);
-      ctx2.fillStyle = "rgba(" + rr + "," + gg + "," + bb + "," + (0.4 * lpScale + 0.06) + ")";
+      ctx2.fillStyle = "rgba(" + terrainColor(lp.lat, lp.tint) + "," + (0.5 * lpScale + 0.08) + ")";
       ctx2.fill();
     }
 
     renderedMarkers2 = [];
 
-    // live weather layer — cloud cover blobs sized/lit by percentage, precipitation as a blue core
+    // live weather layer — stippled cloud puffs (textured, not a soft blur) sized/lit by cover %
     weatherGridPoints.forEach(function(gp){
       var p = project2(gp.lat, gp.lon, G2.rotation);
       if(!p) return;
       var scale = 0.55 + p.z * 0.45;
       var cloud = typeof gp.cloud === "number" ? gp.cloud : 0;
-      if(cloud > 4){
-        var r = G2.radius * (0.09 + (cloud/100) * 0.16) * scale;
-        var cGrad = ctx2.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-        cGrad.addColorStop(0, "rgba(225,235,240," + (0.05 + (cloud/100) * 0.4 * scale) + ")");
-        cGrad.addColorStop(1, "rgba(225,235,240,0)");
-        ctx2.beginPath();
-        ctx2.arc(p.x, p.y, r, 0, Math.PI*2);
-        ctx2.fillStyle = cGrad;
-        ctx2.fill();
+      if(cloud > 6){
+        var puffCount = Math.round(3 + (cloud/100) * 10);
+        var spread = G2.radius * 0.10 * scale;
+        for(var pu = 0; pu < puffCount; pu++){
+          var seed = gp.lat * 12.9898 + gp.lon * 78.233 + pu * 37.719;
+          var frac = seed - Math.floor(seed);
+          var ang = frac * Math.PI * 2;
+          var rad = spread * (0.2 + 0.8 * ((frac * 971) % 1));
+          var px = p.x + Math.cos(ang) * rad;
+          var py = p.y + Math.sin(ang) * rad * 0.72;
+          var puffR = (1.6 + (cloud/100) * 2.6) * scale * (0.7 + 0.6 * ((frac * 513) % 1));
+          ctx2.beginPath();
+          ctx2.arc(px, py, puffR, 0, Math.PI*2);
+          ctx2.fillStyle = "rgba(232,240,244," + (0.16 + (cloud/100) * 0.34) + ")";
+          ctx2.fill();
+        }
       }
       var precip = typeof gp.precip === "number" ? gp.precip : 0;
       if(precip > 0.05){
-        var pr = G2.radius * 0.05 * scale * Math.min(2, 1 + precip);
+        var pr = (1.8 + Math.min(2.4, precip)) * scale;
         ctx2.beginPath();
         ctx2.arc(p.x, p.y, pr, 0, Math.PI*2);
-        ctx2.fillStyle = "rgba(90,167,232," + (0.5 * scale) + ")";
+        ctx2.fillStyle = "rgba(90,167,232," + (0.65 * scale) + ")";
         ctx2.fill();
       }
       renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, G2.radius*0.09*scale + 6), type: "cell", ref: gp });
