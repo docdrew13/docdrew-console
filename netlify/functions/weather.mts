@@ -32,15 +32,49 @@ export default async (req: Request) => {
       country = place.country || "";
     }
 
-    const wxRes = await fetch(
+    const wxPromise = fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-        `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,pressure_msl,precipitation,cloud_cover,is_day` +
+        `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,pressure_msl,precipitation,snowfall,cloud_cover,is_day` +
         `&hourly=temperature_2m,precipitation_probability,weather_code` +
-        `&daily=temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max` +
+        `&daily=temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,snowfall_sum` +
         `&forecast_days=6&timezone=auto&temperature_unit=celsius&wind_speed_unit=kmh`
     );
+    // air quality is a separate Open-Meteo service — fetched in parallel, and allowed to fail
+    // without taking down the rest of the report (some remote/ocean coordinates have no AQ data).
+    const aqPromise = fetch(
+      `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}` +
+        `&current=us_aqi,pm2_5,pm10,ozone&timezone=auto`
+    ).catch(() => null);
+
+    const [wxRes, aqRes] = await Promise.all([wxPromise, aqPromise]);
     if (!wxRes.ok) throw new Error("forecast status " + wxRes.status);
     const wx = await wxRes.json();
+
+    let airQuality: any = null;
+    if (aqRes && aqRes.ok) {
+      try {
+        const aq = await aqRes.json();
+        const aqi = aq?.current?.us_aqi;
+        if (typeof aqi === "number") {
+          let category = "Unknown";
+          if (aqi <= 50) category = "Good";
+          else if (aqi <= 100) category = "Moderate";
+          else if (aqi <= 150) category = "Unhealthy (Sensitive)";
+          else if (aqi <= 200) category = "Unhealthy";
+          else if (aqi <= 300) category = "Very Unhealthy";
+          else category = "Hazardous";
+          airQuality = {
+            aqi,
+            category,
+            pm25: aq.current?.pm2_5,
+            pm10: aq.current?.pm10,
+            ozone: aq.current?.ozone,
+          };
+        }
+      } catch {
+        airQuality = null;
+      }
+    }
 
     // find the hourly index nearest "now" so we can hand back the next ~12 hours only
     let startIdx = 0;
@@ -82,6 +116,7 @@ export default async (req: Request) => {
         },
         hourly,
         daily,
+        airQuality,
         updated: new Date().toISOString(),
       }),
       { headers: { "content-type": "application/json", "cache-control": "public, max-age=600" } }

@@ -6,9 +6,6 @@
 <title>Docdrew Console</title>
 <meta name="description" content="A full-screen live console — weather, markets and world news plotted on a rotating globe.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305070C'/%3E%3Cpath d='M32 10 54 46H10Z' fill='none' stroke='%23FFA94D' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='36' r='4.5' fill='%2352D8DE'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap">
 <style>
   /* ============ TOKENS ============ */
   :root{
@@ -31,6 +28,12 @@
     --violet-ink:#241535;
     --good:#4FD68C;
     --bad:#FF6B5E;
+    --teal:#4FD6B0;
+    --teal-ink:#06342A;
+    --frost:#8EC9FF;
+    --frost-ink:#0B2A44;
+    --crimson:#FF6F91;
+    --crimson-ink:#3A0A18;
     color-scheme: dark;
   }
 
@@ -41,7 +44,7 @@
     overflow:hidden;
     background:var(--void);
     color:var(--text);
-    font-family:"Titillium Web", ui-sans-serif, system-ui, sans-serif;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, sans-serif;
     -webkit-font-smoothing:antialiased;
   }
   body{
@@ -92,14 +95,14 @@
     clip-path: polygon(50% 6%, 94% 88%, 6% 88%);
   }
   .brand-name{
-    font-family:"Rajdhani", sans-serif; font-weight:700; letter-spacing:0.08em;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; letter-spacing:0.08em;
     text-transform:uppercase; font-size:23px; color:var(--text);
   }
   .brand-name .dim{ color:var(--text-dim); font-weight:600; }
 
   .stardate{
     flex:0 0 auto;
-    font-family:"Share Tech Mono", monospace;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size:17.5px;
     color:var(--cyan);
     letter-spacing:0.04em;
@@ -109,7 +112,7 @@
 
   .greeting-block{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; line-height:1.15; }
   .greeting{
-    font-family:"Rajdhani", sans-serif; font-weight:700; font-size:23px;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; font-size:23px;
     letter-spacing:0.03em; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .greeting .status-dot{
@@ -118,10 +121,10 @@
     animation: blink 2.4s ease-in-out infinite;
   }
   @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
-  .subline{ font-family:"Share Tech Mono", monospace; font-size:15.5px; color:var(--text-dim); }
+  .subline{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px; color:var(--text-dim); }
 
   .clock{
-    flex:0 0 auto; text-align:right; font-family:"Share Tech Mono", monospace;
+    flex:0 0 auto; text-align:right; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     color:var(--amber); font-size:29px; letter-spacing:0.03em; line-height:1.1;
   }
   .clock .zone{ display:block; font-size:14.5px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; }
@@ -152,11 +155,11 @@
     flex:0 0 auto;
     display:flex; align-items:center; justify-content:space-between; gap:8px;
     padding:6px 8px 6px 16px;
-    font-family:"Rajdhani", sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.09em; font-size:18px;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.09em; font-size:18px;
     color:var(--amber-ink);
     background:var(--amber);
   }
-  .panel-head .n{ font-family:"Share Tech Mono", monospace; font-size:15.5px; opacity:0.75; text-transform:none; letter-spacing:0; }
+  .panel-head .n{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px; opacity:0.75; text-transform:none; letter-spacing:0; }
   .panel[data-accent="cyan"] .panel-head{ background:var(--cyan); color:var(--cyan-ink); }
   .panel[data-accent="violet"] .panel-head{ background:var(--violet); color:var(--violet-ink); }
   .panel[data-accent="gold"] .panel-head{ background:var(--gold); color:var(--gold-ink); }
@@ -215,7 +218,7 @@
   .video-tile-title{
     position:absolute; left:0; right:0; bottom:0; padding:5px 7px 6px;
     background:linear-gradient(transparent, rgba(0,0,0,0.88));
-    font-family:"Share Tech Mono", monospace; font-size:12.5px; line-height:1.3; color:#fff;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12.5px; line-height:1.3; color:#fff;
   }
   .video-tile-title b{ display:block; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--cyan); font-weight:400; }
   .video-tile.unavailable{ display:flex; align-items:center; justify-content:center; cursor:default; }
@@ -235,16 +238,16 @@
   }
   .quote-row:last-child{ border-bottom:0; }
   .q-id{ min-width:0; }
-  .q-sym{ font-family:"Share Tech Mono", monospace; font-size:18px; color:var(--text); }
+  .q-sym{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:18px; color:var(--text); }
   .q-name{ font-size:15px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
-  .q-nums{ text-align:right; font-family:"Share Tech Mono", monospace; font-size:17.5px; font-variant-numeric:tabular-nums; }
+  .q-nums{ text-align:right; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:17.5px; font-variant-numeric:tabular-nums; }
   .q-price{ color:var(--text); }
   .q-chg.up{ color:var(--good); }
   .q-chg.down{ color:var(--bad); }
   .edit-row{ margin-top:6px; }
   .edit-row input{
     width:100%; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
-    border-radius:6px; padding:6px 8px; font-family:"Share Tech Mono", monospace; font-size:15.5px;
+    border-radius:6px; padding:6px 8px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px;
   }
   .edit-hint{ font-size:14.5px; color:var(--text-dim); margin-top:4px; }
 
@@ -254,32 +257,32 @@
     background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
     border-radius:6px; padding:6px 8px; font-size:17.5px;
   }
-  .fx-row input{ width:76px; font-family:"Share Tech Mono", monospace; }
+  .fx-row input{ width:76px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   .fx-swap{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--cyan); border-radius:6px; width:28px; height:28px; cursor:pointer; }
   .fx-swap:hover{ background:var(--panel-2); }
-  .fx-result{ font-family:"Share Tech Mono", monospace; font-size:32px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
+  .fx-result{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:32px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
   .fx-meta{ text-align:center; font-size:15px; color:var(--text-dim); }
 
   /* ---- weather compact ---- */
   .wx-top{ display:flex; align-items:center; gap:10px; }
   .wx-icon{ width:40px; height:40px; flex:none; }
-  .wx-temp{ font-family:"Share Tech Mono", monospace; font-size:37.5px; color:var(--text); }
+  .wx-temp{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:37.5px; color:var(--text); }
   .wx-place{ font-size:15.5px; color:var(--text-dim); }
-  .wx-place-coord{ font-family:"Share Tech Mono", monospace; font-size:11px; color:var(--text-dim); opacity:0.7; margin-top:1px; }
+  .wx-place-coord{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; color:var(--text-dim); opacity:0.7; margin-top:1px; }
   .wx-cond{ font-size:16px; color:var(--cyan); }
   .wx-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
-  .wx-stat{ text-align:center; font-family:"Share Tech Mono", monospace; font-size:15.5px; color:var(--text-dim); }
+  .wx-stat{ text-align:center; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px; color:var(--text-dim); }
   .wx-stat b{ display:block; color:var(--text); font-size:19px; }
   .wx-city-edit{ display:flex; gap:6px; margin-top:8px; }
   .wx-city-edit input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:15.5px; }
   .wx-more-link{
     display:inline-flex; align-items:center; gap:4px; background:none; border:none; color:var(--cyan);
-    font-family:"Share Tech Mono", monospace; font-size:14px; letter-spacing:0.04em; text-transform:uppercase;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:14px; letter-spacing:0.04em; text-transform:uppercase;
     cursor:pointer; padding:8px 0 0; text-align:left; width:100%;
   }
   .wx-more-link:hover{ color:var(--text); }
   .wx-forecast{ display:flex; justify-content:space-between; gap:4px; margin-top:10px; padding-top:8px; border-top:1px solid var(--grid-line); }
-  .wx-fday{ flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-family:"Share Tech Mono", monospace; }
+  .wx-fday{ flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   .wx-fday-label{ font-size:13px; color:var(--text-dim); text-transform:uppercase; }
   .wx-fday svg{ width:20px; height:20px; }
   .wx-fday-hi{ font-size:15px; color:var(--text); }
@@ -298,7 +301,7 @@
   .news-thumb.empty{ display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:23px; }
   .news-back{
     display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--cyan);
-    font-family:"Share Tech Mono", monospace; font-size:15px; letter-spacing:0.05em; text-transform:uppercase;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15px; letter-spacing:0.05em; text-transform:uppercase;
     cursor:pointer; padding:12px 14px 4px; text-align:left; width:100%;
   }
   .news-back:hover{ color:var(--text); }
@@ -312,15 +315,15 @@
   }
   .globe-head{
     flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
-    padding:10px 16px; font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:18px; color:var(--cyan);
+    padding:10px 16px; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:18px; color:var(--cyan);
   }
-  .globe-head .n{ font-family:"Share Tech Mono", monospace; font-size:15px; color:var(--text-dim); letter-spacing:0; text-transform:none; }
+  .globe-head .n{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15px; color:var(--text-dim); letter-spacing:0; text-transform:none; }
   .globe-body{ flex:1; min-height:0; position:relative; }
   .globe-body canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
   .globe-body canvas:active{ cursor:grabbing; }
   .globe-legend{
     position:absolute; left:14px; bottom:32px; display:flex; flex-direction:column; gap:4px; font-size:14px; color:var(--text-dim);
-    font-family:"Share Tech Mono", monospace; pointer-events:none;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; pointer-events:none;
   }
   .globe-legend span{ display:flex; align-items:center; gap:5px; }
   .legend-dot{ width:8px; height:8px; border-radius:50%; }
@@ -330,13 +333,13 @@
   .legend-dot.red{ background:#FF6B5E; box-shadow:0 0 6px #FF6B5E; }
   .globe-hint{
     position:absolute; left:14px; bottom:12px; font-size:13px; color:var(--text-dim);
-    font-family:"Share Tech Mono", monospace; pointer-events:none; text-align:left;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; pointer-events:none; text-align:left;
   }
   .globe-tooltip{
     position:absolute; pointer-events:none; transform:translate(-50%,-130%);
     background:var(--panel-2); border:1px solid var(--cyan-dim); border-radius:6px;
     padding:5px 9px; font-size:15.5px; color:var(--text); white-space:nowrap; display:none;
-    font-family:"Rajdhani", sans-serif; font-weight:600; letter-spacing:0.02em;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:600; letter-spacing:0.02em;
     box-shadow:0 8px 20px -8px rgba(0,0,0,0.7);
   }
 
@@ -385,7 +388,7 @@
     flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:10px 10px 10px 18px; background:var(--cyan); color:var(--cyan-ink);
   }
-  .detail-eyebrow{ font-family:"Rajdhani",sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:16px; }
+  .detail-eyebrow{ font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:16px; }
   .detail-close{
     appearance:none; border:0; background:rgba(0,0,0,0.2); color:inherit; width:26px; height:26px;
     border-radius:50%; cursor:pointer; font-size:19px; line-height:1;
@@ -393,8 +396,8 @@
   .detail-close:hover{ background:rgba(0,0,0,0.36); }
   .detail-body{ flex:1; min-height:0; overflow-y:auto; padding:18px 20px 22px; }
   .detail-img{ width:100%; max-height:220px; object-fit:cover; border-radius:8px; margin-bottom:14px; background:var(--panel); }
-  .detail-title{ font-family:"Rajdhani", sans-serif; font-weight:700; font-size:30px; line-height:1.25; margin:0 0 8px; text-wrap:balance; }
-  .detail-meta{ font-family:"Share Tech Mono", monospace; font-size:15.5px; color:var(--text-dim); margin-bottom:12px; }
+  .detail-title{ font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; font-size:30px; line-height:1.25; margin:0 0 8px; text-wrap:balance; }
+  .detail-meta{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px; color:var(--text-dim); margin-bottom:12px; }
   .detail-meta b{ color:var(--cyan); font-weight:400; }
   .detail-snippet{ font-size:20px; line-height:1.45; color:var(--text); margin:0 0 12px; }
   .detail-link{
@@ -466,22 +469,6 @@
       </aside>
 
       <div class="globes-stack">
-        <section class="globe-panel" aria-label="Live global feed">
-          <div class="globe-head">
-            <span>Live Global Feed</span>
-            <span class="n" id="globe-count">0 markers tracked</span>
-          </div>
-          <div class="globe-body" id="globe-body">
-            <canvas id="globe-canvas"></canvas>
-            <div class="globe-tooltip" id="globe-tooltip"></div>
-            <div class="globe-legend">
-              <span><i class="legend-dot amber"></i>News dateline</span>
-              <span><i class="legend-dot red"></i>Montreal</span>
-            </div>
-            <div class="globe-hint">drag to rotate · click a marker</div>
-          </div>
-        </section>
-
         <section class="globe-panel" aria-label="Live weather systems" data-accent="weather">
           <div class="globe-head">
             <span>Weather Systems</span>
@@ -496,6 +483,22 @@
               <span><i class="legend-dot red"></i>Montreal</span>
             </div>
             <div class="globe-hint">drag to rotate · live cloud cover</div>
+          </div>
+        </section>
+
+        <section class="globe-panel" aria-label="Live global feed">
+          <div class="globe-head">
+            <span>Live Global Feed</span>
+            <span class="n" id="globe-count">0 markers tracked</span>
+          </div>
+          <div class="globe-body" id="globe-body">
+            <canvas id="globe-canvas"></canvas>
+            <div class="globe-tooltip" id="globe-tooltip"></div>
+            <div class="globe-legend">
+              <span><i class="legend-dot amber"></i>News dateline</span>
+              <span><i class="legend-dot red"></i>Montreal</span>
+            </div>
+            <div class="globe-hint">drag to rotate · click a marker</div>
           </div>
         </section>
       </div>
