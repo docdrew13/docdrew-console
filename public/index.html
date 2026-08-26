@@ -362,6 +362,39 @@
   .fx-result{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:32px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
   .fx-meta{ text-align:center; font-size:15px; color:var(--text-dim); }
 
+  /* ---- flight tracker + ISS ---- */
+  .ft-iss{ background:var(--panel-2); border:1px solid var(--grid-line); border-radius:8px; padding:9px 11px; margin-bottom:10px; }
+  .ft-iss-head{ display:flex; align-items:center; gap:6px; font-size:14px; font-weight:700; color:var(--frost); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .ft-iss-dot{ width:7px; height:7px; border-radius:50%; background:var(--frost); box-shadow:0 0 6px var(--frost); flex:none; animation:blink 2.4s ease-in-out infinite; }
+  .ft-iss-stats{ font-size:15px; color:var(--text-dim); line-height:1.55; }
+  .ft-iss-stats b{ color:var(--text); }
+  .ft-form{ display:flex; flex-direction:column; gap:6px; margin-bottom:9px; }
+  .ft-form select{ background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:15px; min-width:0; }
+  .ft-search-row{ display:flex; gap:6px; }
+  .ft-search-row input{
+    flex:1 1 auto; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:6px; padding:6px 8px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:15px; text-transform:uppercase;
+  }
+  .ft-search-row button{
+    appearance:none; background:var(--frost); color:var(--frost-ink); border:none; border-radius:6px;
+    padding:6px 14px; font-weight:700; font-size:14px; cursor:pointer; flex:none;
+  }
+  .ft-search-row button:hover{ filter:brightness(1.08); }
+  .ft-results{ display:flex; flex-direction:column; gap:6px; }
+  .ft-result-row{ background:var(--panel-2); border:1px solid var(--grid-line); border-radius:6px; padding:7px 10px; cursor:pointer; }
+  .ft-result-row:hover{ border-color:var(--frost); }
+  .ft-result-row .ft-callsign{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:15px; color:var(--text); }
+  .ft-result-row .ft-sub{ font-size:13.5px; color:var(--text-dim); margin-top:2px; }
+  .ft-tracked{ background:var(--panel-2); border:1px solid var(--frost); border-radius:8px; padding:10px 12px; margin-top:9px; }
+  .ft-tracked-head{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px; }
+  .ft-tracked-head .ft-callsign{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:16px; color:var(--frost); }
+  .ft-tracked-clear{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--text-dim); border-radius:5px; padding:2px 8px; font-size:12px; cursor:pointer; }
+  .ft-tracked-clear:hover{ color:var(--text); }
+  .ft-tracked-stats{ font-size:14.5px; color:var(--text-dim); line-height:1.55; }
+  .ft-tracked-stats b{ color:var(--text); }
+  .ft-fun{ margin-top:7px; padding-top:7px; border-top:1px dashed var(--grid-line); font-size:13.5px; color:var(--gold); }
+
   /* ---- weather compact ---- */
   .wx-top{ display:flex; align-items:center; gap:10px; }
   .wx-icon{ width:40px; height:40px; flex:none; }
@@ -432,6 +465,8 @@
   .legend-dot.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
   .legend-dot.blue{ background:#5AA7E8; box-shadow:0 0 6px #5AA7E8; }
   .legend-dot.red{ background:#FF6B5E; box-shadow:0 0 6px #FF6B5E; }
+  .legend-dot.frost{ background:var(--frost); box-shadow:0 0 6px var(--frost); }
+  .legend-dot.gold{ background:var(--gold); box-shadow:0 0 6px var(--gold); }
   .legend-dot.haze{ background:rgba(205,222,230,0.85); }
   .legend-dot.precip-grad{
     width:20px; border-radius:4px;
@@ -706,6 +741,8 @@
             <div class="globe-legend">
               <span><i class="legend-dot amber"></i>News dateline</span>
               <span><i class="legend-dot red"></i><span id="globe-home-label">Montreal</span></span>
+              <span><i class="legend-dot frost"></i>ISS</span>
+              <span><i class="legend-dot gold"></i>Tracked flight</span>
             </div>
             <div class="globe-hint">drag to rotate &amp; tilt · click a marker</div>
           </div>
@@ -724,6 +761,12 @@
           <div class="panel-head"><span>Sky Watch</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="skywatch-body">
             <div class="empty-state">Loading sky data…</div>
+          </div>
+        </section>
+        <section class="panel" data-accent="frost" data-panel-key="flighttracker" aria-label="Flight tracker">
+          <div class="panel-head"><span>Flight Tracker</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="flighttracker-body">
+            <div class="empty-state">Loading tracker…</div>
           </div>
         </section>
         <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Sports scores">
@@ -1577,6 +1620,206 @@
       resultEl.textContent = "—";
       metaEl.textContent = "Rate feed unavailable";
     }
+  }
+
+  /* ============================================================
+     FLIGHT TRACKER + ISS — live positions via OpenSky Network
+     (aircraft) and wheretheiss.at (ISS). OpenSky's anonymous access
+     is capped at 400 credits/day and each lookup here fetches the
+     full worldwide state-vector snapshot server-side, so flight
+     searches are ONLY ever triggered by explicit user action (a
+     search submit, or the manual Refresh button on a tracked
+     flight) — never on an automatic interval. The ISS feed has no
+     such daily cap, just a gentle ~1 req/sec courtesy limit, so it
+     polls on its own independent interval below. Both markers are
+     drawn on the "Live Global Feed" globe via the shared
+     renderedMarkers/project() pipeline defined further down.
+  ============================================================ */
+  var AIRLINE_CATALOG = [
+    { code: "ACA", name: "Air Canada" },
+    { code: "WJA", name: "WestJet" },
+    { code: "AAL", name: "American Airlines" },
+    { code: "DAL", name: "Delta Air Lines" },
+    { code: "UAL", name: "United Airlines" },
+    { code: "SWA", name: "Southwest Airlines" },
+    { code: "JBU", name: "JetBlue" },
+    { code: "BAW", name: "British Airways" },
+    { code: "AFR", name: "Air France" },
+    { code: "DLH", name: "Lufthansa" },
+    { code: "KLM", name: "KLM" },
+    { code: "UAE", name: "Emirates" },
+    { code: "QTR", name: "Qatar Airways" },
+    { code: "ANA", name: "All Nippon Airways" },
+    { code: "JAL", name: "Japan Airlines" },
+    { code: "QFA", name: "Qantas" },
+    { code: "RYR", name: "Ryanair" },
+    { code: "EZY", name: "easyJet" }
+  ];
+
+  var issData = null;       // latest ISS reading — drawn on the globe whenever loaded
+  var trackedFlight = null; // currently selected search result — drawn on the globe
+
+  function renderFlightTracker(){
+    var body = $("flighttracker-body");
+    if(!body) return;
+    var opts = '<option value="">Any airline…</option>' + AIRLINE_CATALOG.map(function(a){
+      return '<option value="' + a.code + '">' + escapeHtml(a.name) + "</option>";
+    }).join("");
+    body.innerHTML =
+      '<div class="ft-iss" id="ft-iss">' +
+        '<div class="ft-iss-head"><span class="ft-iss-dot" aria-hidden="true"></span>ISS — International Space Station</div>' +
+        '<div class="ft-iss-stats" id="ft-iss-stats">Loading orbital data…</div>' +
+      "</div>" +
+      '<form class="ft-form" id="ft-form">' +
+        '<select id="ft-airline" aria-label="Airline">' + opts + "</select>" +
+        '<div class="ft-search-row">' +
+          '<input type="text" id="ft-query" placeholder="Flight callsign, e.g. DAL123" autocomplete="off">' +
+          '<button type="submit">Track</button>' +
+        "</div>" +
+      "</form>" +
+      '<div class="ft-results" id="ft-results"></div>' +
+      '<div class="ft-tracked" id="ft-tracked" hidden></div>';
+
+    $("ft-airline").addEventListener("change", function(){
+      var code = $("ft-airline").value;
+      if(code) $("ft-query").value = code;
+      $("ft-query").focus();
+    });
+    $("ft-form").addEventListener("submit", function(e){
+      e.preventDefault();
+      var q = $("ft-query").value.trim().toUpperCase();
+      if(!q) return;
+      var airlineCode = $("ft-airline").value;
+      var mode = (airlineCode && q === airlineCode) ? "airline" : "flight";
+      searchFlights(q, mode);
+    });
+
+    renderTrackedFlight();
+  }
+
+  async function searchFlights(query, mode){
+    var resultsEl = $("ft-results");
+    if(!resultsEl) return;
+    resultsEl.innerHTML = '<div class="empty-state" style="padding:6px 0;">Searching live positions…</div>';
+    try{
+      var data = await getJSON("/api/flights?mode=" + mode + "&query=" + encodeURIComponent(query));
+      renderFlightResults(data.results || [], query);
+    }catch(err){
+      resultsEl.innerHTML = '<div class="error-state" style="padding:6px 0;">Flight lookup unavailable right now.</div>';
+    }
+  }
+
+  function renderFlightResults(results, query){
+    var resultsEl = $("ft-results");
+    if(!resultsEl) return;
+    if(!results.length){
+      resultsEl.innerHTML = '<div class="empty-state" style="padding:6px 0;">No aircraft currently reporting for &ldquo;' + escapeHtml(query) + '&rdquo; — this only sees planes in the air right now, not schedules.</div>';
+      return;
+    }
+    resultsEl.innerHTML = results.map(function(f, idx){
+      var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("en-US") + " m" : "—";
+      var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("en-US") + " km/h" : "—";
+      return '<div class="ft-result-row" data-idx="' + idx + '">' +
+        '<div class="ft-callsign">' + escapeHtml(f.callsign || f.icao24) + "</div>" +
+        '<div class="ft-sub">' + escapeHtml(f.originCountry || "") + " · " + alt + " · " + spd + (f.onGround ? " · on ground" : "") + "</div>" +
+      "</div>";
+    }).join("");
+    Array.prototype.forEach.call(resultsEl.querySelectorAll(".ft-result-row"), function(row){
+      row.addEventListener("click", function(){
+        var idx = parseInt(row.getAttribute("data-idx"), 10);
+        trackedFlight = results[idx];
+        renderTrackedFlight();
+        updateGlobeMarkerCount();
+      });
+    });
+  }
+
+  function renderTrackedFlight(){
+    var wrap = $("ft-tracked");
+    if(!wrap) return;
+    if(!trackedFlight){ wrap.hidden = true; wrap.innerHTML = ""; return; }
+    var f = trackedFlight;
+    wrap.hidden = false;
+    var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("en-US") + " m" : "—";
+    var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("en-US") + " km/h" : "—";
+    var hdg = f.headingDeg != null ? Math.round(f.headingDeg) + "°" : "—";
+    var vr = f.verticalRateMs != null ? (f.verticalRateMs > 0.5 ? "climbing" : f.verticalRateMs < -0.5 ? "descending" : "level") : "—";
+    var html = '<div class="ft-tracked-head"><span class="ft-callsign">' + escapeHtml(f.callsign || f.icao24) + '</span><button type="button" class="ft-tracked-clear" id="ft-tracked-clear">Clear</button></div>' +
+      '<div class="ft-tracked-stats"><b>' + escapeHtml(f.originCountry || "Unknown origin") + "</b><br>" +
+        "Altitude " + alt + " · " + spd + " · heading " + hdg + " · " + vr +
+      "</div>";
+    if(issData && f.lat != null && f.lon != null){
+      var distKm = Math.round(haversineKm(f.lat, f.lon, issData.lat, issData.lon));
+      var fun = "✦ " + distKm.toLocaleString("en-US") + " km from the ISS overhead right now";
+      if(f.altitudeM && f.altitudeM > 0){
+        var multiple = Math.round((issData.altitudeKm * 1000) / f.altitudeM);
+        fun += " — the station is " + multiple.toLocaleString("en-US") + "× higher than this flight (" +
+          Math.round(issData.altitudeKm).toLocaleString("en-US") + " km vs " + Math.round(f.altitudeM / 1000).toLocaleString("en-US") + " km).";
+      } else {
+        fun += ".";
+      }
+      html += '<div class="ft-fun">' + fun + "</div>";
+    }
+    wrap.innerHTML = html;
+    $("ft-tracked-clear").addEventListener("click", function(){
+      trackedFlight = null;
+      renderTrackedFlight();
+      updateGlobeMarkerCount();
+    });
+  }
+
+  function renderIssStats(){
+    var statsEl = $("ft-iss-stats");
+    if(!statsEl) return;
+    if(!issData){ statsEl.textContent = "ISS feed unavailable right now."; return; }
+    var vis = issData.visibility === "daylight" ? "in daylight" : issData.visibility === "eclipsed" ? "in Earth's shadow" : (issData.visibility || "");
+    statsEl.innerHTML = "<b>" + issData.lat.toFixed(1) + "°, " + issData.lon.toFixed(1) + "°</b> · " +
+      Math.round(issData.altitudeKm).toLocaleString("en-US") + " km up · " +
+      Math.round(issData.velocityKmh).toLocaleString("en-US") + " km/h" + (vis ? " · " + vis : "");
+  }
+
+  async function loadIss(){
+    try{
+      var data = await getJSON("/api/iss");
+      issData = data;
+      renderIssStats();
+      if(trackedFlight) renderTrackedFlight(); // refresh the ISS-distance fun stat too
+      updateGlobeMarkerCount();
+    }catch(err){
+      if(!issData){
+        var statsEl = $("ft-iss-stats");
+        if(statsEl) statsEl.textContent = "ISS feed unavailable right now.";
+      }
+    }
+  }
+
+  function openIssDetail(data){
+    detailEyebrow.textContent = "Live Position";
+    var vis = data.visibility === "daylight" ? "In daylight" : data.visibility === "eclipsed" ? "In Earth's shadow" : (data.visibility || "Unknown visibility");
+    var html = '<h2 class="detail-title">International Space Station</h2>' +
+      '<div class="detail-meta"><b>' + data.lat.toFixed(2) + "°, " + data.lon.toFixed(2) + "°</b> · " + Math.round(data.altitudeKm).toLocaleString("en-US") + " km altitude</div>" +
+      '<p class="detail-snippet">Traveling at ' + Math.round(data.velocityKmh).toLocaleString("en-US") + " km/h — " + vis + ". Orbits the Earth roughly every 93 minutes.</p>";
+    detailBody.innerHTML = html;
+    overlay.hidden = false;
+  }
+
+  function openFlightDetail(f){
+    detailEyebrow.textContent = "Live Position";
+    var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("en-US") + " m" : "—";
+    var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("en-US") + " km/h" : "—";
+    var hdg = f.headingDeg != null ? Math.round(f.headingDeg) + "°" : "—";
+    var html = '<h2 class="detail-title">' + escapeHtml(f.callsign || f.icao24) + "</h2>" +
+      '<div class="detail-meta"><b>' + escapeHtml(f.originCountry || "Unknown origin") + "</b> · " + alt + " · " + spd + "</div>" +
+      '<p class="detail-snippet">Heading ' + hdg + (f.onGround ? " · currently on the ground" : "") + ". Live position via OpenSky Network — no schedule or gate data available from this feed.</p>";
+    detailBody.innerHTML = html;
+    overlay.hidden = false;
+  }
+
+  function updateGlobeMarkerCount(){
+    var countEl = $("globe-count");
+    if(!countEl) return;
+    var n = (typeof newsMarkers !== "undefined" ? newsMarkers.length : 0) + 1 + (issData ? 1 : 0) + (trackedFlight ? 1 : 0);
+    countEl.textContent = n + " markers tracked";
   }
 
   /* ============================================================
@@ -2704,6 +2947,48 @@
 
       renderedMarkers.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "home", ref: HOME });
     })();
+
+    // ISS marker — current live position, when loaded
+    if(issData && issData.lat != null && issData.lon != null){
+      var pIss = project(issData.lat, issData.lon, G.rotation, G.tilt);
+      if(pIss){
+        var scaleIss = 0.6 + pIss.z * 0.4;
+        var baseRIss = 4 * scaleIss;
+        ctx.beginPath();
+        ctx.arc(pIss.x, pIss.y, baseRIss + pulse*3*scaleIss, 0, Math.PI*2);
+        ctx.strokeStyle = "rgba(142,201,255," + (0.6*scaleIss) + ")";
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(pIss.x, pIss.y, baseRIss, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(142,201,255," + (0.95*scaleIss) + ")";
+        ctx.fill();
+
+        renderedMarkers.push({ x: pIss.x, y: pIss.y, r: Math.max(10, baseRIss + 7), type: "iss", ref: issData });
+      }
+    }
+
+    // tracked flight marker — the aircraft currently selected from a search result
+    if(trackedFlight && trackedFlight.lat != null && trackedFlight.lon != null){
+      var pFl = project(trackedFlight.lat, trackedFlight.lon, G.rotation, G.tilt);
+      if(pFl){
+        var scaleFl = 0.6 + pFl.z * 0.4;
+        var baseRFl = 3.6 * scaleFl;
+        ctx.beginPath();
+        ctx.arc(pFl.x, pFl.y, baseRFl + pulse*2.6*scaleFl, 0, Math.PI*2);
+        ctx.strokeStyle = "rgba(255,209,102," + (0.6*scaleFl) + ")";
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(pFl.x, pFl.y, baseRFl, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(255,209,102,0.95)";
+        ctx.fill();
+
+        renderedMarkers.push({ x: pFl.x, y: pFl.y, r: Math.max(10, baseRFl + 7), type: "flight", ref: trackedFlight });
+      }
+    }
   }
 
   function tick(){
@@ -2735,7 +3020,10 @@
       tooltip.style.display = "block";
       tooltip.style.left = hit.x + "px";
       tooltip.style.top = hit.y + "px";
-      tooltip.textContent = hit.type === "news" ? hit.ref.place : hit.ref.name;
+      tooltip.textContent = hit.type === "news" ? hit.ref.place :
+        hit.type === "iss" ? "ISS — International Space Station" :
+        hit.type === "flight" ? (hit.ref.callsign || hit.ref.icao24 || "Tracked flight") :
+        hit.ref.name;
     } else {
       if(!G.dragging) canvas.style.cursor = "grab";
       tooltip.style.display = "none";
@@ -2782,6 +3070,14 @@
       if(topItem) renderNewsDetail(topItem);
       return;
     }
+    if(hit.type === "iss"){
+      openIssDetail(hit.ref);
+      return;
+    }
+    if(hit.type === "flight"){
+      openFlightDetail(hit.ref);
+      return;
+    }
     if(hit.type === "station"){
       var st = hit.ref;
       var relatedItems = newsMarkers.filter(function(nm){ return nm.place === st.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
@@ -2804,7 +3100,7 @@
       if(grouped[key].items.length < 6) grouped[key].items.push(item);
     });
     newsMarkers = Object.keys(grouped).slice(0, 30).map(function(k){ return grouped[k]; });
-    $("globe-count").textContent = (newsMarkers.length + 1) + " markers tracked";
+    updateGlobeMarkerCount();
   }
 
   async function loadStations(){
@@ -2814,7 +3110,7 @@
       });
     }));
     stationMarkers = results.filter(function(r){ return r.status === "fulfilled"; }).map(function(r){ return r.value; });
-    $("globe-count").textContent = (newsMarkers.length + 1) + " markers tracked";
+    updateGlobeMarkerCount();
   }
 
   /* ============================================================
@@ -3378,7 +3674,7 @@
   // new widgets default to collapsed regardless of prior stored state — keeps the console
   // compact by default per the "must fit without scrolling" constraint; once a user
   // explicitly opens/closes one, that choice persists like the original four panels.
-  ["skywatch", "sports"].forEach(function(k){
+  ["skywatch", "sports", "flighttracker"].forEach(function(k){
     if(!(k in railCollapse)) railCollapse[k] = true;
   });
 
@@ -3415,6 +3711,7 @@
     renderTodos();
     renderLog();
     renderSkyWatch(null);
+    renderFlightTracker();
 
     resizeCanvas();
     if(window.ResizeObserver){ new ResizeObserver(debounce(resizeCanvas, 120)).observe(globeBody); }
@@ -3438,6 +3735,7 @@
     loadAurora();
     loadBromont();
     loadSports();
+    loadIss();
 
     setInterval(loadQuotes, 90000);
     setInterval(loadFx, 300000);
@@ -3449,6 +3747,7 @@
     setInterval(loadAurora, 900000);
     setInterval(loadBromont, 900000);
     setInterval(loadSports, 600000);
+    setInterval(loadIss, 15000);
     setInterval(updateSubsolar, 60000);
     setInterval(function(){ renderSkyWatch(lastAuroraData); }, 600000); // keep moon icon fresh
     if(!REDUCED_MOTION) setInterval(rotateShipStatus, 9000);
