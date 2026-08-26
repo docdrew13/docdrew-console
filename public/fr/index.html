@@ -285,6 +285,7 @@
   .sport-tennis-match{ font-size:15px; color:var(--text); margin-top:3px; }
   .sport-tennis-match span{ color:var(--text-dim); font-size:13px; }
   .sport-tennis-match .sets{ color:var(--text-dim); font-size:13px; margin-left:4px; }
+  .sport-tennis-match b{ color:var(--good); font-weight:700; }
   .sport-team{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
   .sport-team-x{ cursor:pointer; color:var(--text-dim); font-size:13px; flex:0 0 auto; }
   .sport-team-x:hover{ color:var(--bad); }
@@ -429,6 +430,8 @@
   }
   .wx-more-link:hover{ color:var(--text); }
   .snow-report{ margin-top:10px; padding-top:9px; border-top:1px solid var(--grid-line); }
+  .snow-report-collapsed{ margin-top:10px; padding-top:9px; border-top:1px solid var(--grid-line); }
+  .snow-report-collapsed .wx-more-link{ padding-top:0; }
   .snow-report-head{ font-size:14px; color:var(--frost); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px; }
   .wx-forecast{ display:flex; justify-content:space-between; gap:4px; margin-top:10px; padding-top:8px; border-top:1px solid var(--grid-line); }
   .wx-fday{ flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
@@ -2004,7 +2007,7 @@
     if(data.today && typeof data.today.max === "number"){
       html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + Math.round(data.today.max) + "°</b>Max</div><div class=\"wx-stat\"><b>" + Math.round(data.today.min) + "°</b>Min</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synchro</div></div>";
     }
-    html += buildSnowReportHtml(lastBromontData);
+    html += buildSnowReportHtml(lastBromontData, snowExpanded);
     html += '<button type="button" class="wx-more-link" id="wx-more-btn">Prévisions complètes →</button>';
     wxBody.innerHTML = html;
     if(wxEditing) renderWxEditor();
@@ -2014,6 +2017,12 @@
       if(data.place && typeof data.place.latitude === "number"){
         openLocationDetail(data.place.latitude, data.place.longitude, { name: data.place.name });
       }
+    });
+    var snowToggleBtn = $("snow-toggle-btn");
+    if(snowToggleBtn) snowToggleBtn.addEventListener("click", function(){
+      snowExpanded = !snowExpanded;
+      if(snowExpanded && !lastBromontData) loadBromont();
+      renderWx(lastHomeWxData);
     });
   }
 
@@ -2311,11 +2320,18 @@
   var snowRegion = readLS(LS.snowRegion, DEFAULT_SNOW_REGION);
   var lastBromontData = null;
   var snowEditing = false;
+  // Réduit par défaut — un bulletin de neige n'a pas sa place à l'écran la majeure partie
+  // de l'année, donc il est caché derrière un lien du même genre que « Prévisions complètes ».
+  var snowExpanded = false;
 
-  function buildSnowReportHtml(data){
+  function buildSnowReportHtml(data, expanded){
     var head = '<div class="snow-report-head" id="snow-report-head" title="Cliquer deux fois pour changer de région">❄ Bulletin de neige — ' + escapeHtml(snowRegion.name) + "</div>";
+    if(!expanded){
+      return '<div class="snow-report-collapsed"><button type="button" class="wx-more-link" id="snow-toggle-btn">❄ Bulletin de neige — ' + escapeHtml(snowRegion.name) + " →</button></div>";
+    }
     if(!data || !data.current){
-      return '<div class="snow-report">' + head + '<div class="error-state">Conditions indisponibles.</div></div>';
+      return '<div class="snow-report">' + head + '<div class="error-state">Conditions indisponibles.</div>' +
+        '<button type="button" class="wx-more-link" id="snow-toggle-btn">▲ Masquer</button></div>';
     }
     var c = data.current;
     var snow = typeof c.snowfall === "number" ? c.snowfall : 0;
@@ -2327,6 +2343,7 @@
       '<div class="wx-stat"><b>' + (typeof snow === "number" ? snow.toFixed(1) : "0") + "</b>cm neige</div>" +
     "</div>";
     html += '<div class="snow-report-caption">Estimation basée sur la météo — pas un bulletin officiel des pistes.</div>';
+    html += '<button type="button" class="wx-more-link" id="snow-toggle-btn">▲ Masquer</button>';
     html += "</div>";
     return html;
   }
@@ -2507,7 +2524,10 @@
             sets = m.sets1.map(function(v, i){ return v + "-" + (m.sets2[i] != null ? m.sets2[i] : "?"); }).join(", ");
           }
           var badge = m.state === "in" ? '<span class="sport-live">● EN DIRECT</span> ' : "";
-          html += '<div class="sport-tennis-match">' + badge + escapeHtml(m.player1) + " vs " + escapeHtml(m.player2) +
+          // Met en gras le nom du joueur gagnant — connu seulement une fois le match terminé.
+          var p1 = m.winner1 === true ? "<b>" + escapeHtml(m.player1) + "</b>" : escapeHtml(m.player1);
+          var p2 = m.winner2 === true ? "<b>" + escapeHtml(m.player2) + "</b>" : escapeHtml(m.player2);
+          html += '<div class="sport-tennis-match">' + badge + p1 + " vs " + p2 +
             (sets ? ' <span class="sets">' + escapeHtml(sets) + "</span>" : "") +
             ' <span>' + escapeHtml(m.status || "") + "</span></div>";
         });
@@ -2556,7 +2576,12 @@
     return fetch("https://site.api.espn.com/apis/site/v2/sports/" + spec.sport + "/" + spec.league + "/teams/" + spec.teamId + "/schedule")
       .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
       .then(function(data){
-        var events = (data && data.events) || [];
+        // Ignore les matchs de présaison/exhibition — ils ne comptent pas dans la fiche
+        // de l'équipe et ne méritent ni le badge EN DIRECT ni la ligne "dernier résultat".
+        var events = ((data && data.events) || []).filter(function(ev){
+          var st = ev.seasonType || {};
+          return String(st.id) !== "1" && !/preseason|exhibition/i.test(st.name || "");
+        });
         var games = events.map(function(ev){
           var comp = ev.competitions && ev.competitions[0];
           var type = (comp && comp.status && comp.status.type) || {};
@@ -2608,7 +2633,9 @@
                 player1: (a && a.athlete && a.athlete.displayName) || "TBD",
                 player2: (b && b.athlete && b.athlete.displayName) || "TBD",
                 sets1: (a && a.linescores) ? a.linescores.map(function(l){ return l.value; }) : [],
-                sets2: (b && b.linescores) ? b.linescores.map(function(l){ return l.value; }) : []
+                sets2: (b && b.linescores) ? b.linescores.map(function(l){ return l.value; }) : [],
+                winner1: typeof (a && a.winner) === "boolean" ? a.winner : null,
+                winner2: typeof (b && b.winner) === "boolean" ? b.winner : null
               });
             });
           });
@@ -2818,7 +2845,7 @@
       return getJSON("/api/news?source=" + src.key).then(function(data){
         var items = (data.items || []).map(function(it){
           it.sourceKey = src.key;
-          it.sourceLabel = data.name || src.label;
+          it.sourceLabel = it.sourceLabel || data.name || src.label;
           return it;
         });
         newsCache[src.key] = items;
