@@ -301,26 +301,37 @@
   .podcast-add input{ flex:1 1 90px; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:14px; }
   .podcast-add button{ flex:0 0 auto; background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:14px; cursor:pointer; }
 
-  /* ---- podcast video tiles ---- */
-  .video-tiles{ display:flex; gap:8px; }
-  .video-tile{
-    flex:1; position:relative; border-radius:8px; overflow:hidden; cursor:pointer;
-    aspect-ratio:16/9; background:var(--panel-2); border:1px solid var(--grid-line);
+  .podcast-search-row{ display:flex; gap:6px; }
+  .podcast-search-row input{ flex:1 1 auto; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:14px; }
+  .podcast-search-row button{ flex:0 0 auto; background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 14px; font-weight:700; font-size:14px; cursor:pointer; }
+  .podcast-search-results{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+  .podcast-result-row{ display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--grid-line); border-radius:6px; padding:6px 8px; cursor:pointer; }
+  .podcast-result-row:hover{ border-color:var(--violet); }
+  .podcast-result-thumb{ width:34px; height:34px; border-radius:50%; object-fit:cover; flex:none; background:var(--panel); }
+  .podcast-result-info{ flex:1 1 auto; min-width:0; }
+  .podcast-result-name{ font-size:14px; color:var(--text); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .podcast-result-sub{ font-size:12.5px; color:var(--text-dim); }
+  .podcast-result-add{ flex:0 0 auto; appearance:none; background:none; border:1px solid var(--grid-line); color:var(--text-dim); border-radius:5px; padding:3px 10px; font-size:12.5px; cursor:pointer; }
+  .podcast-result-add:hover{ color:var(--text); border-color:var(--violet); }
+  .podcast-manual-toggle{ display:inline-block; margin-top:10px; background:none; border:none; color:var(--cyan); font-size:13px; text-decoration:underline; cursor:pointer; padding:0; }
+
+  /* ---- podcasts list — plain rows (name + latest title), no thumbnail "mini window";
+     stacks vertically so any number of channels reads cleanly in a narrow rail, instead
+     of squeezing side-by-side preview tiles down to an unreadable size ---- */
+  .video-tiles{ display:flex; flex-direction:column; gap:6px; }
+  .podcast-row{
+    display:flex; flex-direction:column; gap:2px; cursor:pointer;
+    background:var(--panel-2); border:1px solid var(--grid-line); border-radius:7px; padding:7px 10px;
   }
-  .video-tile img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .video-tile .play-badge{
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    opacity:0.9; transition:opacity 0.15s;
+  .podcast-row:hover{ border-color:var(--violet); }
+  .podcast-row-name{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px;
+    letter-spacing:0.04em; text-transform:uppercase; color:var(--cyan);
   }
-  .video-tile:hover .play-badge{ opacity:1; }
-  .video-tile-title{
-    position:absolute; left:0; right:0; bottom:0; padding:5px 7px 6px;
-    background:linear-gradient(transparent, rgba(0,0,0,0.88));
-    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12.5px; line-height:1.3; color:#fff;
-  }
-  .video-tile-title b{ display:block; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--cyan); font-weight:400; }
-  .video-tile.unavailable{ display:flex; align-items:center; justify-content:center; cursor:default; }
-  .video-tile.unavailable .video-tile-title{ position:static; background:none; text-align:center; }
+  .podcast-row-video{ font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .podcast-row.unavailable{ cursor:default; }
+  .podcast-row.unavailable:hover{ border-color:var(--grid-line); }
+  .podcast-row.unavailable .podcast-row-video{ color:var(--text-dim); }
   .video-panel{
     position:relative; width:min(920px, 92vw); background:#000; border-radius:10px; overflow:hidden;
     box-shadow:0 30px 80px -20px rgba(0,0,0,0.85);
@@ -801,8 +812,7 @@
           </div>
           <div class="panel-body" id="podcasts-body">
             <div class="video-tiles" id="video-tiles">
-              <div class="video-tile unavailable"><div class="video-tile-title">Loading…</div></div>
-              <div class="video-tile unavailable"><div class="video-tile-title">Loading…</div></div>
+              <div class="podcast-empty">Loading…</div>
             </div>
           </div>
         </section>
@@ -1448,6 +1458,10 @@
   var DEFAULT_PODCASTS = [];
   var podcasts = readLS(LS.podcasts, DEFAULT_PODCASTS);
   var podcastsEditing = false;
+  var podcastSearchResults = []; // last channel-search results, kept across re-renders so
+                                  // adding one doesn't wipe the list before adding another
+  var podcastSearchQuery = "";
+  var podcastManualOpen = false; // the old URL/@handle/ID field, tucked behind a disclosure now that search is the main path
 
   async function loadPodcasts(){
     var container = $("video-tiles");
@@ -1460,19 +1474,67 @@
     }));
     container.innerHTML = "";
     results.forEach(function(r, idx){
-      var tile = el("div", "video-tile");
+      var row = el("div", "podcast-row");
       if(r.status === "fulfilled" && r.value.data && r.value.data.videoId){
         var p = r.value.meta, d = r.value.data;
-        tile.innerHTML =
-          '<img src="' + escapeHtml(d.thumbnail) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
-          '<div class="play-badge"><svg viewBox="0 0 60 60" width="30" height="30"><circle cx="30" cy="30" r="28" fill="rgba(0,0,0,0.55)"/><polygon points="24,18 44,30 24,42" fill="#fff"/></svg></div>' +
-          '<div class="video-tile-title"><b>' + escapeHtml(p.label) + "</b>" + escapeHtml(d.title) + "</div>";
-        tile.addEventListener("click", function(){ openVideo(d.videoId); });
+        row.innerHTML =
+          '<div class="podcast-row-name">' + escapeHtml(p.label) + "</div>" +
+          '<div class="podcast-row-video">' + escapeHtml(d.title) + "</div>";
+        row.addEventListener("click", function(){ openVideo(d.videoId); });
       } else {
-        tile.className = "video-tile unavailable";
-        tile.innerHTML = '<div class="video-tile-title">' + escapeHtml(podcasts[idx].label) + " unavailable</div>";
+        row.className = "podcast-row unavailable";
+        row.innerHTML =
+          '<div class="podcast-row-name">' + escapeHtml(podcasts[idx].label) + "</div>" +
+          '<div class="podcast-row-video">Unavailable right now</div>';
       }
-      container.appendChild(tile);
+      container.appendChild(row);
+    });
+  }
+
+  async function searchPodcastChannels(query){
+    var resultsEl = $("podcast-search-results");
+    if(!resultsEl) return;
+    resultsEl.innerHTML = '<div class="podcast-empty">Searching…</div>';
+    try{
+      var data = await getJSON("/api/youtube-search?q=" + encodeURIComponent(query));
+      podcastSearchResults = data.results || [];
+      renderPodcastSearchResults();
+    }catch(err){
+      podcastSearchResults = [];
+      resultsEl.innerHTML = '<div class="podcast-empty">Search unavailable right now — try adding by URL or @handle below.</div>';
+    }
+  }
+
+  function renderPodcastSearchResults(){
+    var resultsEl = $("podcast-search-results");
+    if(!resultsEl) return;
+    if(!podcastSearchResults.length){
+      resultsEl.innerHTML = "";
+      return;
+    }
+    resultsEl.innerHTML = podcastSearchResults.map(function(r, idx){
+      var thumb = r.thumbnail
+        ? '<img class="podcast-result-thumb" src="' + escapeHtml(r.thumbnail) + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'
+        : '<span class="podcast-result-thumb"></span>';
+      return '<div class="podcast-result-row" data-idx="' + idx + '">' +
+        thumb +
+        '<div class="podcast-result-info">' +
+          '<div class="podcast-result-name">' + escapeHtml(r.name) + "</div>" +
+          (r.subscribers ? '<div class="podcast-result-sub">' + escapeHtml(r.subscribers) + "</div>" : "") +
+        "</div>" +
+        '<button type="button" class="podcast-result-add">Add</button>' +
+      "</div>";
+    }).join("");
+    Array.prototype.forEach.call(resultsEl.querySelectorAll(".podcast-result-row"), function(row){
+      row.addEventListener("click", function(){
+        var idx = parseInt(row.getAttribute("data-idx"), 10);
+        var r = podcastSearchResults[idx];
+        if(!r) return;
+        podcasts.push({ label: r.name, channelId: r.channelId });
+        writeLS(LS.podcasts, podcasts);
+        renderPodcastEditor();
+        loadPodcasts();
+      });
     });
   }
 
@@ -1487,13 +1549,42 @@
     var rowsHtml = podcasts.map(function(p, idx){
       return '<div class="podcast-edit-row"><span>' + escapeHtml(p.label) + '</span><span class="podcast-edit-x" data-idx="' + idx + '">✕</span></div>';
     }).join("");
-    wrap.innerHTML = rowsHtml +
-      '<div class="podcast-add">' +
+    wrap.innerHTML =
+      '<div class="podcast-search">' +
+        '<div class="podcast-search-row">' +
+          '<input type="text" id="podcast-search-input" placeholder="Search for a channel or podcast" value="' + escapeHtml(podcastSearchQuery) + '">' +
+          '<button type="button" id="podcast-search-btn">Search</button>' +
+        "</div>" +
+        '<div class="podcast-search-results" id="podcast-search-results"></div>' +
+      "</div>" +
+      rowsHtml +
+      '<button type="button" class="podcast-manual-toggle" id="podcast-manual-toggle">' + (podcastManualOpen ? "Hide manual add" : "Add by URL or @handle instead") + "</button>" +
+      '<div class="podcast-add" id="podcast-manual-add"' + (podcastManualOpen ? "" : ' style="display:none;"') + '>' +
         '<input type="text" id="podcast-name-input" placeholder="Name">' +
         '<input type="text" id="podcast-channel-input" placeholder="Channel URL, @handle, or ID">' +
         '<button type="button" id="podcast-add-btn">Add</button>' +
       "</div>";
     body.appendChild(wrap);
+    renderPodcastSearchResults();
+
+    $("podcast-search-btn").addEventListener("click", function(){
+      var q = $("podcast-search-input").value.trim();
+      if(!q) return;
+      podcastSearchQuery = q;
+      searchPodcastChannels(q);
+    });
+    $("podcast-search-input").addEventListener("keydown", function(e){
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      var q = $("podcast-search-input").value.trim();
+      if(!q) return;
+      podcastSearchQuery = q;
+      searchPodcastChannels(q);
+    });
+    $("podcast-manual-toggle").addEventListener("click", function(){
+      podcastManualOpen = !podcastManualOpen;
+      renderPodcastEditor();
+    });
 
     Array.prototype.forEach.call(wrap.querySelectorAll(".podcast-edit-x"), function(x){
       x.addEventListener("click", function(){
