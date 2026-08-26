@@ -74,6 +74,7 @@
     width:100vw;
     padding:10px 12px 8px;
     display:grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr 100px 30px;
     gap:8px;
   }
@@ -228,7 +229,7 @@
   .tab.active{ background:var(--violet); border-color:var(--violet); color:var(--violet-ink); font-weight:700; }
 
   /* ============ DECK (main 3-col area) ============ */
-  .deck{ display:grid; grid-template-columns: 1fr 440px 260px 260px; gap:8px; min-height:0; }
+  .deck{ display:grid; grid-template-columns: minmax(0,1fr) 360px 240px 240px; gap:8px; min-height:0; min-width:0; }
   .rail{ display:flex; flex-direction:column; gap:8px; min-height:0; }
   .rail-left .panel:nth-child(1){ flex:1; }
   .globes-stack{ display:flex; flex-direction:column; gap:8px; min-height:0; }
@@ -563,11 +564,20 @@
   @media (max-width: 980px), (max-height: 620px){
     html,body{ overflow:auto; }
     .console{ height:auto; min-height:100vh; min-height:100dvh; }
-    .deck{ grid-template-columns:1fr; }
+    .deck{ grid-template-columns:minmax(0,1fr); }
     .rail{ flex-direction:row; flex-wrap:wrap; }
     .rail .panel{ flex:1 1 320px; max-height:none; }
     .globe-body{ min-height:360px; }
     .strip{ grid-template-columns:1fr; }
+  }
+
+  /* Tablet band (iPad landscape and similar, ~981-1300px): the desktop 4-column grid's
+     fixed-width globes + two right-rail columns don't leave enough room for news before
+     the full single-column mobile fallback kicks in at 980px — news was down to a sliver
+     or forcing horizontal overflow. Compress the globes and right rails further here so
+     news keeps a workable width, at the globes' expense. */
+  @media (min-width: 981px) and (max-width: 1300px){
+    .deck{ grid-template-columns: minmax(0,1fr) 300px 210px 210px; }
   }
 
   /* Topbar is a single-row flex layout of mostly fixed-width elements (brand, stardate,
