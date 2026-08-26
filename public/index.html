@@ -142,6 +142,11 @@
     font-weight:700; font-size:23px; letter-spacing:0.03em; color:var(--text);
     background:var(--panel-2); border:1px solid var(--grid-line); border-radius:5px; padding:0 6px; width:140px;
   }
+  .brand-name-edit{
+    display:inline-block; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight:700; font-size:23px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text);
+    background:var(--panel-2); border:1px solid var(--grid-line); border-radius:5px; padding:0 6px; width:170px;
+  }
 
   .search{ flex:0 0 auto; display:flex; align-items:center; gap:6px; }
   .search select, .search input{
@@ -531,7 +536,7 @@
     <header class="topbar">
       <div class="brand">
         <span class="brand-mark" aria-hidden="true"></span>
-        <span class="brand-name">DOCDREW<span class="dim">.CA</span></span>
+        <span class="brand-name" id="brand-name">DOCDREW<span class="dim">.CA</span></span>
       </div>
       <span class="stardate" id="stardate">STARDATE —</span>
       <div class="greeting-block">
@@ -715,7 +720,8 @@
     railCollapse: "dds-rail-collapse",
     captainsLog: "dds-captains-log",
     homeCity: "dds-home-city",
-    userName: "dds-user-name"
+    userName: "dds-user-name",
+    brandName: "dds-brand-name"
   };
 
   // "Top Stories" is pinned first (the default/home tab, catching general news that
@@ -1005,7 +1011,10 @@
     greetEl.appendChild(input);
     input.focus();
     input.select();
+    var closed = false;
     function commit(){
+      if(closed) return;
+      closed = true;
       var typed = input.value.trim();
       userName = typed || "Andrew";
       writeLS(LS.userName, userName);
@@ -1013,8 +1022,8 @@
       updateClock();
     }
     input.addEventListener("keydown", function(e){
-      if(e.key === "Enter") commit();
-      else if(e.key === "Escape"){ nameEditing = false; updateClock(); }
+      if(e.key === "Enter") input.blur();
+      else if(e.key === "Escape"){ closed = true; nameEditing = false; updateClock(); }
     });
     input.addEventListener("blur", commit);
   }
@@ -1026,6 +1035,55 @@
 
   updateClock();
   setInterval(updateClock, 1000);
+
+  /* ============================================================
+     BRAND NAME (editable, top-left "DOCDREW.CA")
+  ============================================================ */
+  var brandName = readLS(LS.brandName, "DOCDREW.CA");
+  var brandEditing = false;
+  function renderBrandName(){
+    if(brandEditing) return;
+    var el2 = $("brand-name");
+    var dotIdx = brandName.lastIndexOf(".");
+    if(dotIdx > 0 && dotIdx < brandName.length - 1){
+      el2.innerHTML = escapeHtml(brandName.slice(0, dotIdx)) + '<span class="dim">' + escapeHtml(brandName.slice(dotIdx)) + "</span>";
+    } else {
+      el2.textContent = brandName;
+    }
+  }
+  function renderBrandEditor(){
+    var el2 = $("brand-name");
+    var input = document.createElement("input");
+    input.type = "text";
+    input.className = "brand-name-edit";
+    input.value = brandName;
+    input.maxLength = 28;
+    el2.textContent = "";
+    el2.appendChild(input);
+    input.focus();
+    input.select();
+    var closed = false;
+    function commit(){
+      if(closed) return;
+      closed = true;
+      var typed = input.value.trim();
+      brandName = typed || "DOCDREW.CA";
+      writeLS(LS.brandName, brandName);
+      brandEditing = false;
+      renderBrandName();
+    }
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter") input.blur();
+      else if(e.key === "Escape"){ closed = true; brandEditing = false; renderBrandName(); }
+    });
+    input.addEventListener("blur", commit);
+  }
+  renderBrandName();
+  $("brand-name").title = "Double-click to edit";
+  $("brand-name").addEventListener("dblclick", function(){
+    brandEditing = true;
+    renderBrandEditor();
+  });
 
   /* ============================================================
      HOME CITY SELECTOR
