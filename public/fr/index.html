@@ -2547,8 +2547,8 @@
             completed: !!status.completed,
             statusText: status.shortDetail || status.description || "",
             opponent: (opp && opp.team && opp.team.displayName) || "TBD",
-            teamScore: self && self.score != null ? self.score : null,
-            oppScore: opp && opp.score != null ? opp.score : null,
+            teamScore: self && self.score ? (self.score.displayValue != null ? self.score.displayValue : self.score.value) : null,
+            oppScore: opp && opp.score ? (opp.score.displayValue != null ? opp.score.displayValue : opp.score.value) : null,
             win: typeof (self && self.winner) === "boolean" ? self.winner : null
           };
         });
