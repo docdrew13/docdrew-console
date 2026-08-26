@@ -186,10 +186,19 @@
   .globes-stack{ display:flex; flex-direction:column; gap:8px; min-height:0; }
   .globes-stack .globe-panel{ flex:1; min-height:0; }
   .globes-stack .globe-body{ aspect-ratio: 1 / 1; height:100%; width:auto; max-width:100%; margin:0 auto; }
-  .rail-right .panel:nth-child(1){ flex:0 0 auto; max-height:32%; }
-  .rail-right .panel:nth-child(2){ flex:0 0 auto; }
-  .rail-right .panel:nth-child(3){ flex:1.1; }
-  .rail-right .panel:nth-child(4){ flex:0 0 auto; max-height:26%; }
+  /* right rail is an independent accordion — each panel toggles open/closed on its own,
+     and the whole column scrolls as one unit instead of each box fighting a squeezed
+     internal max-height. */
+  .rail-right{ overflow-y:auto; }
+  .rail-right .panel{ flex:0 0 auto; }
+  .rail-right .panel-head{ cursor:pointer; user-select:none; }
+  .rail-right .panel-body{ overflow-y:visible; max-height:none; }
+  .rail-right .panel.collapsed .panel-body{ display:none; }
+  .panel-chevron{
+    flex:0 0 auto; font-style:normal; font-size:14px; opacity:0.75; line-height:1;
+    transition:transform 0.15s ease;
+  }
+  .panel.collapsed .panel-chevron{ transform:rotate(-90deg); }
 
   /* ---- podcast video tiles ---- */
   .video-tiles{ display:flex; gap:8px; }
@@ -492,14 +501,14 @@
       </div>
 
       <aside class="rail rail-right">
-        <section class="panel" data-accent="cyan" aria-label="Weather">
-          <div class="panel-head"><span>Weather</span></div>
+        <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
+          <div class="panel-head"><span>Weather</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="wx-body">
             <div class="empty-state">Loading weather…</div>
           </div>
         </section>
-        <section class="panel" data-accent="violet" aria-label="Podcasts">
-          <div class="panel-head"><span>Podcasts</span></div>
+        <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
+          <div class="panel-head"><span>Podcasts</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body" id="podcasts-body">
             <div class="video-tiles" id="video-tiles">
               <div class="video-tile unavailable"><div class="video-tile-title">Loading…</div></div>
@@ -507,17 +516,18 @@
             </div>
           </div>
         </section>
-        <section class="panel round-l" data-accent="amber" aria-label="Stock quotes">
+        <section class="panel round-l" data-accent="amber" data-panel-key="markets" aria-label="Stock quotes">
           <div class="panel-head">
             <span>Markets</span>
             <button class="head-btn" id="stocks-edit-btn" type="button">Edit</button>
+            <i class="panel-chevron">▾</i>
           </div>
           <div class="panel-body scroll" id="stocks-body">
             <div class="empty-state">Loading quotes…</div>
           </div>
         </section>
-        <section class="panel round-l" data-accent="gold" aria-label="Currency converter">
-          <div class="panel-head"><span>Currency</span></div>
+        <section class="panel round-l" data-accent="gold" data-panel-key="currency" aria-label="Currency converter">
+          <div class="panel-head"><span>Currency</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="fx-body"></div>
         </section>
       </aside>
@@ -690,7 +700,8 @@
     fxAmt: "dds-fx-amt",
     wxCity: "dds-wx-city",
     links: "dds-links",
-    todos: "dds-todos"
+    todos: "dds-todos",
+    railCollapse: "dds-rail-collapse"
   };
 
   /* ============================================================
@@ -1057,9 +1068,21 @@
     return Math.abs(lat).toFixed(1) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lon).toFixed(1) + "°" + (lon >= 0 ? "E" : "W");
   }
 
+  function ensureWeatherPanelVisible(){
+    var wxSection = wxBody.closest(".panel");
+    if(!wxSection) return;
+    if(typeof railCollapse !== "undefined" && railCollapse.weather){
+      railCollapse.weather = false;
+      writeLS(LS.railCollapse, railCollapse);
+    }
+    wxSection.classList.remove("collapsed");
+    wxSection.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+
   function openLocationDetail(lat, lon, opts){
     opts = opts || {};
     wxViewMode = "location";
+    ensureWeatherPanelVisible();
     var near = nearestPlace(lat, lon);
     var displayName = opts.name || null;
     var items = opts.items || null;
@@ -2186,9 +2209,38 @@
   }
 
   /* ============================================================
+     RIGHT-RAIL ACCORDION — Weather / Podcasts / Markets / Currency
+     each collapse or expand independently, remembered per-browser.
+  ============================================================ */
+  var railCollapse = readLS(LS.railCollapse, {});
+
+  function applyPanelCollapse(section){
+    var key = section.getAttribute("data-panel-key");
+    if(!key) return;
+    section.classList.toggle("collapsed", !!railCollapse[key]);
+  }
+
+  function initRailAccordion(){
+    Array.prototype.forEach.call(document.querySelectorAll(".rail-right .panel[data-panel-key]"), function(section){
+      applyPanelCollapse(section);
+      var head = section.querySelector(".panel-head");
+      if(!head) return;
+      head.addEventListener("click", function(e){
+        // let controls inside the head (Edit button, tabs, etc.) work without also toggling
+        if(e.target.closest && e.target.closest("button, a, input, select, .tabs")) return;
+        var key = section.getAttribute("data-panel-key");
+        railCollapse[key] = !railCollapse[key];
+        writeLS(LS.railCollapse, railCollapse);
+        applyPanelCollapse(section);
+      });
+    });
+  }
+
+  /* ============================================================
      INIT
   ============================================================ */
   function init(){
+    initRailAccordion();
     renderFx();
     renderLinks();
     renderTodos();
