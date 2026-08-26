@@ -187,8 +187,37 @@
   .globes-stack .globe-panel{ flex:1; min-height:0; }
   .globes-stack .globe-body{ aspect-ratio: 1 / 1; height:100%; width:auto; max-width:100%; margin:0 auto; }
   .rail-right .panel:nth-child(1){ flex:0 0 auto; max-height:32%; }
-  .rail-right .panel:nth-child(2){ flex:1.1; }
-  .rail-right .panel:nth-child(3){ flex:0 0 auto; max-height:26%; }
+  .rail-right .panel:nth-child(2){ flex:0 0 auto; }
+  .rail-right .panel:nth-child(3){ flex:1.1; }
+  .rail-right .panel:nth-child(4){ flex:0 0 auto; max-height:26%; }
+
+  /* ---- podcast video tiles ---- */
+  .video-tiles{ display:flex; gap:8px; }
+  .video-tile{
+    flex:1; position:relative; border-radius:8px; overflow:hidden; cursor:pointer;
+    aspect-ratio:16/9; background:var(--panel-2); border:1px solid var(--grid-line);
+  }
+  .video-tile img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .video-tile .play-badge{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    opacity:0.9; transition:opacity 0.15s;
+  }
+  .video-tile:hover .play-badge{ opacity:1; }
+  .video-tile-title{
+    position:absolute; left:0; right:0; bottom:0; padding:5px 7px 6px;
+    background:linear-gradient(transparent, rgba(0,0,0,0.88));
+    font-family:"Share Tech Mono", monospace; font-size:10px; line-height:1.3; color:#fff;
+  }
+  .video-tile-title b{ display:block; font-size:9.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--cyan); font-weight:400; }
+  .video-tile.unavailable{ display:flex; align-items:center; justify-content:center; cursor:default; }
+  .video-tile.unavailable .video-tile-title{ position:static; background:none; text-align:center; }
+  .video-panel{
+    position:relative; width:min(920px, 92vw); background:#000; border-radius:10px; overflow:hidden;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,0.85);
+  }
+  .video-panel .detail-close{ position:absolute; top:10px; right:10px; z-index:2; background:rgba(0,0,0,0.55); }
+  .video-frame-wrap{ position:relative; width:100%; aspect-ratio:16/9; }
+  .video-frame-wrap iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
 
   /* ---- stock list ---- */
   .quote-row{
@@ -490,6 +519,15 @@
             <div class="empty-state">Loading weather…</div>
           </div>
         </section>
+        <section class="panel" data-accent="violet" aria-label="Podcasts">
+          <div class="panel-head"><span>Podcasts</span></div>
+          <div class="panel-body" id="podcasts-body">
+            <div class="video-tiles" id="video-tiles">
+              <div class="video-tile unavailable"><div class="video-tile-title">Loading…</div></div>
+              <div class="video-tile unavailable"><div class="video-tile-title">Loading…</div></div>
+            </div>
+          </div>
+        </section>
         <section class="panel round-l" data-accent="amber" aria-label="Stock quotes">
           <div class="panel-head">
             <span>Markets</span>
@@ -532,6 +570,16 @@
         <button class="detail-close" id="detail-close" aria-label="Close">✕</button>
       </div>
       <div class="detail-body scroll" id="detail-body"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="video-overlay" hidden>
+    <div class="video-panel" role="dialog" aria-modal="true" aria-label="Video player">
+      <button class="detail-close" id="video-close" aria-label="Close">✕</button>
+      <div class="video-frame-wrap">
+        <iframe id="video-frame" src="" title="Video player" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
     </div>
   </div>
 
@@ -798,6 +846,57 @@
   $("detail-close").addEventListener("click", closeDetail);
   overlay.addEventListener("click", function(e){ if(e.target === overlay) closeDetail(); });
   document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !overlay.hidden) closeDetail(); });
+
+  /* ============================================================
+     VIDEO OVERLAY — full-screen inline YouTube player, never
+     leaves the page or opens a new tab.
+  ============================================================ */
+  var videoOverlay = $("video-overlay");
+  var videoFrame = $("video-frame");
+
+  function openVideo(videoId){
+    videoFrame.src = "https://www.youtube.com/embed/" + encodeURIComponent(videoId) + "?autoplay=1&rel=0";
+    videoOverlay.hidden = false;
+  }
+  function closeVideo(){
+    videoOverlay.hidden = true;
+    videoFrame.src = ""; // stop playback
+  }
+  $("video-close").addEventListener("click", closeVideo);
+  videoOverlay.addEventListener("click", function(e){ if(e.target === videoOverlay) closeVideo(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !videoOverlay.hidden) closeVideo(); });
+
+  /* ============================================================
+     PODCASTS — most recent upload from each channel, as small
+     clickable thumbnail tiles
+  ============================================================ */
+  var PODCASTS = [
+    { key: "meidastouch", label: "MeidasTouch", channelId: "UC9r9HYFxEQOBXSopFS61ZWg" },
+    { key: "todmaffin", label: "Tod Maffin", channelId: "UCy9djDjPbgW7chRBXK2TV1g" }
+  ];
+
+  async function loadPodcasts(){
+    var container = $("video-tiles");
+    var results = await Promise.allSettled(PODCASTS.map(function(p){
+      return getJSON("/api/youtube?channel=" + p.channelId).then(function(data){ return { meta: p, data: data }; });
+    }));
+    container.innerHTML = "";
+    results.forEach(function(r, idx){
+      var tile = el("div", "video-tile");
+      if(r.status === "fulfilled" && r.value.data && r.value.data.videoId){
+        var p = r.value.meta, d = r.value.data;
+        tile.innerHTML =
+          '<img src="' + escapeHtml(d.thumbnail) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
+          '<div class="play-badge"><svg viewBox="0 0 60 60" width="30" height="30"><circle cx="30" cy="30" r="28" fill="rgba(0,0,0,0.55)"/><polygon points="24,18 44,30 24,42" fill="#fff"/></svg></div>' +
+          '<div class="video-tile-title"><b>' + escapeHtml(p.label) + "</b>" + escapeHtml(d.title) + "</div>";
+        tile.addEventListener("click", function(){ openVideo(d.videoId); });
+      } else {
+        tile.className = "video-tile unavailable";
+        tile.innerHTML = '<div class="video-tile-title">' + escapeHtml(PODCASTS[idx].label) + " unavailable</div>";
+      }
+      container.appendChild(tile);
+    });
+  }
 
   /* ============================================================
      MARKETS (stocks)
@@ -1674,6 +1773,13 @@
   canvas.addEventListener("pointerleave", function(){ tooltip.style.display = "none"; });
 
   function handleMarkerClick(hit){
+    if(hit.type === "news"){
+      // a news dateline marker is a place already tied to real headlines — jump straight into
+      // the top story inline in the Newswire box, same as clicking a headline in the list.
+      var topItem = hit.ref.items && hit.ref.items[0];
+      if(topItem) renderNewsDetail(topItem);
+      return;
+    }
     if(hit.type === "station"){
       var st = hit.ref;
       var relatedItems = newsMarkers.filter(function(nm){ return nm.place === st.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
@@ -1681,8 +1787,6 @@
     } else if(hit.type === "home"){
       var relatedHome = newsMarkers.filter(function(nm){ return nm.place === hit.ref.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
       openLocationDetail(hit.ref.lat, hit.ref.lon, { name: hit.ref.name, items: relatedHome });
-    } else {
-      openLocationDetail(hit.ref.lat, hit.ref.lon, { name: hit.ref.place, items: hit.ref.items });
     }
   }
 
@@ -2136,6 +2240,7 @@
     loadStations();
     loadAllNews();
     loadWeatherGrid();
+    loadPodcasts();
 
     setInterval(loadQuotes, 90000);
     setInterval(loadFx, 300000);
@@ -2143,6 +2248,7 @@
     setInterval(loadAllNews, 300000);
     setInterval(loadStations, 900000);
     setInterval(loadWeatherGrid, 600000);
+    setInterval(loadPodcasts, 1800000);
   }
 
   init();
