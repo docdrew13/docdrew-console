@@ -59,10 +59,16 @@ export default async (req: Request) => {
       headers: { "content-type": "application/json", "cache-control": "public, max-age=86400" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: "fetch_failed", message: String(err) }), {
-      status: 502,
-      headers: { "content-type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        error: "diag_fetch_threw",
+        message: String(err),
+        errName: err instanceof Error ? err.name : typeof err,
+        errStack: err instanceof Error ? String(err.stack).slice(0, 800) : null,
+        errCause: err instanceof Error && (err as any).cause ? String((err as any).cause) : null,
+      }),
+      { status: 200, headers: { "content-type": "application/json" } }
+    );
   }
 };
 
