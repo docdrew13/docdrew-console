@@ -34,7 +34,18 @@ export default async (req: Request) => {
         accept: "application/json, text/plain, */*",
       },
     });
-    if (!res.ok) throw new Error("upstream status " + res.status);
+    if (!res.ok) {
+      const bodyText = await res.text().catch(() => "");
+      return new Response(
+        JSON.stringify({
+          error: "diag_upstream_not_ok",
+          status: res.status,
+          statusText: res.statusText,
+          bodySnippet: bodyText.slice(0, 500),
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      );
+    }
     const data = await res.json();
     const groups: any[] = data?.sports?.[0]?.leagues?.[0]?.teams || [];
     const teams = groups
