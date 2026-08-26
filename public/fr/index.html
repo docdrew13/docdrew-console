@@ -88,7 +88,8 @@
     border:1px solid var(--grid-line);
     border-radius:30px 10px 30px 10px;
   }
-  .brand{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+  .brand-block{ display:flex; flex-direction:column; gap:4px; flex:0 0 auto; }
+  .brand{ display:flex; align-items:center; gap:10px; }
   .brand-mark{
     width:26px; height:26px; flex:none;
     background: conic-gradient(from 220deg, var(--amber), var(--gold), var(--amber));
@@ -100,14 +101,28 @@
   }
   .brand-name .dim{ color:var(--text-dim); font-weight:600; }
 
+  /* Sélecteur de ville d'accueil — vit maintenant sous le texte de la marque (était sous
+     l'horloge), pour que la boîte de l'horloge n'ait qu'à s'ajuster à l'heure. */
+  .brand-city-select{
+    appearance:none; -webkit-appearance:none; background:transparent; border:none; outline:none;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px; color:var(--text-dim);
+    letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; align-self:flex-start;
+    margin-left:36px; padding:0 14px 0 2px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' stroke='%237a9aa8' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 2px center;
+  }
+  .brand-city-select:hover{ color:var(--text); }
+  .brand-city-select option{ background:var(--panel); color:var(--text); font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+  /* La date stellaire et la date partagent une colonne à deux lignes maintenant, au lieu
+     que la date soit sous l'accueil — libère l'accueil pour une seule ligne plus large. */
+  .stardate-block{
+    flex:0 0 auto; display:flex; flex-direction:column; justify-content:center; gap:2px;
+    border-left:1px solid var(--grid-line); padding-left:16px; line-height:1.2;
+  }
   .stardate{
-    flex:0 0 auto;
     font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size:17.5px;
-    color:var(--cyan);
-    letter-spacing:0.04em;
-    border-left:1px solid var(--grid-line);
-    padding-left:16px;
+    font-size:16px; color:var(--cyan); letter-spacing:0.04em;
   }
 
   .greeting-block{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; line-height:1.15; }
@@ -121,22 +136,13 @@
     animation: blink 2.4s ease-in-out infinite;
   }
   @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
-  .subline{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px; color:var(--text-dim); }
+  .subline{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13.5px; color:var(--text-dim); }
+  .subline-short{ display:none; }
 
   .clock{
     flex:0 0 auto; text-align:right; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color:var(--amber); font-size:29px; letter-spacing:0.03em; line-height:1.1;
+    color:var(--amber); font-size:34px; letter-spacing:0.03em; line-height:1.1;
   }
-  .clock .zone{ display:block; font-size:14.5px; color:var(--text-dim); letter-spacing:0.12em; text-transform:uppercase; }
-  select.zone{
-    appearance:none; -webkit-appearance:none; background:transparent; border:none; outline:none;
-    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-align:right; cursor:pointer;
-    margin-left:auto; padding:1px 14px 1px 2px;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' stroke='%237a9aa8' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat:no-repeat; background-position:right 2px center;
-  }
-  select.zone:hover{ color:var(--text); }
-  select.zone option{ background:var(--panel); color:var(--text); font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   .greeting-name-edit{
     display:inline-block; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-weight:700; font-size:23px; letter-spacing:0.03em; color:var(--text);
@@ -575,12 +581,13 @@
     .brand-mark{ width:20px; height:20px; }
     .brand-name{ font-size:18px; }
     .brand-name-edit{ font-size:18px; width:130px; }
-    .stardate{ font-size:13.5px; padding-left:10px; }
+    .brand-city-select{ font-size:11.5px; margin-left:30px; }
+    .stardate-block{ padding-left:10px; }
+    .stardate{ font-size:13px; }
     .greeting{ font-size:17px; }
     .greeting-name-edit{ font-size:17px; width:110px; }
-    .subline{ font-size:12.5px; }
-    .clock{ font-size:20px; }
-    .clock .zone{ font-size:11.5px; }
+    .subline{ font-size:11.5px; }
+    .clock{ font-size:26px; }
     .search select, .search input{ font-size:14px; padding:6px 8px; }
     .search input{ width:100px; }
     .search button{ font-size:13px; padding:6px 10px; }
@@ -588,7 +595,20 @@
   }
   @media (max-width: 900px){
     .stardate{ display:none; }
+    .subline{ display:none; }
+    .subline-short{ display:block; font-size:11px; }
     .search select{ display:none; }
+    .topbar{ gap:5px; padding:0 8px; }
+    .brand-mark{ width:16px; height:16px; }
+    .brand-name{ font-size:14px; }
+    .brand-city-select{ font-size:10px; margin-left:22px; }
+    .stardate-block{ padding-left:8px; }
+    .greeting{ font-size:14px; }
+    .clock{ font-size:19px; }
+    .search{ gap:4px; }
+    .search input{ width:48px; padding:5px 6px; }
+    .search button{ padding:5px 7px; font-size:12px; }
+    .lang-switch{ width:22px; height:20px; font-size:9.5px; }
   }
 </style>
 </head>
@@ -596,18 +616,23 @@
   <div class="console" id="console">
 
     <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span class="brand-name" id="brand-name">DOCDREW<span class="dim">.CA</span></span>
+      <div class="brand-block">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name" id="brand-name">DOCDREW<span class="dim">.CA</span></span>
+        </div>
+        <select class="brand-city-select" id="home-city-select" aria-label="Ville de résidence"></select>
       </div>
-      <span class="stardate" id="stardate">DATE STELLAIRE —</span>
+      <div class="stardate-block">
+        <span class="stardate" id="stardate">DATE STELLAIRE —</span>
+        <div class="subline" id="date-text">—</div>
+        <div class="subline subline-short" id="date-text-short">—</div>
+      </div>
       <div class="greeting-block">
         <div class="greeting"><span class="status-dot" aria-hidden="true"></span><span id="greeting-text">Initialisation de la console…</span></div>
-        <div class="subline" id="date-text">—</div>
       </div>
       <div class="clock" id="clock">
         --:--:--
-        <select class="zone" id="home-city-select" aria-label="Ville de résidence"></select>
       </div>
       <form class="search" id="search-form" role="search">
         <select id="search-engine" aria-label="Moteur de recherche">
@@ -1080,6 +1105,10 @@
 
     var dateFmt = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
     $("date-text").textContent = dateFmt.format(now);
+    // version courte échangée via CSS sur les petits écrans — la date complète est trop
+    // large pour partager la barre supérieure avec tout le reste une fois sur sa propre ligne
+    var dateFmtShort = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, weekday: "short", month: "short", day: "numeric" });
+    $("date-text-short").textContent = dateFmtShort.format(now);
 
     var hourFmt = new Intl.DateTimeFormat("fr-CA", { timeZone: HOME_TZ, hour: "numeric", hour12: false });
     var hour = parseInt(hourFmt.format(now), 10);
