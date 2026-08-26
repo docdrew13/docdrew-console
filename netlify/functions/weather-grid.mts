@@ -1,8 +1,13 @@
 import type { Config } from "@netlify/functions";
 
-// A coarse global lattice used to paint a live "weather systems" layer across the weather globe.
-const LATS = [-60, -30, 0, 30, 60];
-const LONS = [-180, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150];
+// A global lattice used to paint a live "weather systems" layer across the weather globe.
+// Precipitation is highly localized and intermittent — a coarse 5x12 grid (the original size
+// here) very often lands zero rainy cells even while it's actively raining somewhere on Earth,
+// since none of the sample points happens to sit inside an active system. Denser sampling
+// (9x18 = 162 points vs. the original 60) meaningfully improves the odds of actually catching
+// precipitation, while staying well within Open-Meteo's multi-location request limits.
+const LATS = [-80, -60, -40, -20, 0, 20, 40, 60, 80];
+const LONS = [-180, -160, -140, -120, -100, -80, -60, -40, -20, 0, 20, 40, 60, 80, 100, 120, 140, 160];
 
 interface GridPoint {
   lat: number;
