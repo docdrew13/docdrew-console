@@ -242,6 +242,12 @@
   .news-item:hover .news-title{ color:var(--cyan); }
   .news-thumb{ width:56px; height:56px; border-radius:6px; object-fit:cover; flex:none; background:var(--panel-2); }
   .news-thumb.empty{ display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:18.5px; }
+  .news-back{
+    display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--cyan);
+    font-family:"Share Tech Mono", monospace; font-size:12px; letter-spacing:0.05em; text-transform:uppercase;
+    cursor:pointer; padding:12px 14px 4px; text-align:left; width:100%;
+  }
+  .news-back:hover{ color:var(--text); }
   .news-title{ font-size:14px; line-height:1.32; color:var(--text); }
   .news-meta{ font-size:11px; color:var(--text-dim); margin-top:3px; text-transform:uppercase; letter-spacing:0.04em; }
 
@@ -267,6 +273,7 @@
   .legend-dot.cyan{ background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
   .legend-dot.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
   .legend-dot.blue{ background:#5AA7E8; box-shadow:0 0 6px #5AA7E8; }
+  .legend-dot.red{ background:#FF6B5E; box-shadow:0 0 6px #FF6B5E; }
   .globe-hint{
     position:absolute; left:14px; bottom:12px; font-size:10.5px; color:var(--text-dim);
     font-family:"Share Tech Mono", monospace; pointer-events:none; text-align:left;
@@ -436,8 +443,8 @@
             <canvas id="globe-canvas"></canvas>
             <div class="globe-tooltip" id="globe-tooltip"></div>
             <div class="globe-legend">
-              <span><i class="legend-dot cyan"></i>Weather station</span>
               <span><i class="legend-dot amber"></i>News dateline</span>
+              <span><i class="legend-dot red"></i>Montreal</span>
             </div>
             <div class="globe-hint">drag to rotate · click a marker</div>
           </div>
@@ -454,6 +461,7 @@
             <div class="globe-legend">
               <span><i class="legend-dot cyan"></i>Cloud cover</span>
               <span><i class="legend-dot blue"></i>Precipitation</span>
+              <span><i class="legend-dot red"></i>Montreal</span>
             </div>
             <div class="globe-hint">drag to rotate · live cloud cover</div>
           </div>
@@ -544,6 +552,8 @@
     { name: "Sao Paulo", lat: -23.55, lon: -46.63 },
     { name: "Cape Town", lat: -33.92, lon: 18.42 }
   ];
+
+  var HOME = { name: "Montreal", lat: 45.5017, lon: -73.5673 };
 
   // [name, lat, lon, extra match keywords...]
   var PLACES_RAW = [
@@ -1002,11 +1012,37 @@
       meta.style.minWidth = "0";
       meta.innerHTML = '<div class="news-title">' + escapeHtml(item.title) + '</div><div class="news-meta">' + escapeHtml(item.sourceLabel) + " · " + escapeHtml(timeAgo(item.pubDate)) + "</div>";
       row.appendChild(meta);
-      row.addEventListener("click", function(){ openStoryDetail(item); });
+      row.addEventListener("click", function(){ renderNewsDetail(item); });
       wrap.appendChild(row);
     });
     body.innerHTML = "";
     body.appendChild(wrap);
+  }
+
+  function renderNewsDetail(item){
+    var body = $("news-body");
+    var wrap = el("div");
+
+    var back = el("button", "news-back");
+    back.type = "button";
+    back.textContent = "← Back to headlines";
+    back.addEventListener("click", function(){ renderNewsList(); });
+    wrap.appendChild(back);
+
+    var content = el("div");
+    content.style.padding = "6px 14px 20px";
+    var html = "";
+    if(item.image) html += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
+    html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
+    html += '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
+    if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
+    html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open Full Story ↗</a>';
+    content.innerHTML = html;
+    wrap.appendChild(content);
+
+    body.innerHTML = "";
+    body.appendChild(wrap);
+    body.scrollTop = 0;
   }
 
   function buildTicker(){
@@ -1264,30 +1300,6 @@
 
     renderedMarkers = [];
 
-    // weather blobs (stations)
-    stationMarkers.forEach(function(st){
-      var p = project(st.lat, st.lon, G.rotation);
-      if(!p) return;
-      var scale = 0.55 + p.z * 0.45;
-      var cloud = st.wx ? (st.wx.cloud_cover || 0) / 100 : 0.3;
-      var r = G.radius * (0.10 + cloud * 0.09) * scale;
-      var blobGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-      blobGrad.addColorStop(0, "rgba(82,216,222," + (0.30 * scale) + ")");
-      blobGrad.addColorStop(1, "rgba(82,216,222,0)");
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI*2);
-      ctx.fillStyle = blobGrad;
-      ctx.fill();
-
-      var dotR = 3.2 * scale;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, dotR, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(82,216,222," + (0.85*scale) + ")";
-      ctx.fill();
-
-      renderedMarkers.push({ x: p.x, y: p.y, r: Math.max(9, dotR + 6), type: "station", ref: st });
-    });
-
     // news star markers
     var pulse = 0.5 + 0.5 * Math.sin(Date.now() / 500);
     newsMarkers.forEach(function(nm){
@@ -1308,6 +1320,26 @@
 
       renderedMarkers.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "news", ref: nm });
     });
+
+    // home marker — Montreal
+    (function(){
+      var p = project(HOME.lat, HOME.lon, G.rotation);
+      if(!p) return;
+      var scale = 0.6 + p.z * 0.4;
+      var baseR = 3.8 * scale;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, baseR + pulse*2.6*scale, 0, Math.PI*2);
+      ctx.strokeStyle = "rgba(255,107,94," + (0.6*scale) + ")";
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, baseR, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(255,107,94," + (0.95*scale) + ")";
+      ctx.fill();
+
+      renderedMarkers.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "home", ref: HOME });
+    })();
   }
 
   function tick(){
@@ -1339,7 +1371,7 @@
       tooltip.style.display = "block";
       tooltip.style.left = hit.x + "px";
       tooltip.style.top = hit.y + "px";
-      tooltip.textContent = hit.type === "station" ? hit.ref.name : hit.ref.place;
+      tooltip.textContent = hit.type === "news" ? hit.ref.place : hit.ref.name;
     } else {
       if(!G.dragging) canvas.style.cursor = "grab";
       tooltip.style.display = "none";
@@ -1373,6 +1405,9 @@
       var st = hit.ref;
       var relatedItems = newsMarkers.filter(function(nm){ return nm.place === st.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
       openPlaceDetail(st.name, relatedItems, true, st.wx);
+    } else if(hit.type === "home"){
+      var relatedHome = newsMarkers.filter(function(nm){ return nm.place === hit.ref.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
+      openPlaceDetail(hit.ref.name, relatedHome, false, null);
     } else {
       openPlaceDetail(hit.ref.place, hit.ref.items, false, null);
     }
@@ -1390,7 +1425,7 @@
       if(grouped[key].items.length < 6) grouped[key].items.push(item);
     });
     newsMarkers = Object.keys(grouped).slice(0, 30).map(function(k){ return grouped[k]; });
-    $("globe-count").textContent = (stationMarkers.length + newsMarkers.length) + " markers tracked";
+    $("globe-count").textContent = (newsMarkers.length + 1) + " markers tracked";
   }
 
   async function loadStations(){
@@ -1400,7 +1435,7 @@
       });
     }));
     stationMarkers = results.filter(function(r){ return r.status === "fulfilled"; }).map(function(r){ return r.value; });
-    $("globe-count").textContent = (stationMarkers.length + newsMarkers.length) + " markers tracked";
+    $("globe-count").textContent = (newsMarkers.length + 1) + " markers tracked";
   }
 
   /* ============================================================
@@ -1617,6 +1652,27 @@
       }
       renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, G2.radius*0.09*scale + 6), type: "cell", ref: gp });
     });
+
+    // home marker — Montreal
+    (function(){
+      var p = project2(HOME.lat, HOME.lon, G2.rotation);
+      if(!p) return;
+      var scale = 0.6 + p.z * 0.4;
+      var baseR = 3.8 * scale;
+      var pulseHome = 0.5 + 0.5 * Math.sin(Date.now() / 500);
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, baseR + pulseHome*2.6*scale, 0, Math.PI*2);
+      ctx2.strokeStyle = "rgba(255,107,94," + (0.6*scale) + ")";
+      ctx2.lineWidth = 1.4;
+      ctx2.stroke();
+
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, baseR, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(255,107,94," + (0.95*scale) + ")";
+      ctx2.fill();
+
+      renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "home", ref: HOME });
+    })();
   }
 
   function tick2(){
@@ -1648,12 +1704,16 @@
       tooltip2.style.display = "block";
       tooltip2.style.left = hit.x + "px";
       tooltip2.style.top = hit.y + "px";
-      var gp = hit.ref;
-      var parts = [];
-      if(typeof gp.cloud === "number") parts.push(Math.round(gp.cloud) + "% cloud");
-      if(typeof gp.temp === "number") parts.push(Math.round(gp.temp) + "°C");
-      if(typeof gp.precip === "number" && gp.precip > 0.05) parts.push(gp.precip.toFixed(1) + "mm precip");
-      tooltip2.textContent = parts.join(" · ") || "no data";
+      if(hit.type === "home"){
+        tooltip2.textContent = hit.ref.name;
+      } else {
+        var gp = hit.ref;
+        var parts = [];
+        if(typeof gp.cloud === "number") parts.push(Math.round(gp.cloud) + "% cloud");
+        if(typeof gp.temp === "number") parts.push(Math.round(gp.temp) + "°C");
+        if(typeof gp.precip === "number" && gp.precip > 0.05) parts.push(gp.precip.toFixed(1) + "mm precip");
+        tooltip2.textContent = parts.join(" · ") || "no data";
+      }
     } else {
       if(!G2.dragging) canvas2.style.cursor = "grab";
       tooltip2.style.display = "none";
