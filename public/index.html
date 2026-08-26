@@ -180,11 +180,12 @@
   .tab.active{ opacity:1; background:rgba(0,0,0,0.34); }
 
   /* ============ DECK (main 3-col area) ============ */
-  .deck{ display:grid; grid-template-columns: 400px 1fr 280px; gap:8px; min-height:0; }
+  .deck{ display:grid; grid-template-columns: 1fr 460px 280px; gap:8px; min-height:0; }
   .rail{ display:flex; flex-direction:column; gap:8px; min-height:0; }
   .rail-left .panel:nth-child(1){ flex:1; }
   .globes-stack{ display:flex; flex-direction:column; gap:8px; min-height:0; }
   .globes-stack .globe-panel{ flex:1; min-height:0; }
+  .globes-stack .globe-body{ aspect-ratio: 1 / 1; height:100%; width:auto; max-width:100%; margin:0 auto; }
   .rail-right .panel:nth-child(1){ flex:0 0 auto; max-height:32%; }
   .rail-right .panel:nth-child(2){ flex:1.1; }
   .rail-right .panel:nth-child(3){ flex:0 0 auto; max-height:26%; }
@@ -1412,8 +1413,52 @@
   var tooltip2 = $("weather-globe-tooltip");
 
   var G2 = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 200, dragging: false, dragDist: 0, lastX: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
-  var weatherGridPoints = []; // {lat,lon,cloud,precip,temp,wind}
+  var weatherGridPoints = []; // {lat,lon,cloud,precip,temp,wind} — the 60 real data cells from Open-Meteo
   var renderedMarkers2 = [];
+
+  // cheap layered/warped sine turbulence — no gradient tables, just cross-modulated waves.
+  // Good enough to read as organic swirling cloud contours instead of round blobs, and safe to reason about.
+  function fbmNoise(x, y, t){
+    var warpX = Math.sin(y * 1.3 - t * 0.06) * 1.4;
+    var warpY = Math.cos(x * 0.9 + t * 0.05) * 1.4;
+    var v = 0;
+    v += Math.sin((x + warpX) * 1.6 + t * 0.12) * 0.5;
+    v += Math.sin((y + warpY) * 2.1 - t * 0.09) * 0.32;
+    v += Math.sin((x + y) * 0.9 + warpX * 0.5 + t * 0.07) * 0.18;
+    return v; // roughly -1..1
+  }
+
+  // a fine sample lattice across the whole sphere (not just land) that the noise + real
+  // regional cloud% get evaluated against every frame, so cover reads as continuous swirling
+  // bands rather than isolated puffs stuck to the 60 real data points.
+  var cloudSamplePoints = (function buildCloudSamplePoints(){
+    var pts = [];
+    for(var lat = -84; lat <= 84; lat += 4){
+      for(var lon = -180; lon < 180; lon += 4){
+        pts.push({ lat: lat, lon: lon, jx: (Math.random()-0.5)*2, jy: (Math.random()-0.5)*2, coverage: 0 });
+      }
+    }
+    return pts;
+  })();
+
+  // inverse-distance-weighted blend of the 60 real grid cells onto the fine lattice — run once
+  // whenever fresh data lands (every 10 min), never per animation frame.
+  function recomputeCloudCoverage(){
+    if(!weatherGridPoints.length) return;
+    for(var i = 0; i < cloudSamplePoints.length; i++){
+      var cp = cloudSamplePoints[i];
+      var wSum = 0, cSum = 0;
+      for(var j = 0; j < weatherGridPoints.length; j++){
+        var gp = weatherGridPoints[j];
+        if(typeof gp.cloud !== "number") continue;
+        var dLat = cp.lat - gp.lat, dLon = cp.lon - gp.lon;
+        var d2 = dLat*dLat + dLon*dLon;
+        var w = 1 / (d2 + 6);
+        wSum += w; cSum += w * gp.cloud;
+      }
+      cp.coverage = wSum > 0 ? Math.max(0, Math.min(1, (cSum / wSum) / 100)) : 0;
+    }
+  }
 
   function resizeCanvas2(){
     var rect = weatherGlobeBody.getBoundingClientRect();
@@ -1526,29 +1571,34 @@
 
     renderedMarkers2 = [];
 
-    // live weather layer — stippled cloud puffs (textured, not a soft blur) sized/lit by cover %
+    // live weather layer — a fine lattice sampled through cheap turbulence noise, gated by the
+    // real regional cloud% blended onto it. Reads as continuous swirling bands rather than
+    // blobs pinned to the 60 raw data points, while overall coverage still tracks live data.
+    var tNoise = Date.now() / 1000;
+    for(var ci = 0; ci < cloudSamplePoints.length; ci++){
+      var cp = cloudSamplePoints[ci];
+      var coverage = cp.coverage;
+      if(coverage < 0.03) continue;
+      var cpp = project2(cp.lat, cp.lon, G2.rotation);
+      if(!cpp) continue;
+      var n = fbmNoise(cp.lon * 0.05, cp.lat * 0.07, tNoise);
+      n = (n + 1) / 2; // remap roughly to 0..1
+      var threshold = 1 - coverage * 0.9 - 0.06;
+      if(n < threshold) continue;
+      var edge = Math.min(1, (n - threshold) / 0.35);
+      var cScale = 0.55 + cpp.z * 0.45;
+      var rC = (1.0 + edge * 1.7) * cScale;
+      ctx2.beginPath();
+      ctx2.arc(cpp.x + cp.jx, cpp.y + cp.jy, rC, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(232,240,245," + (0.12 + edge * 0.55 * (0.4 + coverage * 0.6)) + ")";
+      ctx2.fill();
+    }
+
+    // precipitation markers stay tied to the exact 60 data cells — precise, not noise-driven
     weatherGridPoints.forEach(function(gp){
       var p = project2(gp.lat, gp.lon, G2.rotation);
       if(!p) return;
       var scale = 0.55 + p.z * 0.45;
-      var cloud = typeof gp.cloud === "number" ? gp.cloud : 0;
-      if(cloud > 6){
-        var puffCount = Math.round(3 + (cloud/100) * 10);
-        var spread = G2.radius * 0.10 * scale;
-        for(var pu = 0; pu < puffCount; pu++){
-          var seed = gp.lat * 12.9898 + gp.lon * 78.233 + pu * 37.719;
-          var frac = seed - Math.floor(seed);
-          var ang = frac * Math.PI * 2;
-          var rad = spread * (0.2 + 0.8 * ((frac * 971) % 1));
-          var px = p.x + Math.cos(ang) * rad;
-          var py = p.y + Math.sin(ang) * rad * 0.72;
-          var puffR = (1.6 + (cloud/100) * 2.6) * scale * (0.7 + 0.6 * ((frac * 513) % 1));
-          ctx2.beginPath();
-          ctx2.arc(px, py, puffR, 0, Math.PI*2);
-          ctx2.fillStyle = "rgba(232,240,244," + (0.16 + (cloud/100) * 0.34) + ")";
-          ctx2.fill();
-        }
-      }
       var precip = typeof gp.precip === "number" ? gp.precip : 0;
       if(precip > 0.05){
         var pr = (1.8 + Math.min(2.4, precip)) * scale;
@@ -1620,6 +1670,7 @@
     try{
       var data = await getJSON("/api/weather-grid");
       weatherGridPoints = data.points || [];
+      recomputeCloudCoverage();
       $("weather-globe-count").textContent = weatherGridPoints.length + " cells · updated " + timeAgo(data.updated);
     }catch(err){
       $("weather-globe-count").textContent = "weather layer unavailable";
