@@ -259,7 +259,7 @@
   .globe-body canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
   .globe-body canvas:active{ cursor:grabbing; }
   .globe-legend{
-    position:absolute; left:16px; bottom:14px; display:flex; gap:14px; font-size:12px; color:var(--text-dim);
+    position:absolute; left:14px; bottom:32px; display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--text-dim);
     font-family:"Share Tech Mono", monospace; pointer-events:none;
   }
   .globe-legend span{ display:flex; align-items:center; gap:5px; }
@@ -268,8 +268,8 @@
   .legend-dot.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
   .legend-dot.blue{ background:#5AA7E8; box-shadow:0 0 6px #5AA7E8; }
   .globe-hint{
-    position:absolute; right:16px; bottom:14px; font-size:11.5px; color:var(--text-dim);
-    font-family:"Share Tech Mono", monospace; pointer-events:none; text-align:right;
+    position:absolute; left:14px; bottom:12px; font-size:10.5px; color:var(--text-dim);
+    font-family:"Share Tech Mono", monospace; pointer-events:none; text-align:left;
   }
   .globe-tooltip{
     position:absolute; pointer-events:none; transform:translate(-50%,-130%);
@@ -1578,19 +1578,22 @@
     for(var ci = 0; ci < cloudSamplePoints.length; ci++){
       var cp = cloudSamplePoints[ci];
       var coverage = cp.coverage;
-      if(coverage < 0.03) continue;
+      if(coverage < 0.12) continue;
       var cpp = project2(cp.lat, cp.lon, G2.rotation);
       if(!cpp) continue;
       var n = fbmNoise(cp.lon * 0.05, cp.lat * 0.07, tNoise);
       n = (n + 1) / 2; // remap roughly to 0..1
-      var threshold = 1 - coverage * 0.9 - 0.06;
+      // curved response: only genuinely cloudy regions clear enough of the noise field to show —
+      // clear/low-cover areas stay essentially empty instead of a uniform haze over everything.
+      var covCurve = Math.pow(coverage, 1.8);
+      var threshold = 1 - covCurve * 0.6;
       if(n < threshold) continue;
-      var edge = Math.min(1, (n - threshold) / 0.35);
+      var edge = Math.min(1, (n - threshold) / 0.3);
       var cScale = 0.55 + cpp.z * 0.45;
-      var rC = (1.0 + edge * 1.7) * cScale;
+      var rC = (0.9 + edge * 1.5) * cScale;
       ctx2.beginPath();
       ctx2.arc(cpp.x + cp.jx, cpp.y + cp.jy, rC, 0, Math.PI*2);
-      ctx2.fillStyle = "rgba(232,240,245," + (0.12 + edge * 0.55 * (0.4 + coverage * 0.6)) + ")";
+      ctx2.fillStyle = "rgba(232,240,245," + (0.1 + edge * 0.5 * (0.3 + covCurve * 0.7)) + ")";
       ctx2.fill();
     }
 
