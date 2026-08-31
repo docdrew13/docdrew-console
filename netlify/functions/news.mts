@@ -107,14 +107,30 @@ function stripHtml(s: string): string {
   return s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+  rsquo: "’", lsquo: "‘", sbquo: "‚",
+  rdquo: "”", ldquo: "“", bdquo: "„",
+  ndash: "–", mdash: "—", hellip: "…",
+  eacute: "é", egrave: "è", ecirc: "ê", euml: "ë",
+  agrave: "à", acirc: "â", auml: "ä", aring: "å",
+  ocirc: "ô", ouml: "ö", ograve: "ò",
+  ucirc: "û", uuml: "ü", ugrave: "ù",
+  ccedil: "ç", icirc: "î", iuml: "ï", igrave: "ì",
+  Eacute: "É", Egrave: "È", Agrave: "À", Ccedil: "Ç",
+  oelig: "œ", OElig: "Œ", aelig: "æ", AElig: "Æ",
+  szlig: "ß", ntilde: "ñ", Ntilde: "Ñ",
+  copy: "©", reg: "®", trade: "™",
+  deg: "°", middot: "·", laquo: "«", raquo: "»",
+};
+
 function decodeEntities(s: string): string {
   return s
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#0?39;/g, "'")
-    .replace(/&nbsp;/g, " ");
+    .replace(/&#x([0-9a-fA-F]+);/g, (_m, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_m, dec) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&([a-zA-Z]+);/g, (m, name) =>
+      Object.prototype.hasOwnProperty.call(NAMED_ENTITIES, name) ? NAMED_ENTITIES[name] : m
+    );
 }
 
 function parseItems(xml: string, max = 12): NewsItem[] {
