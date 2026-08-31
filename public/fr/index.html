@@ -3077,67 +3077,6 @@
     return s;
   })();
 
-  /* ------------------------------------------------------------
-     DAY/NIGHT TERMINATOR — subsolar point via Spencer's approximation
-     (no API), shaded onto both globes as a coarse full-sphere
-     jittered lattice (ocean included, unlike landPoints) with a
-     soft twilight feather.
-  ------------------------------------------------------------ */
-  function getSubsolarPoint(date){
-    var now = date || new Date();
-    var start = Date.UTC(now.getUTCFullYear(), 0, 1);
-    var dayOfYear = (now.getTime() - start) / 86400000; // fractional, Jan 1 00:00 UTC = 0
-    var gamma = 2 * Math.PI / 365 * dayOfYear;
-
-    var eqtime = 229.18 * (0.000075 + 0.001868*Math.cos(gamma) - 0.032077*Math.sin(gamma)
-      - 0.014615*Math.cos(2*gamma) - 0.040849*Math.sin(2*gamma)); // minutes
-
-    var decl = 0.006918 - 0.399912*Math.cos(gamma) + 0.070257*Math.sin(gamma)
-      - 0.006758*Math.cos(2*gamma) + 0.000907*Math.sin(2*gamma)
-      - 0.002697*Math.cos(3*gamma) + 0.00148*Math.sin(3*gamma); // radians
-
-    var utcHours = now.getUTCHours() + now.getUTCMinutes()/60 + now.getUTCSeconds()/3600;
-    var lon = (720 - utcHours*60 - eqtime) / 4;
-    lon = ((lon + 180) % 360 + 360) % 360 - 180;
-
-    return { lat: decl * 180 / Math.PI, lon: lon };
-  }
-
-  function unitVec(lat, lon){
-    var la = lat * Math.PI / 180, lo = lon * Math.PI / 180;
-    return { x: Math.cos(la) * Math.cos(lo), y: Math.cos(la) * Math.sin(lo), z: Math.sin(la) };
-  }
-
-  var currentSubsolar = getSubsolarPoint();
-  var currentSubsolarVec = unitVec(currentSubsolar.lat, currentSubsolar.lon);
-  function updateSubsolar(){
-    currentSubsolar = getSubsolarPoint();
-    currentSubsolarVec = unitVec(currentSubsolar.lat, currentSubsolar.lon);
-  }
-
-  var TWILIGHT_BAND = 0.06;
-  function nightAlpha(lat, lon){
-    var v = unitVec(lat, lon);
-    var cosZ = v.x*currentSubsolarVec.x + v.y*currentSubsolarVec.y + v.z*currentSubsolarVec.z;
-    if(cosZ >= TWILIGHT_BAND) return 0;
-    if(cosZ <= -TWILIGHT_BAND) return 1;
-    return 1 - (cosZ + TWILIGHT_BAND) / (2 * TWILIGHT_BAND);
-  }
-
-  // coarse full-sphere lattice (ocean included), jittered in lat/lon space to avoid a
-  // mechanical grid look — shared by both globes since it's the same physical shading.
-  var nightSamplePoints = (function buildNightSamplePoints(){
-    var pts = [];
-    for(var lat = -84; lat <= 84; lat += 4){
-      for(var lon = -180; lon < 180; lon += 4){
-        var jlat = Math.max(-89, Math.min(89, lat + (Math.random()-0.5)*1.9));
-        var jlon = lon + (Math.random()-0.5)*1.9;
-        pts.push({ lat: jlat, lon: jlon });
-      }
-    }
-    return pts;
-  })();
-
   function resizeCanvas(){
     var rect = globeBody.getBoundingClientRect();
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -3315,20 +3254,6 @@
       ctx.beginPath();
       ctx.arc(lpp.x + lp.jx, lpp.y + lp.jy, r, 0, Math.PI*2);
       ctx.fillStyle = "rgba(" + terrainColor(lp.lat, lp.tint) + "," + (0.72 * lpScale + 0.14) + ")";
-      ctx.fill();
-    }
-
-    // day/night terminator — coarse full-sphere shading, ocean included
-    for(var ni = 0; ni < nightSamplePoints.length; ni++){
-      var np = nightSamplePoints[ni];
-      var alpha = nightAlpha(np.lat, np.lon);
-      if(alpha <= 0.01) continue;
-      var npp = project(np.lat, np.lon, G.rotation, G.tilt);
-      if(!npp) continue;
-      var npScale = 0.55 + npp.z * 0.45;
-      ctx.beginPath();
-      ctx.arc(npp.x, npp.y, 3.2 * npScale, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(3,6,14," + (alpha * 0.55 * npScale) + ")";
       ctx.fill();
     }
 
@@ -3777,20 +3702,6 @@
       ctx2.fill();
     }
 
-    // day/night terminator — coarse full-sphere shading, ocean included
-    for(var ni2 = 0; ni2 < nightSamplePoints.length; ni2++){
-      var np2 = nightSamplePoints[ni2];
-      var alpha2 = nightAlpha(np2.lat, np2.lon);
-      if(alpha2 <= 0.01) continue;
-      var npp2 = project2(np2.lat, np2.lon, G2.rotation, G2.tilt);
-      if(!npp2) continue;
-      var npScale2 = 0.55 + npp2.z * 0.45;
-      ctx2.beginPath();
-      ctx2.arc(npp2.x, npp2.y, 3.2 * npScale2, 0, Math.PI*2);
-      ctx2.fillStyle = "rgba(3,6,14," + (alpha2 * 0.55 * npScale2) + ")";
-      ctx2.fill();
-    }
-
     renderedMarkers2 = [];
 
     // live weather layer — a fine lattice sampled through cheap turbulence noise, gated by the
@@ -4197,7 +4108,6 @@
     setInterval(loadBromont, 900000);
     // loadSports() se replanifie lui-même (souvent en direct, lentement sinon).
     setInterval(loadIss, 15000);
-    setInterval(updateSubsolar, 60000);
     setInterval(function(){ renderSkyWatch(lastAuroraData); }, 600000); // keep moon icon fresh
     if(!REDUCED_MOTION) setInterval(rotateShipStatus, 9000);
   }
