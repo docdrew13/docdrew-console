@@ -2748,9 +2748,19 @@
   // entièrement — un honnête "aucun tournoi en cours" plutôt que d'afficher les
   // mauvais joueurs.
   var TENNIS_GENDER_PREFIX = { atp: "mens-", wta: "womens-" };
+  // Sans date explicite, le point de terminaison scoreboard d'ESPN ne se résout pas de façon
+  // fiable au tournoi réellement en cours — il peut continuer de renvoyer un événement plus
+  // ancien/plus petit (ex. Cincinnati) même une fois qu'un Grand Chelem comme l'US Open a
+  // déjà commencé. Passer la date du jour ancre la requête sur « le tournoi actif maintenant ».
+  function tennisDateParam(){
+    var d = new Date();
+    var mo = String(d.getMonth() + 1); if(mo.length < 2) mo = "0" + mo;
+    var da = String(d.getDate()); if(da.length < 2) da = "0" + da;
+    return d.getFullYear() + mo + da;
+  }
   function espnTennis(tour){
     var wantPrefix = TENNIS_GENDER_PREFIX[tour];
-    return fetch("https://site.api.espn.com/apis/site/v2/sports/tennis/" + tour + "/scoreboard")
+    return fetch("https://site.api.espn.com/apis/site/v2/sports/tennis/" + tour + "/scoreboard?dates=" + tennisDateParam())
       .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
       .then(function(data){
         var events = (data && data.events) || [];

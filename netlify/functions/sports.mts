@@ -90,9 +90,20 @@ async function fetchTeamSchedule(feed: { sport: string; league: string; teamId: 
 // but is kept correct in case it's revived.)
 const TENNIS_GENDER_PREFIX: Record<string, string> = { atp: "mens-", wta: "womens-" };
 
+// Without an explicit date, ESPN's scoreboard endpoint doesn't reliably resolve to whatever
+// tournament is actually current — it can keep serving an older/smaller event (e.g.
+// Cincinnati) even once a Grand Slam like the US Open is already underway. Passing today's
+// date pins the request to "the tournament active right now" instead.
+function tennisDateParam(): string {
+  const d = new Date();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}${mo}${da}`;
+}
+
 async function fetchTennis(tour: "atp" | "wta") {
   const wantPrefix = TENNIS_GENDER_PREFIX[tour];
-  const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/tennis/${tour}/scoreboard`, {
+  const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/tennis/${tour}/scoreboard?dates=${tennisDateParam()}`, {
     headers: {
       "user-agent":
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
