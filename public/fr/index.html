@@ -3569,7 +3569,7 @@
   var tooltip2 = $("weather-globe-tooltip");
 
   var G2 = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 200, tilt: -12, dragging: false, dragDist: 0, lastX: 0, lastY: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
-  var weatherGridPoints = []; // {lat,lon,cloud,precip,temp,wind} — the 60 real data cells from Open-Meteo
+  var weatherGridPoints = []; // {lat,lon,cloud,precip,temp,wind} — ~990 real data cells from Open-Meteo (8° lattice)
   var renderedMarkers2 = [];
 
   // radar-style precipitation coloring (green = light, yellow = moderate, red = heavy) — an
@@ -3648,8 +3648,11 @@
         // dozens of dry neighbors. Instead take the strongest nearby cell's value with a tight
         // falloff, so a rainy point "splats" a visible patch around itself instead of vanishing
         // into a global average — this is the fix for precip reading as basically invisible.
+        // The falloff (/6) is tighter than the original (/10) now that the real data grid is
+        // ~6x denser (8° spacing instead of 20°) — a tighter kernel over denser real samples
+        // reads as distinct storm cells instead of every rain point smearing into one big blob.
         if(typeof gp.precip === "number" && gp.precip > 0){
-          var splat = gp.precip / (1 + d2 / 10);
+          var splat = gp.precip / (1 + d2 / 6);
           if(splat > precipMax) precipMax = splat;
         }
       }
@@ -3827,7 +3830,7 @@
       }
 
       // precipitation, interpolated onto this same fine lattice (see recomputeCloudCoverage) —
-      // rendering it only at the 60-ish raw data cells made it read as nearly invisible, since
+      // rendering it only at the ~990 raw data cells made it read as nearly invisible, since
       // real rain is patchy enough that most exact sample points miss it entirely. Painting the
       // interpolated "splat" instead means any nearby rain cell shows up as a visible patch.
       if(precipMm > 0.03){
