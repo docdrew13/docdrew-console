@@ -2737,7 +2737,19 @@
       });
   }
 
+  // Les points de terminaison atp/wta d'ESPN étiquettent parfois mal un tournoi conjoint
+  // (ex. le Cincinnati Open, un événement ATP+WTA combiné) — les requêtes "atp" et "wta"
+  // peuvent toutes deux revenir avec un groupement "Men's Singles", ce qui faisait
+  // afficher un simple doublon du tableau masculin sous l'en-tête féminin. Chaque
+  // groupement porte son propre "slug" ("mens-singles" / "womens-singles" / variantes
+  // "-doubles"), indépendant du tour interrogé — comparer ce slug au tour demandé
+  // détecte l'erreur : un groupement du mauvais genre est ignoré plutôt que fait
+  // confiance, et un tournoi qui n'a plus aucun match après ce filtre est retiré
+  // entièrement — un honnête "aucun tournoi en cours" plutôt que d'afficher les
+  // mauvais joueurs.
+  var TENNIS_GENDER_PREFIX = { atp: "mens-", wta: "womens-" };
   function espnTennis(tour){
+    var wantPrefix = TENNIS_GENDER_PREFIX[tour];
     return fetch("https://site.api.espn.com/apis/site/v2/sports/tennis/" + tour + "/scoreboard")
       .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
       .then(function(data){
@@ -2745,6 +2757,8 @@
         var tournaments = events.slice(0, 3).map(function(ev){
           var matches = [];
           (ev.groupings || []).forEach(function(g){
+            var slug = (g.grouping && g.grouping.slug) || "";
+            if(slug && wantPrefix && slug.indexOf(wantPrefix) !== 0) return; // groupement du mauvais genre — ignoré
             (g.competitions || []).forEach(function(c){
               var a = c.competitors && c.competitors[0];
               var b = c.competitors && c.competitors[1];
@@ -2765,7 +2779,7 @@
           // caché sous des matchs déjà terminés.
           matches.sort(function(m1, m2){ return (m1.state === "in" ? 0 : 1) - (m2.state === "in" ? 0 : 1); });
           return { name: ev.name, matches: matches.slice(0, 4) };
-        });
+        }).filter(function(t){ return t.matches.length > 0; });
         var anyLive = tournaments.some(function(t){ return t.matches.some(function(m){ return m.state === "in"; }); });
         return { tour: tour.toUpperCase(), tournaments: tournaments, anyLive: anyLive };
       })

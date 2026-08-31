@@ -77,7 +77,21 @@ async function fetchTeamSchedule(feed: { sport: string; league: string; teamId: 
   };
 }
 
+// ESPN's own atp/wta scoreboard endpoints sometimes mislabel a joint tournament (e.g. the
+// Cincinnati Open, held as one combined ATP+WTA event) — both the "atp" and "wta" queries
+// can come back tagged with a "Men's Singles" grouping, which would make the WTA panel just
+// show a duplicate of the men's draw under the women's header. Each grouping carries its own
+// slug ("mens-singles" / "womens-singles" / "-doubles" variants), independent of which tour
+// endpoint was requested, so cross-checking that slug against the requested tour catches the
+// mismatch: a wrong-gender grouping is dropped instead of trusted, and a tournament left with
+// zero matches after that is dropped entirely — an honest "no tournaments" instead of
+// silently showing the wrong players. (Mirrors the same fix applied client-side in
+// espnTennis() across the site's HTML — this function isn't currently called by any page,
+// but is kept correct in case it's revived.)
+const TENNIS_GENDER_PREFIX: Record<string, string> = { atp: "mens-", wta: "womens-" };
+
 async function fetchTennis(tour: "atp" | "wta") {
+  const wantPrefix = TENNIS_GENDER_PREFIX[tour];
   const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/tennis/${tour}/scoreboard`, {
     headers: {
       "user-agent":
@@ -89,24 +103,29 @@ async function fetchTennis(tour: "atp" | "wta") {
   const data = await res.json();
   const events: any[] = data?.events || [];
 
-  const tournaments = events.slice(0, 3).map((ev: any) => {
-    const matches: any[] = [];
-    const groupings: any[] = ev.groupings || [];
-    for (const g of groupings) {
-      const comps: any[] = g.competitions || [];
-      for (const c of comps.slice(0, 4)) {
-        const a = c.competitors?.[0];
-        const b = c.competitors?.[1];
-        matches.push({
-          round: c.round?.displayName || "",
-          status: c.status?.type?.description || "",
-          player1: a?.athlete?.displayName || "TBD",
-          player2: b?.athlete?.displayName || "TBD",
-        });
+  const tournaments = events
+    .slice(0, 3)
+    .map((ev: any) => {
+      const matches: any[] = [];
+      const groupings: any[] = ev.groupings || [];
+      for (const g of groupings) {
+        const slug: string = g.grouping?.slug || "";
+        if (slug && wantPrefix && slug.indexOf(wantPrefix) !== 0) continue; // wrong-gender grouping — skip
+        const comps: any[] = g.competitions || [];
+        for (const c of comps.slice(0, 4)) {
+          const a = c.competitors?.[0];
+          const b = c.competitors?.[1];
+          matches.push({
+            round: c.round?.displayName || "",
+            status: c.status?.type?.description || "",
+            player1: a?.athlete?.displayName || "TBD",
+            player2: b?.athlete?.displayName || "TBD",
+          });
+        }
       }
-    }
-    return { name: ev.name, matches };
-  });
+      return { name: ev.name, matches };
+    })
+    .filter((t: any) => t.matches.length > 0);
 
   return {
     tour: tour.toUpperCase(),
