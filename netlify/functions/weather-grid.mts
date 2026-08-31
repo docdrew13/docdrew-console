@@ -32,6 +32,14 @@ interface GridPoint {
   wind: number | null;
 }
 
+// Per-batch cap on how long we'll wait on Open-Meteo before giving up on that slice of the
+// lattice. Without this, a single slow batch would sit inside Promise.all until the *platform's*
+// own function timeout kills the whole request — which returns a bare gateway error (502) and
+// skips the try/catch below entirely, wiping out every other batch's data along with it. Aborting
+// each batch well before that ceiling means a slow/unresponsive batch degrades to an empty slice
+// (see the catch below) while every other batch's real data still comes back normally.
+const BATCH_TIMEOUT_MS = 7000;
+
 async function fetchBatch(lats: number[], lons: number[]): Promise<GridPoint[]> {
   const url =
     "https://api.open-meteo.com/v1/forecast?latitude=" +
@@ -40,8 +48,11 @@ async function fetchBatch(lats: number[], lons: number[]): Promise<GridPoint[]> 
     lons.join(",") +
     "&current=cloud_cover,precipitation,temperature_2m,wind_speed_10m&timezone=UTC";
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), BATCH_TIMEOUT_MS);
+
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: controller.signal });
     if (!res.ok) throw new Error("upstream status " + res.status);
     const data = await res.json();
     // Open-Meteo returns an array (one entry per location) when multiple coordinates are requested,
@@ -57,8 +68,10 @@ async function fetchBatch(lats: number[], lons: number[]): Promise<GridPoint[]> 
       wind: typeof entry?.current?.wind_speed_10m === "number" ? entry.current.wind_speed_10m : null,
     }));
   } catch {
-    // one bad batch shouldn't blank the whole globe — just drop that slice of the lattice.
+    // one bad/slow/timed-out batch shouldn't blank the whole globe — just drop that slice of the lattice.
     return [];
+  } finally {
+    clearTimeout(timer);
   }
 }
 
