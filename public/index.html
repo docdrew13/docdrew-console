@@ -3293,6 +3293,66 @@
     return [d[idx], d[idx + 1], d[idx + 2], a / 255];
   }
 
+  // Rasterizes the radar mosaic onto a small offscreen buffer shaped like the globe's disc, then
+  // blits that buffer onto the visible canvas in one call. Recomputed every animation frame (the
+  // globe keeps rotating), so the buffer is kept deliberately small — real detail beyond this size
+  // doesn't read at the globe's on-screen size anyway, and drawImage's built-in smoothing when
+  // scaling the small buffer up gives soft, antialiased edges for free, which is what makes it
+  // look like an actual radar picture instead of a pile of hard-edged circles.
+  var radarBuf = document.createElement("canvas");
+  var radarBufCtx = radarBuf.getContext("2d");
+  var radarBufImg = null;
+  var radarBufN = 0;
+
+  function renderRadarLayer(){
+    if(!RADAR.loaded || !RADAR.data) return;
+    var n = Math.max(90, Math.min(220, Math.round(G2.radius * 1.15)));
+    if(n !== radarBufN || !radarBufImg){
+      radarBuf.width = n; radarBuf.height = n;
+      radarBufImg = radarBufCtx.createImageData(n, n);
+      radarBufN = n;
+    }
+
+    var tiltRad = G2.tilt * Math.PI / 180;
+    var ct = Math.cos(tiltRad), st = Math.sin(tiltRad);
+    var rotationDeg = G2.rotation;
+    var buf = radarBufImg.data;
+    var half = n / 2;
+
+    for(var by = 0; by < n; by++){
+      var ny = 1 - (by + 0.5) / half; // screen-space y, +1 at top .. -1 at bottom
+      for(var bx = 0; bx < n; bx++){
+        var idx4 = (by * n + bx) * 4;
+        var nx = (bx + 0.5) / half - 1; // screen-space x, -1 at left .. +1 at right
+        var r2 = nx * nx + ny * ny;
+        if(r2 > 1){ buf[idx4 + 3] = 0; continue; } // outside the globe's disc
+
+        // inverse of project2(): recover the pre-tilt (x3,y3,z3) unit sphere point, then the
+        // lat/lon that rotation/tilt puts at this exact screen position.
+        var x3 = nx, y3t = ny, z3t = Math.sqrt(Math.max(0, 1 - r2));
+        var y3 = y3t * ct + z3t * st;
+        var z3 = -y3t * st + z3t * ct;
+        var lat = Math.asin(Math.max(-1, Math.min(1, y3))) * 180 / Math.PI;
+        var lon = Math.atan2(x3, z3) * 180 / Math.PI - rotationDeg;
+        lon = ((lon + 180) % 360 + 360) % 360 - 180;
+
+        var rc = sampleRadar(lat, lon);
+        if(!rc){ buf[idx4 + 3] = 0; continue; }
+        buf[idx4] = rc[0]; buf[idx4 + 1] = rc[1]; buf[idx4 + 2] = rc[2];
+        // depth-shade like every other layer on this globe (dimmer near the limb) and translate
+        // the sampled alpha (radar intensity) into how opaque this pixel paints.
+        var zScale = 0.55 + z3t * 0.45;
+        buf[idx4 + 3] = Math.round(Math.min(255, rc[3] * 235 * zScale + 20));
+      }
+    }
+
+    radarBufCtx.putImageData(radarBufImg, 0, 0);
+    ctx2.save();
+    ctx2.globalAlpha = 0.92;
+    ctx2.drawImage(radarBuf, G2.cx - G2.radius, G2.cy - G2.radius, G2.radius * 2, G2.radius * 2);
+    ctx2.restore();
+  }
+
   // cheap layered/warped sine turbulence — no gradient tables, just cross-modulated waves.
   // Good enough to read as organic swirling cloud contours instead of round blobs, and safe to reason about.
   function fbmNoise(x, y, t){
@@ -3354,7 +3414,6 @@
       }
       cp.coverage = wSum > 0 ? Math.max(0, Math.min(1, (cSum / wSum) / 100)) : 0;
       cp.precipMm = precipMax;
-      cp.radar = sampleRadar(cp.lat, cp.lon);
     }
   }
 
@@ -3480,60 +3539,42 @@
     // real regional cloud% blended onto it. Reads as continuous swirling bands rather than
     // blobs pinned to the 60 raw data points, while overall coverage still tracks live data.
     var tNoise = Date.now() / 1000;
-    // radius (in px) of each radar swatch — sized off the globe's current on-screen radius so
-    // neighboring points in the 3°-spaced lattice always overlap and tile into one continuous
-    // colored region instead of leaving visible gaps between samples.
-    var radarR = Math.max(2.4, G2.radius * 0.05);
     for(var ci = 0; ci < cloudSamplePoints.length; ci++){
       var cp = cloudSamplePoints[ci];
       var coverage = cp.coverage;
-      // radar rendering must NOT be gated behind the cloud-coverage/noise checks below —
-      // that was the actual bug that used to make rain read as nearly invisible, since a rainy
-      // point would still get skipped whenever cloud cover there happened to be low or the noise
-      // field didn't happen to clear the cloud-patchiness threshold.
-      if(coverage < 0.12 && !cp.radar) continue;
+      if(coverage < 0.12) continue;
       var cpp = project2(cp.lat, cp.lon, G2.rotation, G2.tilt);
       if(!cpp) continue;
       var cScale = 0.55 + cpp.z * 0.45;
 
-      if(coverage >= 0.12){
-        var n = fbmNoise(cp.lon * 0.05, cp.lat * 0.07, tNoise);
-        n = (n + 1) / 2; // remap roughly to 0..1
-        // curved response: only genuinely cloudy regions clear enough of the noise field to show —
-        // clear/low-cover areas stay essentially empty instead of a uniform haze over everything.
-        var covCurve = Math.pow(coverage, 1.8);
-        var threshold = 1 - covCurve * 0.6;
-        if(n >= threshold){
-          var edge = Math.min(1, (n - threshold) / 0.3);
-          var rC = (0.9 + edge * 1.5) * cScale;
-          ctx2.beginPath();
-          ctx2.arc(cpp.x, cpp.y, rC, 0, Math.PI*2);
-          // softened & slightly cooler than before, and capped lower — leaves more visual
-          // headroom for the glowing, radar-colored precipitation layer to read as distinct
-          ctx2.fillStyle = "rgba(205,222,230," + (0.08 + edge * 0.4 * (0.3 + covCurve * 0.7)) + ")";
-          ctx2.fill();
-        }
-      }
-
-      // real radar imagery, sampled from the RainViewer mosaic onto this same fine lattice (see
-      // recomputeCloudCoverage/sampleRadar) — actual radar pixel color and intensity (alpha),
-      // not a synthesized dot, painted with enough overlap between neighboring lattice points to
-      // read as one continuous colored region rather than scattered markers.
-      if(cp.radar){
-        var rc = cp.radar;
-        var colStr = rc[0] + "," + rc[1] + "," + rc[2];
-        var pr = radarR * (0.85 + rc[3] * 0.5) * cScale;
-        var pAlpha = Math.min(0.95, 0.55 + rc[3] * 0.4) * cScale;
-        ctx2.save();
-        ctx2.shadowColor = "rgba(" + colStr + ",0.85)";
-        ctx2.shadowBlur = 4 * cScale;
+      var n = fbmNoise(cp.lon * 0.05, cp.lat * 0.07, tNoise);
+      n = (n + 1) / 2; // remap roughly to 0..1
+      // curved response: only genuinely cloudy regions clear enough of the noise field to show —
+      // clear/low-cover areas stay essentially empty instead of a uniform haze over everything.
+      var covCurve = Math.pow(coverage, 1.8);
+      var threshold = 1 - covCurve * 0.6;
+      if(n >= threshold){
+        var edge = Math.min(1, (n - threshold) / 0.3);
+        var rC = (0.9 + edge * 1.5) * cScale;
         ctx2.beginPath();
-        ctx2.arc(cpp.x, cpp.y, pr, 0, Math.PI*2);
-        ctx2.fillStyle = "rgba(" + colStr + "," + pAlpha + ")";
+        ctx2.arc(cpp.x, cpp.y, rC, 0, Math.PI*2);
+        // softened & slightly cooler than before, and capped lower — leaves more visual
+        // headroom for the radar layer painted on top to read as distinct
+        ctx2.fillStyle = "rgba(205,222,230," + (0.08 + edge * 0.4 * (0.3 + covCurve * 0.7)) + ")";
         ctx2.fill();
-        ctx2.restore();
       }
     }
+
+    // Real radar imagery, painted as an actual texture instead of scattered per-point swatches.
+    // An earlier version sampled the RainViewer mosaic onto the same sparse lattice used for the
+    // cloud-noise texture above and drew each sample as its own translucent circle — overlapping
+    // circles of varying size and alpha, which reads as a pile of translucent bubbles/confetti
+    // rather than a real radar sheet, however much they're sized to overlap. A real radar picture
+    // is smooth because it *is* a raster image; the only way to reproduce that look is to actually
+    // rasterize it here too — for every pixel of the globe's disc, work out which lat/lon that
+    // pixel corresponds to on the rotating sphere (the exact inverse of project2 below) and sample
+    // the real radar color there, then blit the whole result on in one drawImage call.
+    renderRadarLayer();
 
     // register the raw data cells for hit-testing / tooltips (precise numbers on hover),
     // even though the visible precip coloring above now comes from the interpolated lattice
