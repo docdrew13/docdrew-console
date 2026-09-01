@@ -517,12 +517,16 @@
   .globe-body{ flex:1; min-height:0; position:relative; }
   .globe-body canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
   .globe-body canvas:active{ cursor:grabbing; }
+  .globe-footer{
+    flex:0 0 auto; display:flex; flex-direction:column; gap:6px;
+    padding:10px 16px 12px; border-top:1px solid var(--grid-line);
+  }
   .globe-legend{
-    position:absolute; left:14px; bottom:32px; display:flex; flex-direction:column; gap:4px; font-size:14px; color:var(--text-dim);
-    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; pointer-events:none;
+    display:flex; flex-direction:row; flex-wrap:wrap; row-gap:5px; column-gap:16px; font-size:14px; color:var(--text-dim);
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   .globe-legend span{ display:flex; align-items:center; gap:5px; }
-  .legend-dot{ width:8px; height:8px; border-radius:50%; }
+  .legend-dot{ width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
   .legend-dot.cyan{ background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
   .legend-dot.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
   .legend-dot.blue{ background:#5AA7E8; box-shadow:0 0 6px #5AA7E8; }
@@ -532,13 +536,13 @@
   .legend-dot.green{ background:var(--good); box-shadow:0 0 6px var(--good); }
   .legend-dot.haze{ background:rgba(205,222,230,0.85); }
   .legend-dot.precip-grad{
-    width:20px; border-radius:4px;
+    width:20px; border-radius:4px; flex:0 0 auto;
     background:linear-gradient(90deg, rgb(110,220,150), rgb(235,214,80), rgb(255,110,90));
     box-shadow:0 0 5px rgba(235,214,80,0.6);
   }
   .globe-hint{
-    position:absolute; left:14px; bottom:12px; font-size:13px; color:var(--text-dim);
-    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; pointer-events:none; text-align:left;
+    font-size:13px; color:var(--text-dim);
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-align:left;
   }
   .globe-tooltip{
     position:absolute; pointer-events:none; transform:translate(-50%,-130%);
@@ -779,7 +783,7 @@
       </aside>
 
       <div class="globes-stack">
-        <section class="globe-panel" aria-label="Systèmes météo en direct" data-accent="weather">
+        <section class="globe-panel" aria-label="Météo et suivi orbital en direct" data-accent="weather">
           <div class="globe-head">
             <span>Systèmes météo</span>
             <span class="n" id="weather-globe-count">synchronisation…</span>
@@ -787,26 +791,13 @@
           <div class="globe-body" id="weather-globe-body">
             <canvas id="weather-globe-canvas"></canvas>
             <div class="globe-tooltip" id="weather-globe-tooltip"></div>
+          </div>
+          <div class="globe-footer">
             <div class="globe-legend">
               <span><i class="legend-dot haze"></i>Couverture nuageuse</span>
               <span><i class="legend-dot precip-grad"></i>Précip. (léger→fort)</span>
-              <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montréal</span></span>
-            </div>
-            <div class="globe-hint">glisser pour pivoter et incliner · couverture nuageuse en direct</div>
-          </div>
-        </section>
-
-        <section class="globe-panel" aria-label="Flux mondial en direct">
-          <div class="globe-head">
-            <span>Flux mondial en direct</span>
-            <span class="n" id="globe-count">0 repères suivis</span>
-          </div>
-          <div class="globe-body" id="globe-body">
-            <canvas id="globe-canvas"></canvas>
-            <div class="globe-tooltip" id="globe-tooltip"></div>
-            <div class="globe-legend">
               <span><i class="legend-dot amber"></i>Origine de la nouvelle</span>
-              <span><i class="legend-dot red"></i><span id="globe-home-label">Montréal</span></span>
+              <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montréal</span></span>
               <span><i class="legend-dot frost"></i>SSI</span>
               <span><i class="legend-dot green"></i>Vol suivi</span>
             </div>
@@ -1817,9 +1808,9 @@
      automatique. Le flux de la SSI n'a pas ce plafond quotidien,
      seulement une limite de courtoisie d'environ 1 requête/seconde,
      il est donc actualisé sur son propre intervalle indépendant
-     ci-dessous. Les deux repères sont dessinés sur le globe « Flux
-     mondial en direct » via le pipeline partagé renderedMarkers/
-     project() défini plus loin.
+     ci-dessous. Les deux repères sont dessinés sur le globe
+     « Systèmes météo » via le pipeline partagé renderedMarkers2/
+     project2() défini plus loin.
   ============================================================ */
   var AIRLINE_CATALOG = [
     { code: "ACA", name: "Air Canada" },
@@ -3012,17 +3003,12 @@
   }
 
   /* ============================================================
-     GLOBE — canvas wireframe sphere, weather blobs, news markers
+     GLOBE DATA — shared continent/marker data feeding the weather globe
+     (the second "Live Global Feed" globe that used to own this data has
+     been retired; its markers now render on the weather globe below)
   ============================================================ */
-  var canvas = $("globe-canvas");
-  var ctx = canvas.getContext("2d");
-  var globeBody = $("globe-body");
-  var tooltip = $("globe-tooltip");
-
-  var G = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 20, tilt: -12, dragging: false, dragDist: 0, lastX: 0, lastY: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
   var stationMarkers = [];  // {name,lat,lon,wx}
   var newsMarkers = [];     // {place,lat,lon,items:[]}
-  var renderedMarkers = []; // this-frame screen positions for hit testing
 
   // Rough, simplified continent silhouettes — [lon,lat] rings, good enough at globe scale
   // to read as recognizable landmasses, not a survey-accurate coastline.
@@ -3101,37 +3087,6 @@
     return s;
   })();
 
-  function resizeCanvas(){
-    var rect = globeBody.getBoundingClientRect();
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    G.w = rect.width; G.h = rect.height;
-    G.cx = rect.width / 2; G.cy = rect.height / 2;
-    G.radius = Math.max(40, Math.min(rect.width, rect.height) * 0.42);
-  }
-
-  // full 3D orientation: yaw (rotationDeg, spin around the vertical axis) composed with
-  // pitch (tiltDeg, spin around the horizontal axis) — two degrees of freedom, driven by
-  // horizontal and vertical drag respectively, together giving free trackball-style rotation.
-  function project(lat, lon, rotationDeg, tiltDeg){
-    var latRad = lat * Math.PI / 180;
-    var lonRad = (lon + rotationDeg) * Math.PI / 180;
-    var x3 = Math.cos(latRad) * Math.sin(lonRad);
-    var y3 = Math.sin(latRad);
-    var z3 = Math.cos(latRad) * Math.cos(lonRad);
-    if(tiltDeg){
-      var tRad = tiltDeg * Math.PI / 180;
-      var ct = Math.cos(tRad), st = Math.sin(tRad);
-      var y3t = y3 * ct - z3 * st;
-      var z3t = y3 * st + z3 * ct;
-      y3 = y3t; z3 = z3t;
-    }
-    if(z3 < -0.06) return null;
-    return { x: G.cx + x3 * G.radius, y: G.cy - y3 * G.radius, z: z3 };
-  }
-
   // inverse of the orthographic projection above — screen point -> lat/lon on the sphere's
   // near face. Returns null if the point falls outside the rendered circle (clicked empty space).
   function invertProject(mx, my, cx, cy, radius, rotationDeg, tiltDeg){
@@ -3177,8 +3132,8 @@
 
   // Globe sphere/atmosphere/wireframe colors — these are canvas literals, not CSS
   // variables, so they can't just inherit from the page's :root theme. Keyed by pageTheme
-  // instead; since drawGlobe()/drawGlobe2() redraw every animation frame, flipping pageTheme
-  // (see toggleTheme() above) recolors the globes on the very next frame with no extra work.
+  // instead; since drawWeatherGlobe() redraws every animation frame, flipping pageTheme
+  // (see toggleTheme() above) recolors the globe on the very next frame with no extra work.
   // Markers/legend dots (home, ISS, flights, news) stay theme-independent on purpose — those
   // are semantic data colors, not part of the "look".
   var GLOBE_PALETTES = {
@@ -3186,276 +3141,6 @@
     light: { sphereStops:["224,150,90,0.42","120,72,40,0.4","48,28,16,0.55","10,6,4,0.75"], glowStroke:"255,168,130,0.35", glowShadow:"255,138,92,0.9", rim:"255,138,92,0.5", wire:"255,138,92,0.09", equator:"255,138,92,0.16" }
   };
   function gp(){ return GLOBE_PALETTES[pageTheme] || GLOBE_PALETTES.dark; }
-
-  function drawGlobe(){
-    ctx.clearRect(0, 0, G.w, G.h);
-    if(G.radius < 10) return;
-
-    // starfield — fixed points behind the sphere, gentle twinkle
-    var t = Date.now() / 1000;
-    for(var si = 0; si < STARS.length; si++){
-      var st2 = STARS[si];
-      var sx = st2.x * G.w, sy = st2.y * G.h;
-      var dxs = sx - G.cx, dys = sy - G.cy;
-      if(dxs*dxs + dys*dys < G.radius*G.radius*1.06) continue; // don't draw stars over the sphere
-      var tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * st2.speed + st2.phase));
-      ctx.beginPath();
-      ctx.arc(sx, sy, st2.r, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(210,230,240," + (tw*0.85) + ")";
-      ctx.fill();
-    }
-
-    // sphere shading — deep lit-ocean look, brighter upper-left "sunlit" limb, dark falloff at the rim
-    var grad = ctx.createRadialGradient(G.cx - G.radius*0.4, G.cy - G.radius*0.45, G.radius*0.05, G.cx, G.cy, G.radius*1.04);
-    grad.addColorStop(0, "rgba(" + gp().sphereStops[0] + ")");
-    grad.addColorStop(0.35, "rgba(" + gp().sphereStops[1] + ")");
-    grad.addColorStop(0.72, "rgba(" + gp().sphereStops[2] + ")");
-    grad.addColorStop(1, "rgba(" + gp().sphereStops[3] + ")");
-    ctx.beginPath();
-    ctx.arc(G.cx, G.cy, G.radius, 0, Math.PI*2);
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // atmosphere rim glow
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(G.cx, G.cy, G.radius + 1.5, 0, Math.PI*2);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(" + gp().glowStroke + ")";
-    ctx.shadowColor = "rgba(" + gp().glowShadow + ")";
-    ctx.shadowBlur = 14;
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(" + gp().rim + ")";
-    ctx.beginPath();
-    ctx.arc(G.cx, G.cy, G.radius, 0, Math.PI*2);
-    ctx.stroke();
-
-    // wireframe meridians
-    ctx.strokeStyle = "rgba(" + gp().wire + ")";
-    ctx.lineWidth = 1;
-    for(var lon = 0; lon < 360; lon += 30){
-      ctx.beginPath();
-      var started = false;
-      for(var lat = -90; lat <= 90; lat += 4){
-        var p = project(lat, lon, G.rotation, G.tilt);
-        if(!p){ started = false; continue; }
-        if(!started){ ctx.moveTo(p.x, p.y); started = true; } else { ctx.lineTo(p.x, p.y); }
-      }
-      ctx.stroke();
-    }
-    // wireframe parallels
-    for(var lat2 = -60; lat2 <= 60; lat2 += 30){
-      ctx.beginPath();
-      var started2 = false;
-      for(var lon2 = 0; lon2 <= 360; lon2 += 4){
-        var p2 = project(lat2, lon2, G.rotation, G.tilt);
-        if(!p2){ started2 = false; continue; }
-        if(!started2){ ctx.moveTo(p2.x, p2.y); started2 = true; } else { ctx.lineTo(p2.x, p2.y); }
-      }
-      ctx.stroke();
-    }
-    // equator, emphasized
-    ctx.strokeStyle = "rgba(" + gp().equator + ")";
-    ctx.beginPath();
-    var started3 = false;
-    for(var lon3 = 0; lon3 <= 360; lon3 += 3){
-      var p3 = project(0, lon3, G.rotation, G.tilt);
-      if(!p3){ started3 = false; continue; }
-      if(!started3){ ctx.moveTo(p3.x, p3.y); started3 = true; } else { ctx.lineTo(p3.x, p3.y); }
-    }
-    ctx.stroke();
-
-    // landmasses — dense stippled terrain, tight enough at this size to read as a solid satellite-style surface
-    for(var li = 0; li < landPoints.length; li++){
-      var lp = landPoints[li];
-      var lpp = project(lp.lat, lp.lon, G.rotation, G.tilt);
-      if(!lpp) continue;
-      var lpScale = 0.5 + lpp.z * 0.5;
-      var r = (0.62 + lp.tint * 0.42) * lpScale;
-      ctx.beginPath();
-      ctx.arc(lpp.x + lp.jx, lpp.y + lp.jy, r, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(" + terrainColor(lp.lat, lp.tint) + "," + (0.72 * lpScale + 0.14) + ")";
-      ctx.fill();
-    }
-
-    renderedMarkers = [];
-
-    // news star markers
-    var pulse = 0.5 + 0.5 * Math.sin(Date.now() / 500);
-    newsMarkers.forEach(function(nm){
-      var p = project(nm.lat, nm.lon, G.rotation, G.tilt);
-      if(!p) return;
-      var scale = 0.6 + p.z * 0.4;
-      var baseR = 3.4 * scale;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, baseR + pulse*3.2*scale, 0, Math.PI*2);
-      ctx.strokeStyle = "rgba(255,169,77," + (0.55*scale) + ")";
-      ctx.lineWidth = 1.3;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, baseR, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(255,169,77," + (0.95*scale) + ")";
-      ctx.fill();
-
-      renderedMarkers.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "news", ref: nm });
-    });
-
-    // home marker — Montreal
-    (function(){
-      var p = project(HOME.lat, HOME.lon, G.rotation, G.tilt);
-      if(!p) return;
-      var scale = 0.6 + p.z * 0.4;
-      var baseR = 3.8 * scale;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, baseR + pulse*2.6*scale, 0, Math.PI*2);
-      ctx.strokeStyle = "rgba(255,107,94," + (0.6*scale) + ")";
-      ctx.lineWidth = 1.4;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, baseR, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(255,107,94," + (0.95*scale) + ")";
-      ctx.fill();
-
-      renderedMarkers.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "home", ref: HOME });
-    })();
-
-    // repère de la SSI — position en direct, une fois chargée
-    if(issData && issData.lat != null && issData.lon != null){
-      var pIss = project(issData.lat, issData.lon, G.rotation, G.tilt);
-      if(pIss){
-        var scaleIss = 0.6 + pIss.z * 0.4;
-        var baseRIss = 4 * scaleIss;
-        ctx.beginPath();
-        ctx.arc(pIss.x, pIss.y, baseRIss + pulse*3*scaleIss, 0, Math.PI*2);
-        ctx.strokeStyle = "rgba(142,201,255," + (0.6*scaleIss) + ")";
-        ctx.lineWidth = 1.4;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(pIss.x, pIss.y, baseRIss, 0, Math.PI*2);
-        ctx.fillStyle = "rgba(142,201,255," + (0.95*scaleIss) + ")";
-        ctx.fill();
-
-        renderedMarkers.push({ x: pIss.x, y: pIss.y, r: Math.max(10, baseRIss + 7), type: "iss", ref: issData });
-      }
-    }
-
-    // trajectoire récente du vol suivi — historique réel via le flux gratuit /tracks
-    // d'OpenSky (~30 dernières minutes), PAS un itinéraire prévu départ/arrivée
-    if(trackedFlightPath && trackedFlightPath.length > 1){
-      ctx.save();
-      ctx.setLineDash([2, 4]);
-      ctx.strokeStyle = "rgba(79,214,140,0.55)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      var pathStarted = false;
-      for(var tpi = 0; tpi < trackedFlightPath.length; tpi++){
-        var tp = trackedFlightPath[tpi];
-        var ptp = project(tp.lat, tp.lon, G.rotation, G.tilt);
-        if(!ptp){ pathStarted = false; continue; }
-        if(!pathStarted){ ctx.moveTo(ptp.x, ptp.y); pathStarted = true; } else { ctx.lineTo(ptp.x, ptp.y); }
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // repère du vol suivi — l'appareil actuellement sélectionné dans un résultat de recherche
-    if(trackedFlight && trackedFlight.lat != null && trackedFlight.lon != null){
-      var pFl = project(trackedFlight.lat, trackedFlight.lon, G.rotation, G.tilt);
-      if(pFl){
-        var scaleFl = 0.6 + pFl.z * 0.4;
-        var baseRFl = 3.6 * scaleFl;
-        ctx.beginPath();
-        ctx.arc(pFl.x, pFl.y, baseRFl + pulse*2.6*scaleFl, 0, Math.PI*2);
-        ctx.strokeStyle = "rgba(79,214,140," + (0.6*scaleFl) + ")";
-        ctx.lineWidth = 1.3;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(pFl.x, pFl.y, baseRFl, 0, Math.PI*2);
-        ctx.fillStyle = "rgba(79,214,140,0.95)";
-        ctx.fill();
-
-        renderedMarkers.push({ x: pFl.x, y: pFl.y, r: Math.max(10, baseRFl + 7), type: "flight", ref: trackedFlight });
-      }
-    }
-  }
-
-  function tick(){
-    if(G.autoRotate && !G.dragging) G.rotation += REDUCED_MOTION ? 0 : 0.045;
-    drawGlobe();
-    requestAnimationFrame(tick);
-  }
-
-  function hitTest(x, y){
-    var best = null, bestDist = Infinity;
-    renderedMarkers.forEach(function(m){
-      var dx = m.x - x, dy = m.y - y, d = Math.sqrt(dx*dx + dy*dy);
-      if(d <= m.r && d < bestDist){ best = m; bestDist = d; }
-    });
-    return best;
-  }
-
-  canvas.addEventListener("pointerdown", function(e){
-    G.dragging = true; G.dragDist = 0; G.lastX = e.clientX; G.lastY = e.clientY;
-    G.autoRotate = false;
-    try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
-  });
-  canvas.addEventListener("pointermove", function(e){
-    var rect = canvas.getBoundingClientRect();
-    var mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    var hit = hitTest(mx, my);
-    if(hit && !G.dragging){
-      canvas.style.cursor = "pointer";
-      tooltip.style.display = "block";
-      tooltip.style.left = hit.x + "px";
-      tooltip.style.top = hit.y + "px";
-      tooltip.textContent = hit.type === "news" ? hit.ref.place :
-        hit.type === "iss" ? "SSI — Station spatiale internationale" :
-        hit.type === "flight" ? (hit.ref.callsign || hit.ref.icao24 || "Vol suivi") :
-        hit.ref.name;
-    } else {
-      if(!G.dragging) canvas.style.cursor = "grab";
-      tooltip.style.display = "none";
-    }
-    if(G.dragging){
-      var dx = e.clientX - G.lastX; G.lastX = e.clientX;
-      var dy = e.clientY - G.lastY; G.lastY = e.clientY;
-      G.dragDist += Math.abs(dx) + Math.abs(dy);
-      G.rotation += dx * 0.4;
-      // vertical drag tilts the sphere on the horizontal axis — full 3D trackball rotation,
-      // unclamped just like rotation (both are periodic, so it can spin freely either way)
-      G.tilt -= dy * 0.4;
-    }
-  });
-  function endDrag(){
-    if(!G.dragging) return;
-    G.dragging = false;
-    clearTimeout(G.idleTimer);
-    G.idleTimer = setTimeout(function(){ G.autoRotate = true; }, 5000);
-  }
-  canvas.addEventListener("pointerup", function(e){
-    var wasClick = G.dragDist < 6;
-    endDrag();
-    if(wasClick){
-      var rect = canvas.getBoundingClientRect();
-      var mx = e.clientX - rect.left, my = e.clientY - rect.top;
-      var hit = hitTest(mx, my);
-      if(hit){
-        handleMarkerClick(hit);
-      } else {
-        var geo = invertProject(mx, my, G.cx, G.cy, G.radius, G.rotation, G.tilt);
-        if(geo) openLocationDetail(geo.lat, geo.lon, {});
-      }
-    }
-  });
-  canvas.addEventListener("pointercancel", endDrag);
-  canvas.addEventListener("pointerleave", function(){ tooltip.style.display = "none"; });
 
   function handleMarkerClick(hit){
     if(hit.type === "news"){
@@ -3793,15 +3478,40 @@
       renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, G2.radius*0.09*scale + 6), type: "cell", ref: gp });
     });
 
+    // shared pulse phase for the news/home/ISS/flight markers below — this globe used to
+    // draw only weather cells and the home marker; news, ISS and the tracked flight moved
+    // over from the retired "Live Global Feed" globe, along with a single shared pulse
+    // value (that globe animated each marker type off its own local pulse var).
+    var pulse = 0.5 + 0.5 * Math.sin(Date.now() / 500);
+
+    // news star markers — moved here from the retired globe
+    newsMarkers.forEach(function(nm){
+      var p = project2(nm.lat, nm.lon, G2.rotation, G2.tilt);
+      if(!p) return;
+      var scale = 0.6 + p.z * 0.4;
+      var baseR = 3.4 * scale;
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, baseR + pulse*3.2*scale, 0, Math.PI*2);
+      ctx2.strokeStyle = "rgba(255,169,77," + (0.55*scale) + ")";
+      ctx2.lineWidth = 1.3;
+      ctx2.stroke();
+
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, baseR, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(255,169,77," + (0.95*scale) + ")";
+      ctx2.fill();
+
+      renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "news", ref: nm });
+    });
+
     // home marker — Montreal
     (function(){
       var p = project2(HOME.lat, HOME.lon, G2.rotation, G2.tilt);
       if(!p) return;
       var scale = 0.6 + p.z * 0.4;
       var baseR = 3.8 * scale;
-      var pulseHome = 0.5 + 0.5 * Math.sin(Date.now() / 500);
       ctx2.beginPath();
-      ctx2.arc(p.x, p.y, baseR + pulseHome*2.6*scale, 0, Math.PI*2);
+      ctx2.arc(p.x, p.y, baseR + pulse*2.6*scale, 0, Math.PI*2);
       ctx2.strokeStyle = "rgba(255,107,94," + (0.6*scale) + ")";
       ctx2.lineWidth = 1.4;
       ctx2.stroke();
@@ -3813,6 +3523,69 @@
 
       renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "home", ref: HOME });
     })();
+
+    // repère de la SSI — position en direct, une fois chargée — déplacé depuis le globe retiré
+    if(issData && issData.lat != null && issData.lon != null){
+      var pIss = project2(issData.lat, issData.lon, G2.rotation, G2.tilt);
+      if(pIss){
+        var scaleIss = 0.6 + pIss.z * 0.4;
+        var baseRIss = 4 * scaleIss;
+        ctx2.beginPath();
+        ctx2.arc(pIss.x, pIss.y, baseRIss + pulse*3*scaleIss, 0, Math.PI*2);
+        ctx2.strokeStyle = "rgba(142,201,255," + (0.6*scaleIss) + ")";
+        ctx2.lineWidth = 1.4;
+        ctx2.stroke();
+
+        ctx2.beginPath();
+        ctx2.arc(pIss.x, pIss.y, baseRIss, 0, Math.PI*2);
+        ctx2.fillStyle = "rgba(142,201,255," + (0.95*scaleIss) + ")";
+        ctx2.fill();
+
+        renderedMarkers2.push({ x: pIss.x, y: pIss.y, r: Math.max(10, baseRIss + 7), type: "iss", ref: issData });
+      }
+    }
+
+    // trajectoire récente du vol suivi — historique réel via le flux gratuit /tracks
+    // d'OpenSky (~30 dernières minutes), PAS un itinéraire prévu départ/arrivée —
+    // déplacé depuis le globe retiré
+    if(trackedFlightPath && trackedFlightPath.length > 1){
+      ctx2.save();
+      ctx2.setLineDash([2, 4]);
+      ctx2.strokeStyle = "rgba(79,214,140,0.55)";
+      ctx2.lineWidth = 1.5;
+      ctx2.beginPath();
+      var pathStarted = false;
+      for(var tpi = 0; tpi < trackedFlightPath.length; tpi++){
+        var tp = trackedFlightPath[tpi];
+        var ptp = project2(tp.lat, tp.lon, G2.rotation, G2.tilt);
+        if(!ptp){ pathStarted = false; continue; }
+        if(!pathStarted){ ctx2.moveTo(ptp.x, ptp.y); pathStarted = true; } else { ctx2.lineTo(ptp.x, ptp.y); }
+      }
+      ctx2.stroke();
+      ctx2.restore();
+    }
+
+    // repère du vol suivi — l'appareil actuellement sélectionné dans un résultat de
+    // recherche — déplacé depuis le globe retiré
+    if(trackedFlight && trackedFlight.lat != null && trackedFlight.lon != null){
+      var pFl = project2(trackedFlight.lat, trackedFlight.lon, G2.rotation, G2.tilt);
+      if(pFl){
+        var scaleFl = 0.6 + pFl.z * 0.4;
+        var baseRFl = 3.6 * scaleFl;
+        ctx2.beginPath();
+        ctx2.arc(pFl.x, pFl.y, baseRFl + pulse*2.6*scaleFl, 0, Math.PI*2);
+        ctx2.strokeStyle = "rgba(79,214,140," + (0.6*scaleFl) + ")";
+        ctx2.lineWidth = 1.3;
+        ctx2.stroke();
+
+        ctx2.beginPath();
+        ctx2.arc(pFl.x, pFl.y, baseRFl, 0, Math.PI*2);
+        ctx2.fillStyle = "rgba(79,214,140,0.95)";
+        ctx2.fill();
+
+        renderedMarkers2.push({ x: pFl.x, y: pFl.y, r: Math.max(10, baseRFl + 7), type: "flight", ref: trackedFlight });
+      }
+    }
   }
 
   function tick2(){
@@ -3846,6 +3619,12 @@
       tooltip2.style.top = hit.y + "px";
       if(hit.type === "home"){
         tooltip2.textContent = hit.ref.name;
+      } else if(hit.type === "news"){
+        tooltip2.textContent = hit.ref.place;
+      } else if(hit.type === "iss"){
+        tooltip2.textContent = "SSI — Station spatiale internationale";
+      } else if(hit.type === "flight"){
+        tooltip2.textContent = hit.ref.callsign || hit.ref.icao24 || "Vol suivi";
       } else {
         var gp = hit.ref;
         var parts = [];
@@ -3879,11 +3658,10 @@
       var rect = canvas2.getBoundingClientRect();
       var mx = e.clientX - rect.left, my = e.clientY - rect.top;
       var hit = hitTest2(mx, my);
-      if(hit && hit.type === "home"){
-        var relatedHome2 = newsMarkers.filter(function(nm){ return nm.place === hit.ref.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
-        openLocationDetail(hit.ref.lat, hit.ref.lon, { name: hit.ref.name, items: relatedHome2 });
-      } else if(hit && hit.type === "cell"){
+      if(hit && hit.type === "cell"){
         openLocationDetail(hit.ref.lat, hit.ref.lon, {});
+      } else if(hit){
+        handleMarkerClick(hit);
       } else {
         var geo = invertProject(mx, my, G2.cx, G2.cy, G2.radius, G2.rotation, G2.tilt);
         if(geo) openLocationDetail(geo.lat, geo.lon, {});
@@ -4096,12 +3874,6 @@
     renderLog();
     renderSkyWatch(null);
     renderFlightTracker();
-
-    resizeCanvas();
-    if(window.ResizeObserver){ new ResizeObserver(debounce(resizeCanvas, 120)).observe(globeBody); }
-    window.addEventListener("resize", debounce(resizeCanvas, 120));
-    requestAnimationFrame(function(){ resizeCanvas(); });
-    tick();
 
     resizeCanvas2();
     if(window.ResizeObserver){ new ResizeObserver(debounce(resizeCanvas2, 120)).observe(weatherGlobeBody); }
