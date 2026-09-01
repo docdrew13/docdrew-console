@@ -546,8 +546,8 @@
   .legend-dot.haze{ background:rgba(230,220,205,0.85); }
   .legend-dot.precip-grad{
     width:20px; border-radius:4px; flex:0 0 auto;
-    background:linear-gradient(90deg, rgb(110,220,150), rgb(235,214,80), rgb(255,110,90));
-    box-shadow:0 0 5px rgba(235,214,80,0.6);
+    background:linear-gradient(90deg, rgb(0,112,163), rgb(255,210,0), rgb(230,40,0));
+    box-shadow:0 0 5px rgba(255,210,0,0.6);
   }
   .globe-hint{
     font-size:13px; color:var(--text-dim);
@@ -805,7 +805,7 @@
           <div class="globe-footer">
             <div class="globe-legend">
               <span><i class="legend-dot haze"></i>Cloud cover</span>
-              <span><i class="legend-dot precip-grad"></i>Precip (light→heavy)</span>
+              <span><i class="legend-dot precip-grad"></i>Live radar (light→heavy)</span>
               <span><i class="legend-dot amber"></i>News dateline</span>
               <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montreal</span></span>
               <span><i class="legend-dot frost"></i>ISS</span>
@@ -3240,6 +3240,77 @@
     return PRECIP_COLOR_STOPS[PRECIP_COLOR_STOPS.length - 1].c;
   }
 
+  // Real radar imagery (RainViewer's free public API) instead of synthesizing precipitation
+  // from Open-Meteo's sparse point samples. RainViewer serves the actual global radar mosaic as
+  // standard XYZ map tiles (the same scheme Google/OSM/every slippy map uses) — a small mosaic
+  // (zoom 2 = 16 tiles) is stitched into one offscreen canvas on each refresh, and every visible
+  // globe sample point looks up its real radar color out of that mosaic via the standard Web
+  // Mercator projection. This is genuine radar data, not an approximation, which is why it reads
+  // as smooth colored regions instead of scattered dots once painted with enough overlap below.
+  var RADAR = { canvas: null, data: null, size: 0, zoom: 2, loaded: false, frameTime: 0 };
+
+  async function loadRadarMosaic(){
+    try{
+      var meta = await getJSON("https://api.rainviewer.com/public/weather-maps.json");
+      var past = meta.radar && meta.radar.past;
+      if(!past || !past.length) return;
+      var frame = past[past.length - 1];
+      var host = meta.host || "https://tilecache.rainviewer.com";
+      var zoom = RADAR.zoom, tilesPerSide = Math.pow(2, zoom), tileSize = 256;
+      var mosaicSize = tilesPerSide * tileSize;
+      var offCanvas = document.createElement("canvas");
+      offCanvas.width = mosaicSize; offCanvas.height = mosaicSize;
+      var offCtx = offCanvas.getContext("2d");
+
+      function loadTile(tx, ty){
+        return new Promise(function(resolve){
+          var img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = function(){ offCtx.drawImage(img, tx * tileSize, ty * tileSize); resolve(true); };
+          img.onerror = function(){ resolve(false); }; // e.g. a polar tile with no coverage — leave transparent
+          img.src = host + frame.path + "/" + tileSize + "/" + zoom + "/" + tx + "/" + ty + "/2/1_1.png";
+        });
+      }
+
+      var loads = [];
+      for(var tx = 0; tx < tilesPerSide; tx++){
+        for(var ty = 0; ty < tilesPerSide; ty++){
+          loads.push(loadTile(tx, ty));
+        }
+      }
+      var results = await Promise.all(loads);
+      if(!results.some(Boolean)) return; // every tile failed — keep whatever mosaic we already had
+
+      RADAR.canvas = offCanvas;
+      RADAR.data = offCtx.getImageData(0, 0, mosaicSize, mosaicSize);
+      RADAR.size = mosaicSize;
+      RADAR.frameTime = frame.time;
+      RADAR.loaded = true;
+      recomputeCloudCoverage(); // re-sample the lattice against the fresh mosaic right away
+    }catch(err){
+      // a failed refresh keeps showing the last mosaic rather than blanking the radar layer
+    }
+  }
+
+  // Standard Web Mercator projection (same math as every XYZ tile scheme) — converts a lat/lon
+  // into a pixel inside the stitched radar mosaic so each globe sample point can look up its
+  // real radar color.
+  function sampleRadar(lat, lon){
+    if(!RADAR.loaded || !RADAR.data) return null;
+    var lonNorm = ((lon + 180) % 360 + 360) % 360;
+    var xFrac = lonNorm / 360;
+    var siny = Math.max(-0.9999, Math.min(0.9999, Math.sin(lat * Math.PI / 180)));
+    var yFrac = 0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI);
+    if(yFrac < 0 || yFrac > 1) return null; // beyond Mercator's coverage, near the poles
+    var px = Math.min(RADAR.size - 1, Math.floor(xFrac * RADAR.size));
+    var py = Math.min(RADAR.size - 1, Math.floor(yFrac * RADAR.size));
+    var idx = (py * RADAR.size + px) * 4;
+    var d = RADAR.data.data;
+    var a = d[idx + 3];
+    if(a < 24) return null; // effectively transparent — no precipitation here
+    return [d[idx], d[idx + 1], d[idx + 2], a / 255];
+  }
+
   // cheap layered/warped sine turbulence — no gradient tables, just cross-modulated waves.
   // Good enough to read as organic swirling cloud contours instead of round blobs, and safe to reason about.
   function fbmNoise(x, y, t){
@@ -3301,6 +3372,7 @@
       }
       cp.coverage = wSum > 0 ? Math.max(0, Math.min(1, (cSum / wSum) / 100)) : 0;
       cp.precipMm = precipMax;
+      cp.radar = sampleRadar(cp.lat, cp.lon);
     }
   }
 
@@ -3426,15 +3498,18 @@
     // real regional cloud% blended onto it. Reads as continuous swirling bands rather than
     // blobs pinned to the 60 raw data points, while overall coverage still tracks live data.
     var tNoise = Date.now() / 1000;
+    // radius (in px) of each radar swatch — sized off the globe's current on-screen radius so
+    // neighboring points in the 3°-spaced lattice always overlap and tile into one continuous
+    // colored region instead of leaving visible gaps between samples.
+    var radarR = Math.max(2.4, G2.radius * 0.05);
     for(var ci = 0; ci < cloudSamplePoints.length; ci++){
       var cp = cloudSamplePoints[ci];
       var coverage = cp.coverage;
-      var precipMm = cp.precipMm || 0;
-      // precip rendering must NOT be gated behind the cloud-coverage/noise checks below —
-      // that was the actual bug making rain read as nearly invisible even after interpolation,
-      // since a rainy point would still get skipped whenever cloud cover there happened to be
-      // low or the noise field didn't happen to clear the cloud-patchiness threshold.
-      if(coverage < 0.12 && precipMm <= 0.03) continue;
+      // radar rendering must NOT be gated behind the cloud-coverage/noise checks below —
+      // that was the actual bug that used to make rain read as nearly invisible, since a rainy
+      // point would still get skipped whenever cloud cover there happened to be low or the noise
+      // field didn't happen to clear the cloud-patchiness threshold.
+      if(coverage < 0.12 && !cp.radar) continue;
       var cpp = project2(cp.lat, cp.lon, G2.rotation, G2.tilt);
       if(!cpp) continue;
       var cScale = 0.55 + cpp.z * 0.45;
@@ -3458,21 +3533,21 @@
         }
       }
 
-      // precipitation, interpolated onto this same fine lattice (see recomputeCloudCoverage) —
-      // rendering it only at the ~990 raw data cells made it read as nearly invisible, since
-      // real rain is patchy enough that most exact sample points miss it entirely. Painting the
-      // interpolated "splat" instead means any nearby rain cell shows up as a visible patch.
-      if(precipMm > 0.03){
-        var col = precipColor(precipMm);
-        var colStr = col[0] + "," + col[1] + "," + col[2];
-        var pr = (1.6 + Math.min(3.2, precipMm * 1.6)) * cScale;
-        var pAlpha = Math.min(0.9, 0.4 + precipMm * 0.3);
+      // real radar imagery, sampled from the RainViewer mosaic onto this same fine lattice (see
+      // recomputeCloudCoverage/sampleRadar) — actual radar pixel color and intensity (alpha),
+      // not a synthesized dot, painted with enough overlap between neighboring lattice points to
+      // read as one continuous colored region rather than scattered markers.
+      if(cp.radar){
+        var rc = cp.radar;
+        var colStr = rc[0] + "," + rc[1] + "," + rc[2];
+        var pr = radarR * (0.85 + rc[3] * 0.5) * cScale;
+        var pAlpha = Math.min(0.95, 0.55 + rc[3] * 0.4) * cScale;
         ctx2.save();
-        ctx2.shadowColor = "rgba(" + colStr + ",0.9)";
-        ctx2.shadowBlur = 7 * cScale;
+        ctx2.shadowColor = "rgba(" + colStr + ",0.85)";
+        ctx2.shadowBlur = 4 * cScale;
         ctx2.beginPath();
         ctx2.arc(cpp.x, cpp.y, pr, 0, Math.PI*2);
-        ctx2.fillStyle = "rgba(" + colStr + "," + (pAlpha * cScale) + ")";
+        ctx2.fillStyle = "rgba(" + colStr + "," + pAlpha + ")";
         ctx2.fill();
         ctx2.restore();
       }
@@ -3651,7 +3726,7 @@
       var dy = e.clientY - G2.lastY; G2.lastY = e.clientY;
       G2.dragDist += Math.abs(dx) + Math.abs(dy);
       G2.rotation += dx * 0.4;
-      G2.tilt += dy * 0.4;
+      G2.tilt -= dy * 0.4;
     }
   });
   function endDrag2(){
@@ -3896,6 +3971,7 @@
     loadStations();
     loadAllNews();
     loadWeatherGrid();
+    loadRadarMosaic();
     loadPodcasts();
     loadAurora();
     loadBromont();
@@ -3908,6 +3984,7 @@
     setInterval(loadAllNews, 300000);
     setInterval(loadStations, 900000);
     setInterval(loadWeatherGrid, 600000);
+    setInterval(loadRadarMosaic, 600000);
     setInterval(loadPodcasts, 1800000);
     setInterval(loadAurora, 900000);
     setInterval(loadBromont, 900000);
