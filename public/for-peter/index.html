@@ -3641,7 +3641,7 @@
       var dy = e.clientY - G2.lastY; G2.lastY = e.clientY;
       G2.dragDist += Math.abs(dx) + Math.abs(dy);
       G2.rotation += dx * 0.4;
-      G2.tilt -= dy * 0.4;
+      G2.tilt += dy * 0.4;
     }
   });
   function endDrag2(){
