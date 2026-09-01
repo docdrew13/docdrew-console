@@ -40,7 +40,7 @@ interface GridPoint {
 // (see the catch below) while every other batch's real data still comes back normally.
 const BATCH_TIMEOUT_MS = 7000;
 
-async function fetchBatch(lats: number[], lons: number[]): Promise<GridPoint[]> {
+async function fetchBatch(lats: number[], lons: number[]): Promise<{ points: GridPoint[]; error: string | null }> {
   const url =
     "https://api.open-meteo.com/v1/forecast?latitude=" +
     lats.join(",") +
@@ -53,13 +53,25 @@ async function fetchBatch(lats: number[], lons: number[]): Promise<GridPoint[]> 
 
   try {
     const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error("upstream status " + res.status);
+    if (!res.ok) {
+      // Open-Meteo returns a JSON body with a human-readable "reason" on 4xx/5xx (e.g. bad
+      // parameter, too many locations) — surface that instead of just the bare status code,
+      // since "upstream status 400" alone doesn't say WHY the batch was rejected.
+      let reason = "";
+      try {
+        const errBody: any = await res.json();
+        reason = errBody?.reason || "";
+      } catch {
+        /* body wasn't JSON — fall through with just the status */
+      }
+      throw new Error("upstream status " + res.status + (reason ? ": " + reason : ""));
+    }
     const data = await res.json();
     // Open-Meteo returns an array (one entry per location) when multiple coordinates are requested,
     // but collapses to a single object when a batch happens to contain exactly one point.
     const list: any[] = Array.isArray(data) ? data : [data];
 
-    return list.map((entry: any, i: number) => ({
+    const points = list.map((entry: any, i: number) => ({
       lat: lats[i],
       lon: lons[i],
       cloud: typeof entry?.current?.cloud_cover === "number" ? entry.current.cloud_cover : null,
@@ -67,9 +79,12 @@ async function fetchBatch(lats: number[], lons: number[]): Promise<GridPoint[]> 
       temp: typeof entry?.current?.temperature_2m === "number" ? entry.current.temperature_2m : null,
       wind: typeof entry?.current?.wind_speed_10m === "number" ? entry.current.wind_speed_10m : null,
     }));
-  } catch {
-    // one bad/slow/timed-out batch shouldn't blank the whole globe — just drop that slice of the lattice.
-    return [];
+    return { points, error: null };
+  } catch (err) {
+    // one bad/slow/timed-out batch shouldn't blank the whole globe — just drop that slice of the
+    // lattice, but keep the reason so the caller can report it instead of failing silently.
+    const reason = (err as any)?.name === "AbortError" ? "timed out after " + BATCH_TIMEOUT_MS + "ms" : String(err);
+    return { points: [], error: reason };
   } finally {
     clearTimeout(timer);
   }
@@ -85,20 +100,28 @@ export default async (req: Request) => {
     }
   }
 
-  const batches: Promise<GridPoint[]>[] = [];
+  const batches: Promise<{ points: GridPoint[]; error: string | null }>[] = [];
   for (let i = 0; i < lats.length; i += BATCH_SIZE) {
     batches.push(fetchBatch(lats.slice(i, i + BATCH_SIZE), lons.slice(i, i + BATCH_SIZE)));
   }
 
   try {
     const results = await Promise.all(batches);
-    const points: GridPoint[] = results.flat();
+    const points: GridPoint[] = results.flatMap((r) => r.points);
+    const batchErrors = results.map((r) => r.error).filter((e): e is string => !!e);
 
-    if (points.length === 0) throw new Error("all_batches_failed");
+    if (points.length === 0) throw new Error("all_batches_failed: " + batchErrors.join(" | "));
 
-    return new Response(JSON.stringify({ points, updated: new Date().toISOString() }), {
-      headers: { "content-type": "application/json", "cache-control": "public, max-age=600" },
-    });
+    return new Response(
+      JSON.stringify({
+        points,
+        updated: new Date().toISOString(),
+        ...(batchErrors.length ? { batchErrors } : {}),
+      }),
+      {
+        headers: { "content-type": "application/json", "cache-control": "public, max-age=600" },
+      }
+    );
   } catch (err) {
     return new Response(JSON.stringify({ error: "fetch_failed", message: String(err) }), {
       status: 502,
