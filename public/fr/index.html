@@ -568,6 +568,18 @@
   .todo-add input{ flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:16px; }
   .todo-add button{ flex:0 0 auto; background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
 
+  .grocery-category{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim); margin:10px 0 4px; }
+  .grocery-category:first-child{ margin-top:0; }
+  .grocery-row{ display:flex; align-items:center; gap:8px; width:100%; padding:4px 0; border-bottom:1px solid var(--grid-soft); }
+  .grocery-row input[type="checkbox"]{ accent-color:var(--crimson); width:15px; height:15px; flex:none; }
+  .grocery-text{ flex:1; font-size:17.5px; color:var(--text); }
+  .grocery-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:19px; }
+  .grocery-del:hover{ color:var(--bad); }
+  .grocery-empty{ color:var(--text-dim); font-size:15px; padding:6px 0 10px; }
+  .grocery-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
+  .grocery-add input{ flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:16px; }
+  .grocery-add button{ flex:0 0 auto; background:var(--crimson); color:var(--crimson-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
+
   /* ============ TICKER ============ */
   /* ============ DETAIL OVERLAY ============ */
   .overlay{
@@ -782,6 +794,10 @@
           <div class="panel-head"><span>Notes</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="log-body"></div>
         </section>
+        <section class="panel" data-accent="crimson" data-panel-key="groceries" aria-label="Épicerie">
+          <div class="panel-head"><span>Épicerie</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="grocery-body"></div>
+        </section>
         <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Balados">
           <div class="panel-head">
             <span>Balados</span>
@@ -884,6 +900,7 @@
     wxCity: "dds-wx-city",
     links: "dds-links",
     todos: "dds-todos",
+    groceries: "dds-groceries",
     railCollapse: "dds-rail-collapse",
     captainsLog: "dds-captains-log",
     homeCity: "dds-home-city",
@@ -1091,6 +1108,7 @@
     { name: "Foodie Collection", url: "https://docdrewfood.netlify.app/" }
   ];
   var DEFAULT_TODOS = [];
+  var DEFAULT_GROCERIES = [];
   var DEFAULT_LOG = [
     { id: "seed-1", text: "Console pleinement opérationnelle. Tous les systèmes sont nominaux.", ts: new Date().toISOString() }
   ];
@@ -3683,6 +3701,107 @@
     $("todo-input").addEventListener("keydown", function(e){ if(e.key === "Enter") addTodo(); });
   }
 
+
+  /* ============================================================
+     GROCERIES — free-form add, auto-sorted into shopping categories
+     by simple keyword matching (no network call); checking an item
+     off removes it immediately instead of leaving it struck through.
+     Stored items keep a language-neutral category KEY (never the
+     translated label) so a shared list (see LS.groceries above)
+     renders with the right-language header no matter which page's
+     browser tab it's viewed from.
+  ============================================================ */
+  var groceryBody = $("grocery-body");
+  var groceries = readLS(LS.groceries, DEFAULT_GROCERIES);
+
+  var GROCERY_CATEGORIES = [
+    { key: "frozen", keywords: ["surgelé","surgelée","congélé","congélée","crème glacée","glace","popsicle","sucette glacée","congélateur"] },
+    { key: "household", keywords: ["essuie-tout","papier hygiénique","papier toilette","serviette de table","papier d'aluminium","pellicule plastique","sac à ordures","sac poubelle","détergent","savon à vaisselle","savon","éponge","nettoyant","javellisant","eau de javel","piles","pile","ampoule","mouchoir","lessive"] },
+    { key: "dairy", keywords: ["lait","fromage","yogourt","yaourt","beurre","crème","crème sure","fromage cottage","oeuf","œuf","oeufs","œufs"] },
+    { key: "meat", keywords: ["poulet","boeuf","bœuf","porc","dinde","jambon","bacon","saucisse","steak","agneau","poisson","saumon","crevette","thon","crabe","homard","tilapia","morue","viande","fruits de mer"] },
+    { key: "bakery", keywords: ["pain","bagel","baguette","petit pain","muffin","croissant","tortilla","pita","pâtisserie","beigne"] },
+    { key: "beverages", keywords: ["eau","jus","boisson gazeuse","soda","cola","bière","vin","café","thé","limonade","boisson"] },
+    { key: "snacks", keywords: ["croustilles","chips","craquelins","bretzel","maïs soufflé","popcorn","noix","bonbon","chocolat","barre granola","collation","biscuit"] },
+    { key: "produce", keywords: ["pomme","banane","orange","raisin","baie","fraise","bleuet","framboise","citron","lime","avocat","tomate","pomme de terre","patate","oignon","ail","carotte","céleri","laitue","épinard","chou frisé","brocoli","chou-fleur","concombre","poivron","champignon","maïs","pois","haricot","courge","courgette","citrouille","melon","pastèque","ananas","mangue","pêche","poire","prune","cerise","kiwi","coriandre","persil","basilic","menthe","gingembre","fines herbes","salade","fruit","légume"] },
+    { key: "pantry", keywords: ["riz","pâtes","nouille","farine","sucre","sel","huile","vinaigre","sauce","ketchup","moutarde","mayonnaise","soupe","conserve","céréale","avoine","miel","confiture","gelée","beurre d'arachide","épice","assaisonnement","cuisson","levure","bouillon"] }
+  ];
+  var GROCERY_OTHER_KEY = "other";
+  var GROCERY_ORDER = GROCERY_CATEGORIES.map(function(c){ return c.key; }).concat([GROCERY_OTHER_KEY]);
+  var GROCERY_LABELS = {
+    frozen: "Surgelés",
+    household: "Entretien ménager",
+    dairy: "Produits laitiers et œufs",
+    meat: "Viande et poisson",
+    bakery: "Boulangerie",
+    beverages: "Boissons",
+    snacks: "Collations",
+    produce: "Fruits et légumes",
+    pantry: "Garde-manger",
+    other: "Autre"
+  };
+
+  function categorizeGrocery(text){
+    var lower = text.toLowerCase();
+    for(var i = 0; i < GROCERY_CATEGORIES.length; i++){
+      var cat = GROCERY_CATEGORIES[i];
+      for(var j = 0; j < cat.keywords.length; j++){
+        if(lower.indexOf(cat.keywords[j]) !== -1) return cat.key;
+      }
+    }
+    return GROCERY_OTHER_KEY;
+  }
+
+  function renderGroceries(){
+    groceryBody.innerHTML = "";
+    if(groceries.length === 0){
+      var empty = el("div", "grocery-empty");
+      empty.textContent = "La liste est vide — ajoutez ce dont vous avez besoin ci-dessous.";
+      groceryBody.appendChild(empty);
+    } else {
+      var byCategory = {};
+      groceries.forEach(function(g){
+        var key = (g.category && GROCERY_LABELS[g.category]) ? g.category : GROCERY_OTHER_KEY;
+        if(!byCategory[key]) byCategory[key] = [];
+        byCategory[key].push(g);
+      });
+      GROCERY_ORDER.forEach(function(key){
+        var items = byCategory[key];
+        if(!items || items.length === 0) return;
+        var head = el("div", "grocery-category");
+        head.textContent = GROCERY_LABELS[key];
+        groceryBody.appendChild(head);
+        items.forEach(function(g){
+          var row = el("div", "grocery-row");
+          row.innerHTML = '<input type="checkbox"><span class="grocery-text">' + escapeHtml(g.text) + '</span><button type="button" class="grocery-del">✕</button>';
+          row.querySelector("input").addEventListener("change", function(){
+            groceries = groceries.filter(function(x){ return x.id !== g.id; });
+            writeLS(LS.groceries, groceries);
+            renderGroceries();
+          });
+          row.querySelector(".grocery-del").addEventListener("click", function(){
+            groceries = groceries.filter(function(x){ return x.id !== g.id; });
+            writeLS(LS.groceries, groceries);
+            renderGroceries();
+          });
+          groceryBody.appendChild(row);
+        });
+      });
+    }
+    var addRow = el("div", "grocery-add");
+    addRow.innerHTML = '<input type="text" id="grocery-input" placeholder="Ajouter un article…"><button type="button" id="grocery-add-btn">Ajouter</button>';
+    groceryBody.appendChild(addRow);
+    function addGrocery(){
+      var input = $("grocery-input");
+      var text = input.value.trim();
+      if(!text) return;
+      groceries.push({ id: "g" + Date.now(), text: text, category: categorizeGrocery(text) });
+      writeLS(LS.groceries, groceries);
+      renderGroceries();
+    }
+    $("grocery-add-btn").addEventListener("click", addGrocery);
+    $("grocery-input").addEventListener("keydown", function(e){ if(e.key === "Enter") addGrocery(); });
+  }
+
   /* ============================================================
      RIGHT-RAIL ACCORDION — Weather / Podcasts / Markets / Currency
      each collapse or expand independently, remembered per-browser.
@@ -3726,6 +3845,7 @@
     renderFx();
     renderLinks();
     renderTodos();
+    renderGroceries();
     renderLog();
     renderSkyWatch(null);
 
