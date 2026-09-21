@@ -193,6 +193,19 @@
   .trip-subrow input:hover, .trip-subrow input:focus{border-color:var(--border);background:var(--surface);outline:none;}
   .trip-subrow input[type="date"]{color:var(--text);}
 
+  .filters-bar{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 14px;padding:9px 12px;
+    background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);
+  }
+  .filters-bar-toggle{
+    display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--text);
+    font-size:13px;font-weight:700;cursor:pointer;padding:2px 4px;border-radius:6px;
+  }
+  .filters-bar-toggle:hover{color:var(--primary);}
+  .filters-bar-summary{
+    color:var(--text-muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;
+  }
+
   .transport-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 20px;}
   .transport-chip{
     display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 9px;border-radius:99px;
@@ -232,7 +245,7 @@
   .tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
 
   .notes-box{
-    width:100%;min-height:70px;border:1px solid var(--border);border-radius:var(--radius-md);
+    width:100%;min-height:480px;border:1px solid var(--border);border-radius:var(--radius-md);
     background:var(--surface);color:var(--text);padding:10px 12px;font-family:inherit;font-size:13px;
     resize:vertical;
   }
@@ -1589,7 +1602,7 @@ let STATE_BY_LANG = {
   en: JSON.parse(JSON.stringify(SEED_STATE_EN)),
   fr: JSON.parse(JSON.stringify(SEED_STATE_FR))
 };
-function freshUi(){ return { selectedTripId: null, activeTab: 'itinerary', activeSection: 'trips', lwList: 'noDog' }; }
+function freshUi(){ return { selectedTripId: null, activeTab: 'itinerary', activeSection: 'trips', lwList: 'noDog', filtersOpen: {} }; }
 let UI_BY_LANG = { en: freshUi(), fr: freshUi() };
 let LANG = null;
 let state = null;
@@ -3297,11 +3310,52 @@ function renderHome_FR(){
     ${past.length? `<div class="section-title">Voyages passés</div><div class="trip-grid">${past.map(tileHtml).join('')}</div>`:''}
   `;
 }
+function tripHasData(t){
+  if(t.destination) return true;
+  if(t.startDate || t.endDate) return true;
+  if(t.travelers) return true;
+  if((t.transportModes||[]).length) return true;
+  if(t.routeType && t.routeType!=='roundtrip') return true;
+  if(t.cabinClass && t.cabinClass!=='economy') return true;
+  if((t.accommodationPrefs||[]).length) return true;
+  if((t.accessibilityNeeds||[]).length) return true;
+  if(t.petFriendly) return true;
+  if(t.driveMinHours || t.driveMaxHours) return true;
+  if((t.days||[]).some(d=>(d.activities||[]).some(a=>a.time||a.title||a.location||a.notes))) return true;
+  if((t.waypoints||[]).some(w=>w.location||w.notes)) return true;
+  if((t.bookings||[]).some(b=>b.title||b.confirmation)) return true;
+  if(t.notes && t.notes.trim()) return true;
+  return false;
+}
+function isFiltersOpen(t){
+  if(!ui.filtersOpen) ui.filtersOpen = {};
+  if(ui.filtersOpen[t.id]===undefined) ui.filtersOpen[t.id] = !tripHasData(t);
+  return ui.filtersOpen[t.id];
+}
+function toggleTripFilters(tripId){
+  if(!ui.filtersOpen) ui.filtersOpen = {};
+  ui.filtersOpen[tripId] = !ui.filtersOpen[tripId];
+  render();
+}
+function filtersSummaryText(t, petLabel, noneLabel){
+  const parts = [];
+  const tm = (t.transportModes||[]).map(v=>{ const m=TRANSPORT_MODES.find(x=>x.v===v); return m?m.label:''; }).filter(Boolean);
+  if(tm.length) parts.push(tm.join(', '));
+  if(t.cabinClass && t.cabinClass!=='economy'){ const cc=CABIN_CLASSES.find(x=>x.v===t.cabinClass); if(cc) parts.push(cc.label); }
+  const ap = (t.accommodationPrefs||[]).map(v=>{ const a=ACCOMMODATION_TYPES.find(x=>x.v===v); return a?a.label:''; }).filter(Boolean);
+  if(ap.length) parts.push(ap.join(', '));
+  if(t.petFriendly) parts.push(petLabel);
+  const an = (t.accessibilityNeeds||[]).map(v=>{ const a=ACCESSIBILITY_NEEDS.find(x=>x.v===v); return a?a.label:''; }).filter(Boolean);
+  if(an.length) parts.push(an.join(', '));
+  return parts.length ? parts.join(' · ') : noneLabel;
+}
+
 function renderTrip_EN(){
   const t = getTrip(ui.selectedTripId);
   if(!t){ renderHome(); return; }
   const c = document.getElementById('content');
   const st = tripStatus(t);
+  const filtersOpen = isFiltersOpen(t);
 
   c.innerHTML = `
     <div class="trip-header">
@@ -3345,6 +3399,14 @@ function renderTrip_EN(){
       ${(!t.flexibleDates && (st.label==='Upcoming' || st.label==='Ongoing')) ? `<div class="field" style="color:var(--primary);font-weight:700">${countdownText(t)}</div>`:''}
     </div>
 
+    <div class="filters-bar">
+      <button type="button" class="filters-bar-toggle" onclick="toggleTripFilters('${t.id}')">
+        ${filtersOpen ? ICONS.chevronUp : ICONS.chevronDown}
+        <span>Preferences &amp; filters</span>
+      </button>
+      ${!filtersOpen ? `<span class="filters-bar-summary">${esc(filtersSummaryText(t, 'Pet-friendly', 'No preferences set yet'))}</span>` : ''}
+    </div>
+    ${filtersOpen ? `
     <div class="transport-row">
       <span class="field-label" style="margin:0 2px 0 0">Transportation</span>
       ${TRANSPORT_MODES.map(m => {
@@ -3413,6 +3475,7 @@ function renderTrip_EN(){
         </button>`;
       }).join('')}
     </div>
+    ` : ''}
 
     <div class="tabs">
       <button class="tab-btn ${ui.activeTab==='itinerary'?'active':''}" onclick="setTab('itinerary')">${ICONS.compass} Itinerary</button>
@@ -3431,6 +3494,7 @@ function renderTrip_FR(){
   if(!t){ renderHome(); return; }
   const c = document.getElementById('content');
   const st = tripStatus(t);
+  const filtersOpen = isFiltersOpen(t);
 
   c.innerHTML = `
     <div class="trip-header">
@@ -3474,6 +3538,14 @@ function renderTrip_FR(){
       ${(!t.flexibleDates && (st.label==='À venir' || st.label==='En cours')) ? `<div class="field" style="color:var(--primary);font-weight:700">${countdownText(t)}</div>`:''}
     </div>
 
+    <div class="filters-bar">
+      <button type="button" class="filters-bar-toggle" onclick="toggleTripFilters('${t.id}')">
+        ${filtersOpen ? ICONS.chevronUp : ICONS.chevronDown}
+        <span>Préférences et filtres</span>
+      </button>
+      ${!filtersOpen ? `<span class="filters-bar-summary">${esc(filtersSummaryText(t, 'Accepte les animaux', 'Aucune préférence définie'))}</span>` : ''}
+    </div>
+    ${filtersOpen ? `
     <div class="transport-row">
       <span class="field-label" style="margin:0 2px 0 0">Transport</span>
       ${TRANSPORT_MODES.map(m => {
@@ -3542,6 +3614,7 @@ function renderTrip_FR(){
         </button>`;
       }).join('')}
     </div>
+    ` : ''}
 
     <div class="tabs">
       <button class="tab-btn ${ui.activeTab==='itinerary'?'active':''}" onclick="setTab('itinerary')">${ICONS.compass} Itinéraire</button>
