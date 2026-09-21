@@ -125,10 +125,11 @@
     display:flex;
     align-items:center;
     gap:18px;
-    padding:0 16px;
+    padding:0 104px 0 16px;
     background:var(--panel);
     border:1px solid var(--grid-line);
     border-radius:30px 10px 30px 10px;
+    position:relative;
   }
   .brand-block{ display:flex; flex-direction:column; gap:4px; flex:0 0 auto; }
   .brand{ display:flex; align-items:center; gap:10px; }
@@ -203,14 +204,14 @@
   }
   .search input::placeholder{ color:var(--text-dim); }
   .lang-switch{
-    flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+    position:absolute; top:50%; right:16px; transform:translateY(-50%); display:inline-flex; align-items:center; justify-content:center;
     width:34px; height:31px; border-radius:8px; background:var(--panel-2); border:1px solid var(--grid-line);
     color:var(--text-dim); font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size:13px; font-weight:700; letter-spacing:0.04em; text-decoration:none; text-transform:uppercase;
   }
   .lang-switch:hover{ color:var(--text); border-color:var(--cyan); }
   .theme-switch{
-    flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+    position:absolute; top:50%; right:60px; transform:translateY(-50%); display:inline-flex; align-items:center; justify-content:center;
     width:34px; height:31px; border-radius:8px; background:var(--panel-2); border:1px solid var(--grid-line);
     color:var(--text-dim); font-size:16px; cursor:pointer; padding:0;
   }
@@ -692,7 +693,7 @@
      greeting/date text down to nothing via its min-width:0 ellipsis. Shrink everything
      proportionally first, then drop the least essential piece (stardate) if still tight. */
   @media (max-width: 1180px){
-    .topbar{ gap:10px; padding:0 10px; }
+    .topbar{ gap:10px; padding:0 82px 0 10px; }
     .brand-mark{ width:20px; height:20px; }
     .brand-name{ font-size:18px; }
     .brand-name-edit{ font-size:18px; width:130px; }
@@ -705,14 +706,14 @@
     .clock{ font-size:26px; }
     .search input{ font-size:14px; padding:6px 8px; width:130px; }
     .search button{ font-size:13px; padding:6px 10px; width:70px; }
-    .lang-switch{ width:28px; height:26px; font-size:11px; }
-    .theme-switch{ width:28px; height:26px; font-size:14px; }
+    .lang-switch{ width:28px; height:26px; font-size:11px; right:10px; }
+    .theme-switch{ width:28px; height:26px; font-size:14px; right:46px; }
   }
   @media (max-width: 900px){
     .stardate{ display:none; }
     .subline{ display:none; }
     .subline-short{ display:block; font-size:11px; }
-    .topbar{ gap:5px; padding:0 8px; }
+    .topbar{ gap:5px; padding:0 64px 0 8px; }
     .brand-mark{ width:16px; height:16px; }
     .brand-name{ font-size:14px; }
     .brand-city-select{ font-size:10px; margin-left:22px; }
@@ -722,8 +723,8 @@
     .search{ gap:4px; }
     .search input{ width:76px; padding:5px 6px; }
     .search button{ padding:5px 7px; font-size:12px; width:60px; }
-    .lang-switch{ width:22px; height:20px; font-size:9.5px; }
-    .theme-switch{ width:22px; height:20px; font-size:12px; }
+    .lang-switch{ width:22px; height:20px; font-size:9.5px; right:8px; }
+    .theme-switch{ width:22px; height:20px; font-size:12px; right:36px; }
   }
   /* Below ~1020px, even the shrunk single-row layout has too many rigid pieces (brand+city,
      stardate+date, greeting, clock, search, language switch) to fit without either forcing
@@ -731,16 +732,16 @@
      (the 700-980px gap). Wrap into a stable 3-row layout instead — greeting gets a
      full-width row of its own, so it never needs to truncate or scroll. */
   @media (max-width: 1020px){
-    .topbar{ flex-wrap:wrap; row-gap:6px; padding:8px; }
+    .topbar{ flex-wrap:wrap; row-gap:6px; padding:8px; padding-right:82px; }
     .brand-block{ order:1; }
     .stardate-block{ order:2; }
-    .theme-switch{ order:3; margin-left:auto; }
-    .lang-switch{ order:3; }
     .greeting-block{ order:4; flex-basis:100%; }
     .greeting{ font-size:16px; }
     .clock{ order:5; font-size:22px; }
     .search{ order:6; flex:1 1 auto; justify-content:flex-end; }
     .search input{ flex:1 1 auto; min-width:0; width:auto; }
+    .lang-switch{ top:14px; transform:none; }
+    .theme-switch{ top:14px; transform:none; }
   }
 </style>
 </head>
