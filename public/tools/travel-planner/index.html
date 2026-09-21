@@ -487,6 +487,24 @@
   .tt-neigh-row b{color:var(--text-muted);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:1px;}
   .tt-source{font-size:10.5px;color:var(--text-muted);margin-top:16px;font-style:italic;}
 
+  /* ---------- Travel Tools: Around Me ---------- */
+  .am-locate-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .am-or{color:var(--text-muted);font-size:12.5px;}
+  .am-search-input{flex:1;min-width:220px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:13.5px;font-family:inherit;}
+  .am-label{font-size:12px;color:var(--text-muted);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+  .am-label strong{color:var(--text);}
+  .am-section{margin-bottom:20px;}
+  .am-section-title{display:flex;align-items:center;gap:7px;font-weight:700;font-size:13.5px;color:var(--teal);margin-bottom:10px;}
+  .am-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .am-card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px 13px;text-decoration:none;color:inherit;transition:border-color .12s;}
+  .am-card:hover{border-color:var(--teal);}
+  .am-card.am-notable{border-left:3px solid var(--teal);}
+  .am-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;}
+  .am-card-name{font-weight:700;font-size:13px;color:var(--text);}
+  .am-badge{color:var(--teal);flex-shrink:0;}
+  .am-card-addr{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+  .am-card-dist{font-size:11px;color:var(--teal);font-weight:700;margin-top:6px;}
+
   /* ---------- Travel Tools: Quick Research ---------- */
   .tt-qr-form{background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px 18px;margin-bottom:18px;}
   .tt-qr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:12px;}
@@ -644,7 +662,13 @@ const ICONS = {
   dollar: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
   cloud: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a5 5 0 1 1 1.3-9.8A6 6 0 0 1 22 12a4.5 4.5 0 0 1-4.5 7Z"/></svg>',
   shield: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>',
-  search: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
+  search: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+  coffee: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a3 3 0 0 1 0 6h-1"/><path d="M3 8h14v6a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg>',
+  utensils: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7a2 2 0 0 0 4 0V2M5 9v13M16 2s-3 2-3 6 3 4 3 4v10"/></svg>',
+  bag: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1 14H5Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>',
+  palette: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A4.2 4.2 0 0 0 21.5 11c0-5-4.3-9-9.5-9Z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="8" r="1.2"/></svg>',
+  museum: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6M6 10v7M10 10v7M14 10v7M18 10v7"/></svg>',
+  flag: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V3"/><path d="M4 4h13l-2 4 2 4H4"/></svg>'
 };
 const TYPE_ICON = {
   flight: ICONS.plane, hotel: ICONS.bed, car: ICONS.car, train: ICONS.train,
@@ -1602,7 +1626,7 @@ let STATE_BY_LANG = {
   en: JSON.parse(JSON.stringify(SEED_STATE_EN)),
   fr: JSON.parse(JSON.stringify(SEED_STATE_FR))
 };
-function freshUi(){ return { selectedTripId: null, activeTab: 'itinerary', activeSection: 'trips', lwList: 'noDog', filtersOpen: {} }; }
+function freshUi(){ return { selectedTripId: null, activeTab: 'itinerary', activeSection: 'trips', lwList: 'noDog', filtersOpen: {}, aroundMe: null }; }
 let UI_BY_LANG = { en: freshUi(), fr: freshUi() };
 let LANG = null;
 let state = null;
@@ -2434,10 +2458,12 @@ function renderTravelTools_EN(){
         <button class="${tool==='climate'?'active':''}" onclick="setTtTool('climate')">${ICONS.cloud} Climate &amp; Weather</button>
         <button class="${tool==='neighborhoods'?'active':''}" onclick="setTtTool('neighborhoods')">${ICONS.home} Neighborhood Finder</button>
         <button class="${tool==='activities'?'active':''}" onclick="setTtTool('activities')">${ICONS.star} Activity Finder</button>
+        <button class="${tool==='aroundme'?'active':''}" onclick="setTtTool('aroundme')">${ICONS.mapPin} Around Me</button>
         <button class="${tool==='currency'?'active':''}" onclick="setTtTool('currency')">${ICONS.dollar} Currency Converter</button>
         <button class="${tool==='research'?'active':''}" onclick="setTtTool('research')">${ICONS.search} Quick Research</button>
       </div>
-      ${tool==='research' ? quickResearchHtml()
+      ${tool==='aroundme' ? aroundMeHtml()
+        : tool==='research' ? quickResearchHtml()
         : tool==='activities' ? activityFinderHtml()
         : tool==='currency' ? currencyConverterHtml()
         : `<div class="tt-dest-picker"><select onchange="setTtDest(this.value)">${destOptions}</select></div>
@@ -2462,13 +2488,15 @@ function renderTravelTools_FR(){
         <p>Consulte les tendances climatiques — et, une fois près du départ, les prévisions réelles — ainsi qu'un portrait quartier par quartier pour choisir où loger, pour toute destination dans ton planificateur ou ailleurs, juste par curiosité (choisis « Autre » dans le menu déroulant). Ces données sont recherchées par Claude et enregistrées comme instantané (le planificateur lui-même n'a pas de connexion internet en direct), alors demande-moi simplement de rafraîchir tout ce qui semble dépassé.</p>
       </div>
       <div class="tt-toggle">
-        <button class="${tool==='climate'?'active':''}" onclick="setTtTool('climate')">${ICONS.cloud} Climat et météo</button>
+        <button class="${tool==='climate'?'active':''}" onclick="setTtTool('climate')">${ICONS.cloud} Climat et m\u00e9t\u00e9o</button>
         <button class="${tool==='neighborhoods'?'active':''}" onclick="setTtTool('neighborhoods')">${ICONS.home} Quartiers</button>
-        <button class="${tool==='activities'?'active':''}" onclick="setTtTool('activities')">${ICONS.star} Activités</button>
+        <button class="${tool==='activities'?'active':''}" onclick="setTtTool('activities')">${ICONS.star} Activit\u00e9s</button>
+        <button class="${tool==='aroundme'?'active':''}" onclick="setTtTool('aroundme')">${ICONS.mapPin} Autour de moi</button>
         <button class="${tool==='currency'?'active':''}" onclick="setTtTool('currency')">${ICONS.dollar} Convertisseur de devises</button>
         <button class="${tool==='research'?'active':''}" onclick="setTtTool('research')">${ICONS.search} Recherche rapide</button>
       </div>
-      ${tool==='research' ? quickResearchHtml()
+      ${tool==='aroundme' ? aroundMeHtml()
+        : tool==='research' ? quickResearchHtml()
         : tool==='activities' ? activityFinderHtml()
         : tool==='currency' ? currencyConverterHtml()
         : `<div class="tt-dest-picker"><select onchange="setTtDest(this.value)">${destOptions}</select></div>
@@ -3034,6 +3062,156 @@ async function runAiResearch(reqId, kind){
     // No backend configured, or offline -- request stays pending, no user-facing error.
   }
 }
+/* ---------------- Around Me: live nearby places via OpenStreetMap (free, no key) ----------------
+   Uses the phone/browser's own location (or a typed place as fallback) plus a Netlify Function
+   that queries OpenStreetMap's Nominatim + Overpass APIs -- real, current places, no API key,
+   no cost. Nothing here is saved to a trip; ask again any time you've moved. */
+const AROUND_ME_ENDPOINT = '/api/around-me';
+const AM_CATEGORIES = [
+  { k:'cafes', icon:'coffee' }, { k:'restaurants', icon:'utensils' }, { k:'shops', icon:'bag' },
+  { k:'galleries', icon:'palette' }, { k:'museums', icon:'museum' }, { k:'landmarks', icon:'flag' }
+];
+const AM_LABELS_EN = { cafes:'Cafes', restaurants:'Restaurants', shops:'Shops', galleries:'Galleries', museums:'Museums', landmarks:'Landmarks & sights' };
+const AM_LABELS_FR = { cafes:'Cafés', restaurants:'Restaurants', shops:'Boutiques', galleries:'Galeries', museums:'Musées', landmarks:'Sites et monuments' };
+function freshAroundMe(){ return { status:'idle', errorMsg:'', label:'', lat:null, lon:null, radius:1200, categories:null, activeFilters:{cafes:true,restaurants:true,shops:true,galleries:true,museums:true,landmarks:true}, askedAt:'' }; }
+function ensureAroundMe(){ if(!ui.aroundMe) ui.aroundMe = freshAroundMe(); return ui.aroundMe; }
+function toggleAmFilter(cat){
+  const am = ensureAroundMe();
+  am.activeFilters[cat] = !am.activeFilters[cat];
+  render();
+}
+function runAroundMeHere(){
+  const am = ensureAroundMe();
+  if(!navigator.geolocation){
+    am.status='error'; am.errorMsg = LANG==='fr' ? "La g\u00e9olocalisation n'est pas disponible sur cet appareil/navigateur." : "Geolocation isn't available on this device/browser.";
+    render(); return;
+  }
+  am.status='loading'; am.errorMsg=''; render();
+  navigator.geolocation.getCurrentPosition(
+    pos => fetchAroundMe({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+    err => {
+      const am2 = ensureAroundMe();
+      am2.status='error';
+      am2.errorMsg = err && err.code===1
+        ? (LANG==='fr' ? "Localisation refus\u00e9e -- autorise l'acc\u00e8s \u00e0 la position dans les r\u00e9glages de ton navigateur, ou cherche un endroit ci-dessous \u00e0 la place." : "Location permission denied -- allow location access in your browser settings, or search a place below instead.")
+        : (LANG==='fr' ? "Impossible d'obtenir ta position. R\u00e9essaie, ou cherche un endroit ci-dessous." : "Couldn't get your location. Try again, or search a place below instead.");
+      render();
+    },
+    { enableHighAccuracy:true, timeout:12000, maximumAge:60000 }
+  );
+}
+function runAroundMeSearch(){
+  const el = document.getElementById('amSearchInput');
+  const q = el ? el.value.trim() : '';
+  if(!q) return;
+  const am = ensureAroundMe();
+  am.status='loading'; am.errorMsg=''; render();
+  fetchAroundMe({ query: q });
+}
+async function fetchAroundMe(payload){
+  const am = ensureAroundMe();
+  try {
+    const resp = await fetch(AROUND_ME_ENDPOINT, {
+      method:'POST', headers:{ 'content-type':'application/json' },
+      body: JSON.stringify(Object.assign({ radius: am.radius, lang: LANG }, payload))
+    });
+    const data = await resp.json().catch(()=>null);
+    if(!resp.ok || !data || data.error){
+      am.status='error';
+      am.errorMsg = LANG==='fr'
+        ? "Recherche indisponible pour l'instant (la fonction en direct n'est peut-\u00eatre pas encore d\u00e9ploy\u00e9e, ou OpenStreetMap est occup\u00e9). R\u00e9essaie dans un moment."
+        : "Live lookup isn't available right now (the live function may not be deployed yet, or OpenStreetMap is busy). Try again in a moment.";
+      render(); return;
+    }
+    am.status='ready';
+    am.label = data.label || '';
+    am.lat = data.lat; am.lon = data.lon;
+    am.categories = data.categories || {};
+    am.askedAt = new Date().toISOString();
+    render();
+  } catch(e){
+    am.status='error';
+    am.errorMsg = LANG==='fr' ? "Hors ligne, ou la fonction en direct n'est pas d\u00e9ploy\u00e9e." : "Offline, or the live function isn't deployed.";
+    render();
+  }
+}
+function amPlaceCard(p){
+  const dist = p.distanceM!=null ? (p.distanceM<1000 ? Math.round(p.distanceM/10)*10+' m' : (p.distanceM/1000).toFixed(1)+' km') : '';
+  const mapsUrl = p.lat && p.lon ? `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((p.name||'')+' '+(p.address||''))}`;
+  return `<a class="am-card ${p.notable?'am-notable':''}" href="${mapsUrl}" target="_blank" rel="noopener">
+    <div class="am-card-top"><span class="am-card-name">${esc(p.name)}</span>${p.notable?`<span class="am-badge">${ICONS.star}</span>`:''}</div>
+    ${p.address ? `<div class="am-card-addr">${esc(p.address)}</div>` : ''}
+    <div class="am-card-dist">${dist}</div>
+  </a>`;
+}
+function aroundMeHtml_EN(){
+  const am = ensureAroundMe();
+  const hasResults = am.status==='ready' && am.categories;
+  let body = '';
+  if(am.status==='loading'){
+    body = `<div class="tt-empty">Looking around...</div>`;
+  } else if(am.status==='error'){
+    body = `<div class="tt-empty">${esc(am.errorMsg)}</div>`;
+  } else if(hasResults){
+    const chips = AM_CATEGORIES.map(c => `<button type="button" class="transport-chip ${am.activeFilters[c.k]?'active':''}" onclick="toggleAmFilter('${c.k}')"><span class="chip-box">${am.activeFilters[c.k]?ICONS.check:''}</span>${ICONS[c.icon]} ${AM_LABELS_EN[c.k]}</button>`).join('');
+    const sections = AM_CATEGORIES.filter(c=>am.activeFilters[c.k]).map(c => {
+      const items = (am.categories[c.k]||[]);
+      if(!items.length) return '';
+      return `<div class="am-section"><div class="am-section-title">${ICONS[c.icon]} ${AM_LABELS_EN[c.k]}</div><div class="am-grid">${items.map(amPlaceCard).join('')}</div></div>`;
+    }).join('');
+    body = `
+      <div class="transport-row" style="margin-bottom:14px">${chips}</div>
+      ${sections || `<div class="tt-empty">Nothing found in range for the selected categories -- try widening the categories above, or search a different spot below.</div>`}
+    `;
+  } else {
+    body = `<div class="tt-empty">Tap <strong>Use my location</strong> below, or search a place, to see what's notable nearby.</div>`;
+  }
+  return `
+    <div class="am-locate-row">
+      <button class="btn btn-primary" onclick="runAroundMeHere()">${ICONS.mapPin} Use my location</button>
+      <span class="am-or">or</span>
+      <input id="amSearchInput" class="am-search-input" placeholder="Search a place instead (e.g. Le Marais, Paris)" onkeydown="if(event.key==='Enter') runAroundMeSearch()">
+      <button class="btn" onclick="runAroundMeSearch()">${ICONS.search} Search</button>
+    </div>
+    ${am.label ? `<div class="am-label">${ICONS.mapPin} Near <strong>${esc(am.label)}</strong> &middot; live from OpenStreetMap, refreshed just now</div>` : ''}
+    ${body}
+  `;
+}
+function aroundMeHtml_FR(){
+  const am = ensureAroundMe();
+  const hasResults = am.status==='ready' && am.categories;
+  let body = '';
+  if(am.status==='loading'){
+    body = `<div class="tt-empty">Recherche en cours...</div>`;
+  } else if(am.status==='error'){
+    body = `<div class="tt-empty">${esc(am.errorMsg)}</div>`;
+  } else if(hasResults){
+    const chips = AM_CATEGORIES.map(c => `<button type="button" class="transport-chip ${am.activeFilters[c.k]?'active':''}" onclick="toggleAmFilter('${c.k}')"><span class="chip-box">${am.activeFilters[c.k]?ICONS.check:''}</span>${ICONS[c.icon]} ${AM_LABELS_FR[c.k]}</button>`).join('');
+    const sections = AM_CATEGORIES.filter(c=>am.activeFilters[c.k]).map(c => {
+      const items = (am.categories[c.k]||[]);
+      if(!items.length) return '';
+      return `<div class="am-section"><div class="am-section-title">${ICONS[c.icon]} ${AM_LABELS_FR[c.k]}</div><div class="am-grid">${items.map(amPlaceCard).join('')}</div></div>`;
+    }).join('');
+    body = `
+      <div class="transport-row" style="margin-bottom:14px">${chips}</div>
+      ${sections || `<div class="tt-empty">Rien trouv\u00e9 \u00e0 proximit\u00e9 pour ces cat\u00e9gories -- \u00e9largis les cat\u00e9gories ci-dessus, ou cherche un autre endroit plus bas.</div>`}
+    `;
+  } else {
+    body = `<div class="tt-empty">Touche <strong>Utiliser ma position</strong> ci-dessous, ou cherche un endroit, pour voir ce qu'il y a de notable autour.</div>`;
+  }
+  return `
+    <div class="am-locate-row">
+      <button class="btn btn-primary" onclick="runAroundMeHere()">${ICONS.mapPin} Utiliser ma position</button>
+      <span class="am-or">ou</span>
+      <input id="amSearchInput" class="am-search-input" placeholder="Cherche un endroit \u00e0 la place (ex. Le Marais, Paris)" onkeydown="if(event.key==='Enter') runAroundMeSearch()">
+      <button class="btn" onclick="runAroundMeSearch()">${ICONS.search} Chercher</button>
+    </div>
+    ${am.label ? `<div class="am-label">${ICONS.mapPin} Pr\u00e8s de <strong>${esc(am.label)}</strong> &middot; en direct depuis OpenStreetMap, actualis\u00e9 \u00e0 l'instant</div>` : ''}
+    ${body}
+  `;
+}
+function aroundMeHtml(){ return (LANG==='fr' ? aroundMeHtml_FR : aroundMeHtml_EN).apply(null, arguments); }
+
 function quickResearchHtml_EN(){
   const list = (state.quickResearch||[]).filter(r=>!QR_OTHER_TAB_CATEGORIES.includes(r.category));
   const sorted = [...list].sort((a,b)=>(b.askedAt||'').localeCompare(a.askedAt||''));
