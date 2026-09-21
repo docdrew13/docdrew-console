@@ -749,8 +749,7 @@
             <div class="globe-legend">
               <span><i class="legend-dot haze"></i>Couverture nuageuse</span>
               <span><i class="legend-dot precip-grad"></i>Radar en direct (léger→fort)</span>
-              <span><i class="legend-dot amber"></i>Origine de la nouvelle</span>
-              <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montréal</span></span>
+                            <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montréal</span></span>
               <span><i class="legend-dot frost"></i>SSI</span>
             </div>
             <div class="globe-hint">glisser pour pivoter et incliner · cliquer sur un repère</div>
@@ -3048,8 +3047,30 @@
     var okCount = results.filter(Boolean).length;
     if(okCount < results.length * 0.9) return false;
 
+    // GIBS can return a fully-successful HTTP 200 for a tile that is really just an empty/
+    // no-data placeholder (solid black) — this happens for "today" specifically, early in the
+    // UTC day before enough real satellite passes have landed in the "best" composite yet. The
+    // per-tile load-succeeded check above doesn't catch this (the placeholder loads fine, it's
+    // just content-empty), so a mostly-black "success" used to get accepted as today's mosaic
+    // and the real, fully-backfilled imagery from a day or two back was never tried. Measured
+    // against the real endpoint (2026-09-21): a fully-backfilled day's mosaic consistently came
+    // back ~70% lit (a full 5-tile-wide equirectangular mosaic spans all 360° of longitude, so
+    // it always includes whichever half of the globe is currently lit, plus night/pole regions
+    // that are legitimately dark even when complete); an in-progress "today" mosaic came back
+    // at ~29% lit — a wide, reliable gap. Sample a sparse grid of pixels across the assembled
+    // mosaic and require at least half of them to be lit; otherwise treat this date as not
+    // actually ready yet and let the caller fall back a day, same as an outright tile failure.
+    var imgData = offCtx.getImageData(0, 0, w, h);
+    var buf = imgData.data;
+    var litSampled = 0, litCount = 0;
+    for(var bp = 0; bp < buf.length; bp += 4 * 211){
+      litSampled++;
+      if(buf[bp] > 12 || buf[bp + 1] > 12 || buf[bp + 2] > 12) litCount++;
+    }
+    if(litSampled > 0 && (litCount / litSampled) < 0.5) return false;
+
     EARTH.canvas = offCanvas;
-    EARTH.data = offCtx.getImageData(0, 0, w, h);
+    EARTH.data = imgData;
     EARTH.w = w; EARTH.h = h;
     EARTH.loaded = true;
     EARTH.dateUsed = dateStr;
@@ -3434,25 +3455,12 @@
     // value (that globe animated each marker type off its own local pulse var).
     var pulse = 0.5 + 0.5 * Math.sin(Date.now() / 500);
 
-    // news star markers — moved here from the retired globe
-    newsMarkers.forEach(function(nm){
-      var p = project2(nm.lat, nm.lon, G2.rotation, G2.tilt);
-      if(!p) return;
-      var scale = 0.6 + p.z * 0.4;
-      var baseR = 3.4 * scale;
-      ctx2.beginPath();
-      ctx2.arc(p.x, p.y, baseR + pulse*3.2*scale, 0, Math.PI*2);
-      ctx2.strokeStyle = "rgba(255,169,77," + (0.55*scale) + ")";
-      ctx2.lineWidth = 1.3;
-      ctx2.stroke();
-
-      ctx2.beginPath();
-      ctx2.arc(p.x, p.y, baseR, 0, Math.PI*2);
-      ctx2.fillStyle = "rgba(255,169,77," + (0.95*scale) + ")";
-      ctx2.fill();
-
-      renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "news", ref: nm });
-    });
+    // News dateline dots removed from the globe display per request (2026-09-21) — the
+    // underlying newsMarkers data/aggregation (populateNewsMarkers, handleMarkerClick's
+    // hit.type==="news" branch, and the home/location "related headlines" lookups that filter
+    // by newsMarkers) is left in place and still works; this just stops drawing/hit-registering
+    // a marker for each one on the globe canvas. Headlines are still reachable from the
+    // Newswire list itself.
 
     // home marker — Montreal
     (function(){
