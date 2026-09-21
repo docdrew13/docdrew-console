@@ -3099,22 +3099,6 @@
     return [d[idx], d[idx + 1], d[idx + 2]];
   }
 
-  // Approximate subsolar point (where the sun is directly overhead right now), so the globe can
-  // shade a real day/night terminator across the photographic texture. This is independent of
-  // G2.rotation — that's just the artistic auto-spin used to view the globe, not real Earth spin —
-  // so the terminator is computed against true lat/lon and simply shows up wherever it lands on
-  // screen this frame. Equation-of-time is ignored: within a few degrees, plenty for a visual.
-  function subsolarPoint(){
-    var now = new Date();
-    var startOfYear = Date.UTC(now.getUTCFullYear(), 0, 1);
-    var dayOfYear = Math.floor((now.getTime() - startOfYear) / 86400000);
-    var decl = -23.44 * Math.cos((360 / 365) * (dayOfYear + 10) * Math.PI / 180);
-    var utcHours = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
-    var lon = -(utcHours - 12) * 15;
-    lon = ((lon + 180) % 360 + 360) % 360 - 180;
-    return { lat: decl, lon: lon };
-  }
-
   var RADAR = { canvas: null, data: null, size: 0, zoom: 2, loaded: false, frameTime: 0 };
 
   async function loadRadarMosaic(){
@@ -3217,12 +3201,6 @@
     var buf = earthBufImg.data;
     var half = n / 2;
 
-    var sun = subsolarPoint();
-    var sLatRad = sun.lat * Math.PI / 180, sLonRad = sun.lon * Math.PI / 180;
-    var sx = Math.cos(sLatRad) * Math.sin(sLonRad);
-    var sy = Math.sin(sLatRad);
-    var sz = Math.cos(sLatRad) * Math.cos(sLonRad);
-
     for(var by = 0; by < n; by++){
       var ny = 1 - (by + 0.5) / half;
       for(var bx = 0; bx < n; bx++){
@@ -3243,20 +3221,15 @@
         var rc = sampleEarth(lat, lon);
         if(!rc){ buf[idx4 + 3] = 0; continue; }
 
-        // real day/night terminator: illumination from the true subsolar angle at this exact
-        // (lat, lon) — independent of the artistic G2.rotation/tilt used only to spin the view.
-        var latRad = lat * Math.PI / 180, lonRad = lon * Math.PI / 180;
-        var px3 = Math.cos(latRad) * Math.sin(lonRad);
-        var py3 = Math.sin(latRad);
-        var pz3 = Math.cos(latRad) * Math.cos(lonRad);
-        var dot = px3*sx + py3*sy + pz3*sz;
-        var light = Math.min(1.05, 0.22 + 0.85 * Math.max(0, dot)); // ambient floor so night isn't pure black
-
-        var zScale = 0.55 + z3t * 0.45; // same limb-darkening every other layer here uses
-        var shade = light * zScale;
-        buf[idx4] = Math.min(255, rc[0] * shade);
-        buf[idx4 + 1] = Math.min(255, rc[1] * shade);
-        buf[idx4 + 2] = Math.min(255, rc[2] * shade);
+        // Day/night terminator shading was removed per request (2026-09-21) — it darkened the
+        // night-side half of the globe so much that the imagery (including clouds) was unreadable
+        // there. The globe now always renders at full brightness everywhere; only the same
+        // limb-darkening every other layer here uses (zScale) is kept, purely for the 3D-sphere
+        // look near the edge of the disc.
+        var zScale = 0.55 + z3t * 0.45;
+        buf[idx4] = Math.min(255, rc[0] * zScale);
+        buf[idx4 + 1] = Math.min(255, rc[1] * zScale);
+        buf[idx4 + 2] = Math.min(255, rc[2] * zScale);
         buf[idx4 + 3] = 255;
       }
     }
