@@ -1172,6 +1172,39 @@
   }
 
   /* ============================================================
+     CLOUD SYNC — small cross-device sync for Tasks / Notes / Groceries,
+     backed by a tiny Netlify Blobs API (netlify/functions/sync.mts).
+     localStorage stays the instant-paint local cache; on load, the
+     server copy is pulled and -- if non-empty -- adopted as the source
+     of truth (so "add on the computer, see it on the phone" works);
+     if the server is still empty (first run), the existing local list
+     is pushed up to seed it instead of being wiped. After that, every
+     local write is also pushed to the server.
+  ============================================================ */
+  var SYNC_OWNER = "main";
+  function syncPull(collection){
+    return getJSON("/api/sync?collection=" + collection + "&owner=" + SYNC_OWNER).catch(function(){ return null; });
+  }
+  function syncPush(collection, data){
+    fetch("/api/sync?collection=" + collection + "&owner=" + SYNC_OWNER, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(data)
+    }).catch(function(){ /* offline, or sync endpoint unreachable -- local copy is still saved */ });
+  }
+  function syncBootstrap(collection, getLocal, setLocal, rerender){
+    syncPull(collection).then(function(remote){
+      if(!Array.isArray(remote)) return;
+      if(remote.length > 0){
+        setLocal(remote);
+        rerender();
+      } else if(getLocal().length > 0){
+        syncPush(collection, getLocal());
+      }
+    });
+  }
+
+  /* ============================================================
      CLOCK / STARDATE
   ============================================================ */
   function updateClock(){
@@ -2559,7 +2592,7 @@
         '<div class="log-text">' + escapeHtml(entry.text) + "</div>";
       row.querySelector(".log-del").addEventListener("click", function(){
         captainsLog = captainsLog.filter(function(x){ return x.id !== entry.id; });
-        writeLS(LS.captainsLog, captainsLog);
+        writeLS(LS.captainsLog, captainsLog); syncPush("log", captainsLog);
         renderLog();
       });
       logBody.appendChild(row);
@@ -2572,7 +2605,7 @@
       var text = input.value.trim();
       if(!text) return;
       captainsLog.push({ id: "log" + Date.now(), text: text, ts: new Date().toISOString() });
-      writeLS(LS.captainsLog, captainsLog);
+      writeLS(LS.captainsLog, captainsLog); syncPush("log", captainsLog);
       renderLog();
     }
     $("log-add-btn").addEventListener("click", addEntry);
@@ -3671,11 +3704,11 @@
       var row = el("div", "todo-row" + (t.done ? " done" : ""));
       row.innerHTML = '<input type="checkbox" ' + (t.done ? "checked" : "") + '><span class="todo-text">' + escapeHtml(t.text) + '</span><button type="button" class="todo-del">✕</button>';
       row.querySelector("input").addEventListener("change", function(){
-        t.done = !t.done; writeLS(LS.todos, todos); renderTodos();
+        t.done = !t.done; writeLS(LS.todos, todos); syncPush("todos", todos); renderTodos();
       });
       row.querySelector(".todo-del").addEventListener("click", function(){
         todos = todos.filter(function(x){ return x.id !== t.id; });
-        writeLS(LS.todos, todos); renderTodos();
+        writeLS(LS.todos, todos); syncPush("todos", todos); renderTodos();
       });
       todoBody.appendChild(row);
     });
@@ -3687,7 +3720,7 @@
       var text = input.value.trim();
       if(!text) return;
       todos.push({ id: "t" + Date.now(), text: text, done: false });
-      writeLS(LS.todos, todos);
+      writeLS(LS.todos, todos); syncPush("todos", todos);
       renderTodos();
     }
     $("todo-add-btn").addEventListener("click", addTodo);
@@ -3768,12 +3801,12 @@
           row.innerHTML = '<input type="checkbox"><span class="grocery-text">' + escapeHtml(g.text) + '</span><button type="button" class="grocery-del">✕</button>';
           row.querySelector("input").addEventListener("change", function(){
             groceries = groceries.filter(function(x){ return x.id !== g.id; });
-            writeLS(LS.groceries, groceries);
+            writeLS(LS.groceries, groceries); syncPush("groceries", groceries);
             renderGroceries();
           });
           row.querySelector(".grocery-del").addEventListener("click", function(){
             groceries = groceries.filter(function(x){ return x.id !== g.id; });
-            writeLS(LS.groceries, groceries);
+            writeLS(LS.groceries, groceries); syncPush("groceries", groceries);
             renderGroceries();
           });
           groceryBody.appendChild(row);
@@ -3788,7 +3821,7 @@
       var text = input.value.trim();
       if(!text) return;
       groceries.push({ id: "g" + Date.now(), text: text, category: categorizeGrocery(text) });
-      writeLS(LS.groceries, groceries);
+      writeLS(LS.groceries, groceries); syncPush("groceries", groceries);
       renderGroceries();
     }
     $("grocery-add-btn").addEventListener("click", addGrocery);
@@ -3840,6 +3873,9 @@
     renderTodos();
     renderGroceries();
     renderLog();
+    syncBootstrap("todos", function(){ return todos; }, function(v){ todos = v; writeLS(LS.todos, todos); }, renderTodos);
+    syncBootstrap("groceries", function(){ return groceries; }, function(v){ groceries = v; writeLS(LS.groceries, groceries); }, renderGroceries);
+    syncBootstrap("log", function(){ return captainsLog; }, function(v){ captainsLog = v; writeLS(LS.captainsLog, captainsLog); }, renderLog);
     renderSkyWatch(null);
 
     resizeCanvas2();
