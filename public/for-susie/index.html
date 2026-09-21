@@ -3120,6 +3120,128 @@
 
   var RADAR = { canvas: null, data: null, size: 0, zoom: 2, loaded: false, frameTime: 0 };
 
+  // Real-time cloud layer, added 2026-09-21 per request: the photoreal Earth mosaic above
+  // only refreshes once a day and (now that day/night shading is gone) doesn't read as "clouds
+  // clearly visible everywhere" so much as "whatever clouds happened to be there when that day's
+  // satellite composite was stitched." This is a genuinely separate, more-frequently-refreshed
+  // layer: OpenWeatherMap's global cloud-cover tiles, proxied through /api/clouds (see
+  // netlify/functions/clouds.mts) so the API key never reaches the page source. Same rasterize-
+  // a-small-offscreen-buffer-then-drawImage technique as renderRadarLayer()/renderTerrainLayer()
+  // just above, and the same Web Mercator tile scheme/sampling math as RADAR/sampleRadar() below.
+  var CLOUDS = { canvas: null, data: null, size: 0, zoom: 2, loaded: false };
+
+  async function loadCloudMosaic(){
+    try{
+      var zoom = CLOUDS.zoom, tilesPerSide = Math.pow(2, zoom), tileSize = 256;
+      var mosaicSize = tilesPerSide * tileSize;
+      var offCanvas = document.createElement("canvas");
+      offCanvas.width = mosaicSize; offCanvas.height = mosaicSize;
+      var offCtx = offCanvas.getContext("2d");
+
+      function loadTile(tx, ty){
+        return new Promise(function(resolve){
+          var img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = function(){ offCtx.drawImage(img, tx * tileSize, ty * tileSize); resolve(true); };
+          img.onerror = function(){ resolve(false); }; // e.g. key not activated yet, or a no-coverage tile
+          img.src = "/api/clouds?z=" + zoom + "&x=" + tx + "&y=" + ty;
+        });
+      }
+
+      var loads = [];
+      for(var tx = 0; tx < tilesPerSide; tx++){
+        for(var ty = 0; ty < tilesPerSide; ty++){
+          loads.push(loadTile(tx, ty));
+        }
+      }
+      var results = await Promise.all(loads);
+      if(!results.some(Boolean)) return; // every tile failed — keep whatever mosaic we already had
+
+      CLOUDS.canvas = offCanvas;
+      CLOUDS.data = offCtx.getImageData(0, 0, mosaicSize, mosaicSize);
+      CLOUDS.size = mosaicSize;
+      CLOUDS.loaded = true;
+    }catch(err){
+      // a failed refresh keeps showing the last mosaic rather than blanking the cloud layer
+    }
+  }
+
+  // Same Web Mercator math as sampleRadar() below — converts a lat/lon into a pixel inside the
+  // stitched cloud mosaic.
+  function sampleClouds(lat, lon){
+    if(!CLOUDS.loaded || !CLOUDS.data) return null;
+    var lonNorm = ((lon + 180) % 360 + 360) % 360;
+    var xFrac = lonNorm / 360;
+    var siny = Math.max(-0.9999, Math.min(0.9999, Math.sin(lat * Math.PI / 180)));
+    var yFrac = 0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI);
+    if(yFrac < 0 || yFrac > 1) return null;
+    var px = Math.min(CLOUDS.size - 1, Math.floor(xFrac * CLOUDS.size));
+    var py = Math.min(CLOUDS.size - 1, Math.floor(yFrac * CLOUDS.size));
+    var idx = (py * CLOUDS.size + px) * 4;
+    var d = CLOUDS.data.data;
+    var a = d[idx + 3];
+    if(a < 8) return null; // effectively transparent — clear sky here
+    return [d[idx], d[idx + 1], d[idx + 2], a / 255];
+  }
+
+  var cloudBuf = document.createElement("canvas");
+  var cloudBufCtx = cloudBuf.getContext("2d");
+  var cloudBufImg = null;
+  var cloudBufN = 0;
+
+  // Rasterizes the cloud mosaic onto a small offscreen buffer shaped like the globe's disc,
+  // same technique as renderTerrainLayer()/renderRadarLayer(). Deliberately has NO day/night
+  // component (unlike the old terrain-layer shading, now removed entirely) and no dependence on
+  // EARTH's freshness — clouds render at consistent visibility everywhere on the globe, refreshed
+  // on their own faster interval (see setInterval(loadCloudMosaic, ...) in init()).
+  function renderCloudLayer(){
+    if(!CLOUDS.loaded || !CLOUDS.data) return;
+    var n = Math.max(90, Math.min(220, Math.round(G2.radius * 1.15)));
+    if(n !== cloudBufN || !cloudBufImg){
+      cloudBuf.width = n; cloudBuf.height = n;
+      cloudBufImg = cloudBufCtx.createImageData(n, n);
+      cloudBufN = n;
+    }
+
+    var tiltRad = G2.tilt * Math.PI / 180;
+    var ct = Math.cos(tiltRad), st = Math.sin(tiltRad);
+    var rotationDeg = G2.rotation;
+    var buf = cloudBufImg.data;
+    var half = n / 2;
+
+    for(var by = 0; by < n; by++){
+      var ny = 1 - (by + 0.5) / half;
+      for(var bx = 0; bx < n; bx++){
+        var idx4 = (by * n + bx) * 4;
+        var nx = (bx + 0.5) / half - 1;
+        var r2 = nx * nx + ny * ny;
+        if(r2 > 1){ buf[idx4 + 3] = 0; continue; }
+
+        var x3 = nx, y3t = ny, z3t = Math.sqrt(Math.max(0, 1 - r2));
+        var y3 = y3t * ct + z3t * st;
+        var z3 = -y3t * st + z3t * ct;
+        var lat = Math.asin(Math.max(-1, Math.min(1, y3))) * 180 / Math.PI;
+        var lon = Math.atan2(x3, z3) * 180 / Math.PI - rotationDeg;
+        lon = ((lon + 180) % 360 + 360) % 360 - 180;
+
+        var rc = sampleClouds(lat, lon);
+        if(!rc){ buf[idx4 + 3] = 0; continue; }
+        buf[idx4] = rc[0]; buf[idx4 + 1] = rc[1]; buf[idx4 + 2] = rc[2];
+        // same edge-of-disc limb darkening every other layer here uses, and a capped overall
+        // opacity so clouds read as a translucent layer over the land/ocean beneath rather than
+        // a flat coat of paint.
+        var zScale = 0.55 + z3t * 0.45;
+        buf[idx4 + 3] = Math.round(Math.min(255, rc[3] * 200 * zScale));
+      }
+    }
+
+    cloudBufCtx.putImageData(cloudBufImg, 0, 0);
+    ctx2.save();
+    ctx2.globalAlpha = 0.85;
+    ctx2.drawImage(cloudBuf, G2.cx - G2.radius, G2.cy - G2.radius, G2.radius * 2, G2.radius * 2);
+    ctx2.restore();
+  }
+
   async function loadRadarMosaic(){
     try{
       var meta = await getJSON("https://api.rainviewer.com/public/weather-maps.json");
@@ -3363,6 +3485,7 @@
     }
 
     renderTerrainLayer();
+    renderCloudLayer();
 
     ctx2.save();
     ctx2.beginPath();
@@ -3892,6 +4015,7 @@
     loadWeatherGrid();
     loadEarthMosaic();
     loadRadarMosaic();
+    loadCloudMosaic();
     loadPodcasts();
     loadAurora();
     loadBromont();
@@ -3906,6 +4030,7 @@
     setInterval(loadWeatherGrid, 600000);
     setInterval(loadEarthMosaic, 10800000);
     setInterval(loadRadarMosaic, 600000);
+    setInterval(loadCloudMosaic, 900000);
     setInterval(loadPodcasts, 1800000);
     setInterval(loadAurora, 900000);
     setInterval(loadBromont, 900000);
