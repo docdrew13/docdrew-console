@@ -3238,6 +3238,113 @@
   // globe sample point looks up its real radar color out of that mosaic via the standard Web
   // Mercator projection. This is genuine radar data, not an approximation, which is why it reads
   // as smooth colored regions instead of scattered dots once painted with enough overlap below.
+  // Real photographic Earth imagery — NASA GIBS VIIRS "Corrected Reflectance" true-color daily
+  // composite (EPSG:4326, so tiles already line up with plain lat/lon — no Mercator unwarp
+  // needed here the way the radar mosaic below needs one). This is an actual same-day satellite
+  // picture of the planet, clouds included, refreshed a few times a day — it replaces both the
+  // old flat-gradient sphere + dot-drawn coastlines AND the fake noise-driven "cloud" texture
+  // with one real image. Rain/storms stay a separate live layer (see RADAR below) so the
+  // "pixels" read as a distinct weather-radar accent on top of the photoreal globe+clouds.
+  var EARTH = { canvas: null, data: null, w: 0, h: 0, loaded: false, dateUsed: null };
+  var EARTH_TILE_ZOOM = 2;
+  // GIBS's EPSG:4326 tile grid does NOT simply double as 2^(z+1) x 2^z the way a normal slippy
+  // map does — confirmed against the real WMTSCapabilities.xml for the "250m" TileMatrixSet
+  // (levels 0-2 are irregular: 2x1, 3x2, 5x3; it only starts doubling cleanly from level 3
+  // onward: 10x5, 20x10, ...). Guessing 8x4 for level 2 silently requested tiles that don't
+  // exist (every column/row past 5x3), which is why the globe showed no photo at all — every
+  // fetch for those out-of-range tiles 404s. Hardcode the real per-level grid instead of a formula.
+  var EARTH_TILE_MATRIX = { 0:{cols:2,rows:1}, 1:{cols:3,rows:2}, 2:{cols:5,rows:3}, 3:{cols:10,rows:5}, 4:{cols:20,rows:10} };
+
+  function ymd(d){
+    return d.getUTCFullYear() + "-" + String(d.getUTCMonth()+1).padStart(2,"0") + "-" + String(d.getUTCDate()).padStart(2,"0");
+  }
+
+  async function loadEarthMosaicForDate(dateStr){
+    var grid = EARTH_TILE_MATRIX[EARTH_TILE_ZOOM];
+    var cols = grid.cols, rows = grid.rows, tileSize = 512;
+    var w = cols * tileSize, h = rows * tileSize;
+    var offCanvas = document.createElement("canvas");
+    offCanvas.width = w; offCanvas.height = h;
+    var offCtx = offCanvas.getContext("2d");
+
+    function loadTile(row, col){
+      return new Promise(function(resolve){
+        var img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function(){ offCtx.drawImage(img, col * tileSize, row * tileSize); resolve(true); };
+        img.onerror = function(){ resolve(false); }; // e.g. a tile GIBS hasn't backfilled yet — leave transparent
+        img.src = "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/"
+          + dateStr + "/250m/" + EARTH_TILE_ZOOM + "/" + row + "/" + col + ".jpg";
+      });
+    }
+
+    var loads = [];
+    for(var row = 0; row < rows; row++){
+      for(var col = 0; col < cols; col++){
+        loads.push(loadTile(row, col));
+      }
+    }
+    var results = await Promise.all(loads);
+    // require near-complete coverage, not just "some tile worked" — today's composite is often
+    // still mid-assembly (GIBS backfills through the day) and a half-empty mosaic would show as
+    // black holes in the globe. A stray dropped tile here or there is fine; a mosaic that's
+    // mostly missing is not "loaded", it's still baking — fall back to an earlier date instead.
+    var okCount = results.filter(Boolean).length;
+    if(okCount < results.length * 0.9) return false;
+
+    EARTH.canvas = offCanvas;
+    EARTH.data = offCtx.getImageData(0, 0, w, h);
+    EARTH.w = w; EARTH.h = h;
+    EARTH.loaded = true;
+    EARTH.dateUsed = dateStr;
+    return true;
+  }
+
+  // Today's composite can still be mid-assembly (GIBS "best" lags UTC by a few hours), so step
+  // back a day at a time rather than ever leaving the globe blank while it catches up.
+  async function loadEarthMosaic(){
+    try{
+      var now = new Date();
+      for(var back = 0; back <= 4; back++){
+        var d = new Date(now.getTime() - back * 86400000);
+        if(await loadEarthMosaicForDate(ymd(d))) return;
+      }
+    }catch(err){
+      // keep showing whatever mosaic (or the gradient fallback) we already had
+    }
+  }
+
+  // Plain equirectangular lookup — EPSG:4326 tiles already line up with raw lat/lon, unlike the
+  // Web Mercator radar mosaic just below, so no projection math is needed here.
+  function sampleEarth(lat, lon){
+    if(!EARTH.loaded || !EARTH.data) return null;
+    var lonNorm = ((lon + 180) % 360 + 360) % 360;
+    var xFrac = lonNorm / 360;
+    var yFrac = (90 - lat) / 180;
+    if(yFrac < 0 || yFrac > 1) return null;
+    var px = Math.min(EARTH.w - 1, Math.floor(xFrac * EARTH.w));
+    var py = Math.min(EARTH.h - 1, Math.floor(yFrac * EARTH.h));
+    var idx = (py * EARTH.w + px) * 4;
+    var d = EARTH.data.data;
+    return [d[idx], d[idx + 1], d[idx + 2]];
+  }
+
+  // Approximate subsolar point (where the sun is directly overhead right now), so the globe can
+  // shade a real day/night terminator across the photographic texture. This is independent of
+  // G2.rotation — that's just the artistic auto-spin used to view the globe, not real Earth spin —
+  // so the terminator is computed against true lat/lon and simply shows up wherever it lands on
+  // screen this frame. Equation-of-time is ignored: within a few degrees, plenty for a visual.
+  function subsolarPoint(){
+    var now = new Date();
+    var startOfYear = Date.UTC(now.getUTCFullYear(), 0, 1);
+    var dayOfYear = Math.floor((now.getTime() - startOfYear) / 86400000);
+    var decl = -23.44 * Math.cos((360 / 365) * (dayOfYear + 10) * Math.PI / 180);
+    var utcHours = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
+    var lon = -(utcHours - 12) * 15;
+    lon = ((lon + 180) % 360 + 360) % 360 - 180;
+    return { lat: decl, lon: lon };
+  }
+
   var RADAR = { canvas: null, data: null, size: 0, zoom: 2, loaded: false, frameTime: 0 };
 
   async function loadRadarMosaic(){
@@ -3277,7 +3384,6 @@
       RADAR.size = mosaicSize;
       RADAR.frameTime = frame.time;
       RADAR.loaded = true;
-      recomputeCloudCoverage(); // re-sample the lattice against the fresh mosaic right away
     }catch(err){
       // a failed refresh keeps showing the last mosaic rather than blanking the radar layer
     }
@@ -3300,6 +3406,93 @@
     var a = d[idx + 3];
     if(a < 24) return null; // effectively transparent — no precipitation here
     return [d[idx], d[idx + 1], d[idx + 2], a / 255];
+  }
+
+  // Rasterizes the Earth mosaic onto a small offscreen buffer shaped like the globe's disc, the
+  // same technique as renderRadarLayer() just below — for every buffer pixel, invert the globe's
+  // projection to recover the real (lat, lon) under it, sample the real photo there, and blit the
+  // whole buffer on in one drawImage call. This is what replaces the old flat gradient sphere and
+  // the dot-drawn coastlines with an actual rotating photograph of the planet (clouds included).
+  var earthBuf = document.createElement("canvas");
+  var earthBufCtx = earthBuf.getContext("2d");
+  var earthBufImg = null;
+  var earthBufN = 0;
+
+  function renderTerrainLayer(){
+    if(!EARTH.loaded || !EARTH.data){
+      // first mosaic still loading (or every tile failed) — fall back to the old flat gradient
+      // sphere rather than an empty disc.
+      var gradFallback = ctx2.createRadialGradient(G2.cx - G2.radius*0.4, G2.cy - G2.radius*0.45, G2.radius*0.05, G2.cx, G2.cy, G2.radius*1.04);
+      gradFallback.addColorStop(0, "rgba(" + gp().sphereStops[0] + ")");
+      gradFallback.addColorStop(0.35, "rgba(" + gp().sphereStops[1] + ")");
+      gradFallback.addColorStop(0.72, "rgba(" + gp().sphereStops[2] + ")");
+      gradFallback.addColorStop(1, "rgba(" + gp().sphereStops[3] + ")");
+      ctx2.beginPath();
+      ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
+      ctx2.fillStyle = gradFallback;
+      ctx2.fill();
+      return;
+    }
+
+    var n = Math.max(90, Math.min(220, Math.round(G2.radius * 1.15)));
+    if(n !== earthBufN || !earthBufImg){
+      earthBuf.width = n; earthBuf.height = n;
+      earthBufImg = earthBufCtx.createImageData(n, n);
+      earthBufN = n;
+    }
+
+    var tiltRad = G2.tilt * Math.PI / 180;
+    var ct = Math.cos(tiltRad), st = Math.sin(tiltRad);
+    var rotationDeg = G2.rotation;
+    var buf = earthBufImg.data;
+    var half = n / 2;
+
+    var sun = subsolarPoint();
+    var sLatRad = sun.lat * Math.PI / 180, sLonRad = sun.lon * Math.PI / 180;
+    var sx = Math.cos(sLatRad) * Math.sin(sLonRad);
+    var sy = Math.sin(sLatRad);
+    var sz = Math.cos(sLatRad) * Math.cos(sLonRad);
+
+    for(var by = 0; by < n; by++){
+      var ny = 1 - (by + 0.5) / half;
+      for(var bx = 0; bx < n; bx++){
+        var idx4 = (by * n + bx) * 4;
+        var nx = (bx + 0.5) / half - 1;
+        var r2 = nx * nx + ny * ny;
+        if(r2 > 1){ buf[idx4 + 3] = 0; continue; }
+
+        // inverse of project2(): recover the real (lat, lon) under this screen pixel, exactly
+        // like renderRadarLayer() does below.
+        var x3 = nx, y3t = ny, z3t = Math.sqrt(Math.max(0, 1 - r2));
+        var y3 = y3t * ct + z3t * st;
+        var z3 = -y3t * st + z3t * ct;
+        var lat = Math.asin(Math.max(-1, Math.min(1, y3))) * 180 / Math.PI;
+        var lon = Math.atan2(x3, z3) * 180 / Math.PI - rotationDeg;
+        lon = ((lon + 180) % 360 + 360) % 360 - 180;
+
+        var rc = sampleEarth(lat, lon);
+        if(!rc){ buf[idx4 + 3] = 0; continue; }
+
+        // real day/night terminator: illumination from the true subsolar angle at this exact
+        // (lat, lon) — independent of the artistic G2.rotation/tilt used only to spin the view.
+        var latRad = lat * Math.PI / 180, lonRad = lon * Math.PI / 180;
+        var px3 = Math.cos(latRad) * Math.sin(lonRad);
+        var py3 = Math.sin(latRad);
+        var pz3 = Math.cos(latRad) * Math.cos(lonRad);
+        var dot = px3*sx + py3*sy + pz3*sz;
+        var light = Math.min(1.05, 0.22 + 0.85 * Math.max(0, dot)); // ambient floor so night isn't pure black
+
+        var zScale = 0.55 + z3t * 0.45; // same limb-darkening every other layer here uses
+        var shade = light * zScale;
+        buf[idx4] = Math.min(255, rc[0] * shade);
+        buf[idx4 + 1] = Math.min(255, rc[1] * shade);
+        buf[idx4 + 2] = Math.min(255, rc[2] * shade);
+        buf[idx4 + 3] = 255;
+      }
+    }
+
+    earthBufCtx.putImageData(earthBufImg, 0, 0);
+    ctx2.drawImage(earthBuf, G2.cx - G2.radius, G2.cy - G2.radius, G2.radius * 2, G2.radius * 2);
   }
 
   // Rasterizes the radar mosaic onto a small offscreen buffer shaped like the globe's disc, then
@@ -3362,70 +3555,6 @@
     ctx2.restore();
   }
 
-  // cheap layered/warped sine turbulence — no gradient tables, just cross-modulated waves.
-  // Good enough to read as organic swirling cloud contours instead of round blobs, and safe to reason about.
-  function fbmNoise(x, y, t){
-    var warpX = Math.sin(y * 1.3 - t * 0.06) * 1.4;
-    var warpY = Math.cos(x * 0.9 + t * 0.05) * 1.4;
-    var v = 0;
-    v += Math.sin((x + warpX) * 1.6 + t * 0.12) * 0.5;
-    v += Math.sin((y + warpY) * 2.1 - t * 0.09) * 0.32;
-    v += Math.sin((x + y) * 0.9 + warpX * 0.5 + t * 0.07) * 0.18;
-    // higher-frequency detail layer — breaks up smooth blob edges into more fractal-looking wisps
-    v += Math.sin((x - warpY) * 4.4 + t * 0.2) * 0.12;
-    v += Math.sin((y + warpX) * 3.7 - t * 0.17) * 0.09;
-    return v / 1.21; // back to roughly -1..1
-  }
-
-  // a fine, JITTERED (not grid-aligned) sample scatter across the whole sphere — a regular
-  // lattice reads as a mechanical dot-grid once most points get pruned by the noise threshold,
-  // so points are scattered in lat/lon space itself, not just nudged a pixel or two on screen.
-  var cloudSamplePoints = (function buildCloudSamplePoints(){
-    var pts = [];
-    for(var lat = -84; lat <= 84; lat += 3){
-      for(var lon = -180; lon < 180; lon += 3){
-        var jlat = Math.max(-89, Math.min(89, lat + (Math.random()-0.5)*2.8));
-        var jlon = lon + (Math.random()-0.5)*2.8;
-        pts.push({ lat: jlat, lon: jlon, coverage: 0 });
-      }
-    }
-    return pts;
-  })();
-
-  // inverse-distance-weighted blend of the 60 real grid cells onto the fine lattice — run once
-  // whenever fresh data lands (every 10 min), never per animation frame.
-  function recomputeCloudCoverage(){
-    if(!weatherGridPoints.length) return;
-    for(var i = 0; i < cloudSamplePoints.length; i++){
-      var cp = cloudSamplePoints[i];
-      var wSum = 0, cSum = 0;
-      var precipMax = 0;
-      for(var j = 0; j < weatherGridPoints.length; j++){
-        var gp = weatherGridPoints[j];
-        var dLat = cp.lat - gp.lat, dLon = cp.lon - gp.lon;
-        var d2 = dLat*dLat + dLon*dLon;
-        if(typeof gp.cloud === "number"){
-          var w = 1 / (d2 + 6);
-          wSum += w; cSum += w * gp.cloud;
-        }
-        // precipitation is far patchier than cloud cover — a wide blended average (like the
-        // cloud IDW above) would dilute a real rain cell almost to zero once averaged against
-        // dozens of dry neighbors. Instead take the strongest nearby cell's value with a tight
-        // falloff, so a rainy point "splats" a visible patch around itself instead of vanishing
-        // into a global average — this is the fix for precip reading as basically invisible.
-        // The falloff (/6) is tighter than the original (/10) now that the real data grid is
-        // ~6x denser (8° spacing instead of 20°) — a tighter kernel over denser real samples
-        // reads as distinct storm cells instead of every rain point smearing into one big blob.
-        if(typeof gp.precip === "number" && gp.precip > 0){
-          var splat = gp.precip / (1 + d2 / 6);
-          if(splat > precipMax) precipMax = splat;
-        }
-      }
-      cp.coverage = wSum > 0 ? Math.max(0, Math.min(1, (cSum / wSum) / 100)) : 0;
-      cp.precipMm = precipMax;
-    }
-  }
-
   function resizeCanvas2(){
     var rect = weatherGlobeBody.getBoundingClientRect();
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -3471,15 +3600,7 @@
       ctx2.fill();
     }
 
-    var grad2 = ctx2.createRadialGradient(G2.cx - G2.radius*0.4, G2.cy - G2.radius*0.45, G2.radius*0.05, G2.cx, G2.cy, G2.radius*1.04);
-    grad2.addColorStop(0, "rgba(" + gp().sphereStops[0] + ")");
-    grad2.addColorStop(0.35, "rgba(" + gp().sphereStops[1] + ")");
-    grad2.addColorStop(0.72, "rgba(" + gp().sphereStops[2] + ")");
-    grad2.addColorStop(1, "rgba(" + gp().sphereStops[3] + ")");
-    ctx2.beginPath();
-    ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
-    ctx2.fillStyle = grad2;
-    ctx2.fill();
+    renderTerrainLayer();
 
     ctx2.save();
     ctx2.beginPath();
@@ -3529,50 +3650,7 @@
     }
     ctx2.stroke();
 
-    // landmasses for geographic context — same dense coastline dots, dimmer than the news globe
-    for(var li = 0; li < landPoints.length; li++){
-      var lp = landPoints[li];
-      var lpp = project2(lp.lat, lp.lon, G2.rotation, G2.tilt);
-      if(!lpp) continue;
-      var lpScale = 0.5 + lpp.z * 0.5;
-      var r0 = (0.6 + lp.tint * 0.38) * lpScale;
-      ctx2.beginPath();
-      ctx2.arc(lpp.x + lp.jx, lpp.y + lp.jy, r0, 0, Math.PI*2);
-      ctx2.fillStyle = "rgba(" + terrainColor(lp.lat, lp.tint) + "," + (0.5 * lpScale + 0.08) + ")";
-      ctx2.fill();
-    }
-
     renderedMarkers2 = [];
-
-    // live weather layer — a fine lattice sampled through cheap turbulence noise, gated by the
-    // real regional cloud% blended onto it. Reads as continuous swirling bands rather than
-    // blobs pinned to the 60 raw data points, while overall coverage still tracks live data.
-    var tNoise = Date.now() / 1000;
-    for(var ci = 0; ci < cloudSamplePoints.length; ci++){
-      var cp = cloudSamplePoints[ci];
-      var coverage = cp.coverage;
-      if(coverage < 0.12) continue;
-      var cpp = project2(cp.lat, cp.lon, G2.rotation, G2.tilt);
-      if(!cpp) continue;
-      var cScale = 0.55 + cpp.z * 0.45;
-
-      var n = fbmNoise(cp.lon * 0.05, cp.lat * 0.07, tNoise);
-      n = (n + 1) / 2; // remap roughly to 0..1
-      // curved response: only genuinely cloudy regions clear enough of the noise field to show —
-      // clear/low-cover areas stay essentially empty instead of a uniform haze over everything.
-      var covCurve = Math.pow(coverage, 1.8);
-      var threshold = 1 - covCurve * 0.6;
-      if(n >= threshold){
-        var edge = Math.min(1, (n - threshold) / 0.3);
-        var rC = (0.9 + edge * 1.5) * cScale;
-        ctx2.beginPath();
-        ctx2.arc(cpp.x, cpp.y, rC, 0, Math.PI*2);
-        // softened & slightly cooler than before, and capped lower — leaves more visual
-        // headroom for the radar layer painted on top to read as distinct
-        ctx2.fillStyle = "rgba(205,222,230," + (0.08 + edge * 0.4 * (0.3 + covCurve * 0.7)) + ")";
-        ctx2.fill();
-      }
-    }
 
     // Real radar imagery, painted as an actual texture instead of scattered per-point swatches.
     // An earlier version sampled the RainViewer mosaic onto the same sparse lattice used for the
@@ -3791,7 +3869,6 @@
     try{
       var data = await getJSON("/api/weather-grid");
       weatherGridPoints = data.points || [];
-      recomputeCloudCoverage();
       $("weather-globe-count").textContent = weatherGridPoints.length + " cellules · mis à jour " + timeAgo(data.updated);
     }catch(err){
       $("weather-globe-count").textContent = "couche météo indisponible";
@@ -4003,6 +4080,7 @@
     loadStations();
     loadAllNews();
     loadWeatherGrid();
+    loadEarthMosaic();
     loadRadarMosaic();
     loadPodcasts();
     loadAurora();
@@ -4016,6 +4094,7 @@
     setInterval(loadAllNews, 300000);
     setInterval(loadStations, 900000);
     setInterval(loadWeatherGrid, 600000);
+    setInterval(loadEarthMosaic, 10800000);
     setInterval(loadRadarMosaic, 600000);
     setInterval(loadPodcasts, 1800000);
     setInterval(loadAurora, 900000);
