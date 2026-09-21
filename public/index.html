@@ -3237,14 +3237,22 @@
   // with one real image. Rain/storms stay a separate live layer (see RADAR below) so the
   // "pixels" read as a distinct weather-radar accent on top of the photoreal globe+clouds.
   var EARTH = { canvas: null, data: null, w: 0, h: 0, loaded: false, dateUsed: null };
-  var EARTH_TILE_ZOOM = 2; // 8 cols x 4 rows of 512px GIBS tiles at this zoom level
+  var EARTH_TILE_ZOOM = 2;
+  // GIBS's EPSG:4326 tile grid does NOT simply double as 2^(z+1) x 2^z the way a normal slippy
+  // map does — confirmed against the real WMTSCapabilities.xml for the "250m" TileMatrixSet
+  // (levels 0-2 are irregular: 2x1, 3x2, 5x3; it only starts doubling cleanly from level 3
+  // onward: 10x5, 20x10, ...). Guessing 8x4 for level 2 silently requested tiles that don't
+  // exist (every column/row past 5x3), which is why the globe showed no photo at all — every
+  // fetch for those out-of-range tiles 404s. Hardcode the real per-level grid instead of a formula.
+  var EARTH_TILE_MATRIX = { 0:{cols:2,rows:1}, 1:{cols:3,rows:2}, 2:{cols:5,rows:3}, 3:{cols:10,rows:5}, 4:{cols:20,rows:10} };
 
   function ymd(d){
     return d.getUTCFullYear() + "-" + String(d.getUTCMonth()+1).padStart(2,"0") + "-" + String(d.getUTCDate()).padStart(2,"0");
   }
 
   async function loadEarthMosaicForDate(dateStr){
-    var cols = Math.pow(2, EARTH_TILE_ZOOM + 1), rows = Math.pow(2, EARTH_TILE_ZOOM), tileSize = 512;
+    var grid = EARTH_TILE_MATRIX[EARTH_TILE_ZOOM];
+    var cols = grid.cols, rows = grid.rows, tileSize = 512;
     var w = cols * tileSize, h = rows * tileSize;
     var offCanvas = document.createElement("canvas");
     offCanvas.width = w; offCanvas.height = h;
