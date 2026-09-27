@@ -92,6 +92,18 @@ after applying it (don't leave it as an uncommitted local-only edit), and when i
 diff the cloud-workspace copy against this folder's `git log`/contents before building
 further edits on top of it.
 
+## Travel Guides page
+
+- `public/tools/travel-guides/index.html` — bilingual (EN/FR) library of Andrew's illustrated
+  local-living PDF guides, linked from a "Guides" button in the Travel Planner top bar.
+  PDFs live in `public/tools/travel-guides/pdf/` (same filenames as in the Travel folder),
+  covers in `covers/<slug>-<lang>.jpg`. To add a guide: copy its PDF(s) + cover in, add an
+  entry to the `GUIDES` array at the top of the page's script, commit, push.
+- The Travel Planner file is synced from `Travel/travel-planner.html` — edit that source too,
+  or the Guides button gets lost on the next sync.
+- Git push auth on the iMac uses a classic GitHub token (repo scope) saved in the macOS
+  keychain (set up 2026-09-27; expires in a year).
+
 ## Testing
 
 - `test_radar.py` (Playwright, not committed/shipped — a local dev artifact) mocks
