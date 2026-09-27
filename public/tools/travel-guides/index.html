@@ -83,12 +83,12 @@
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="../travel-planner/">
+  <a class="brand" href="/tools/travel-planner/">
     <div class="brand-mark"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4H9a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5h-6A1.5 1.5 0 0 1 2 16Z"/><path d="M22 5.5A1.5 1.5 0 0 0 20.5 4H15a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5h6a1.5 1.5 0 0 0 1.5-1.5Z"/></svg></div>
     <div><h1 id="tTitle">Travel Guides</h1><p id="tTag">Illustrated local-living guides to read or download</p></div>
   </a>
   <div class="spacer"></div>
-  <a class="btn" id="backBtn" href="../travel-planner/"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg> <span id="tBack">Travel Planner</span></a>
+  <a class="btn" id="backBtn" href="/tools/travel-planner/"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg> <span id="tBack">Travel Planner</span></a>
   <button class="btn btn-ghost" id="themeBtn" title="Dark mode" onclick="toggleTheme()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
   <div class="pill"><button id="uiEn" onclick="setUi('en')">EN</button><button id="uiFr" onclick="setUi('fr')">FR</button></div>
 </header>
@@ -111,6 +111,11 @@
 <script>
 /* To add a guide: drop its PDF(s) in pdf/ and a cover in covers/, then add an entry here. */
 const GUIDES = [
+  { id:'playa', added:'2026-09-27', pages:{en:40, fr:40}, lgbt:true,
+    en:{ title:'Playa del Carmen & the Riviera Maya', file:'Playa del Carmen Guide - Area by Area.pdf', mb:4.7,
+         blurb:'The Quinta, Playacar and the local side, plus day trips to Cozumel, the cenotes, Akumal, Tulum, Cobá, Chichén Itzá and Cancún — and 2–3 day escapes to Mérida, Bacalar and Holbox.' },
+    fr:{ title:'Playa del Carmen et la Riviera Maya', file:'Guide de Playa del Carmen - Secteur par secteur.pdf', mb:4.7,
+         blurb:'La Quinta, Playacar et le côté local, des excursions à Cozumel, aux cénotes, à Akumal, Tulum, Cobá, Chichén Itzá et Cancún — et des escapades de 2 ou 3 jours à Mérida, Bacalar et Holbox.' } },
   { id:'sicily', added:'2026-09-27', pages:{en:46, fr:45}, lgbt:true,
     en:{ title:'Sicily, Region by Region', file:'Sicily Guide - Region by Region.pdf', mb:6.5,
          blurb:'Arab-Norman gold, Greek temples in wheat fields, Baroque towns, fish markets and a volcano on the skyline. 13 regions, Palermo & Ortigia as bases, plus the islands and Malta.' },
@@ -154,7 +159,8 @@ let FILTER = store.get('tg_filter') || UI;
 if(!['en','fr','all'].includes(FILTER)) FILTER = UI;
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const pdfUrl = f => 'pdf/' + encodeURIComponent(f);
+const BASE = '/tools/travel-guides/';
+const pdfUrl = f => BASE + 'pdf/' + encodeURIComponent(f);
 const isNew = g => (Date.now() - new Date(g.added).getTime()) < 30*864e5;
 
 function card(g, L){
@@ -168,7 +174,7 @@ function card(g, L){
     g.lgbt ? `<span class="tag lg hide-sm">${T.lgbt}</span>` : ''
   ].join('');
   return `<article class="card">
-    <a class="cover" href="${url}" target="_blank" rel="noopener" title="${esc(T.read)}"><img src="covers/${g.id}-${L}.jpg" alt="${esc(e.title)}" loading="lazy"></a>
+    <a class="cover" href="${url}" target="_blank" rel="noopener" title="${esc(T.read)}"><img src="${BASE}covers/${g.id}-${L}.jpg" alt="${esc(e.title)}" loading="lazy"></a>
     <div class="body">
       <h4>${esc(e.title)}</h4>
       <p class="blurb">${esc(e.blurb)}</p>
@@ -199,7 +205,7 @@ function render(){
   set('tTitle', T.title); set('tTag', T.tag); set('tBack', T.back); set('tH2', T.h2);
   set('tIntro', T.intro); set('tShow', T.show); set('chipAll', T.all); set('tFoot', T.foot);
   document.getElementById('themeBtn').title = T.theme;
-  const back = '../travel-planner/?lang=' + UI;
+  const back = '/tools/travel-planner/';
   document.getElementById('backBtn').href = back;
   document.querySelector('.brand').href = back;
   document.getElementById('uiEn').classList.toggle('on', UI==='en');
