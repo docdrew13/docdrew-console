@@ -591,7 +591,7 @@
     <div class="topbar-spacer"></div>
     <div class="topbar-actions">
       <button class="btn btn-icon btn-ghost" id="shellDarkModeBtn" title="Toggle dark mode" onclick="toggleTheme()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
-      <a class="btn" id="shellGuidesBtn" href="../travel-guides/" title="Travel guides (PDF)" style="text-decoration:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4H9a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5h-6A1.5 1.5 0 0 1 2 16Z"/><path d="M22 5.5A1.5 1.5 0 0 0 20.5 4H15a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5h6a1.5 1.5 0 0 0 1.5-1.5Z"/></svg> <span id="shellGuidesText">Guides</span></a>
+      <a class="btn" id="shellGuidesBtn" href="https://docdrew-console.netlify.app/tools/travel-guides/" title="Travel guides (PDF)" style="text-decoration:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4H9a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5h-6A1.5 1.5 0 0 1 2 16Z"/><path d="M22 5.5A1.5 1.5 0 0 0 20.5 4H15a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5h6a1.5 1.5 0 0 0 1.5-1.5Z"/></svg> <span id="shellGuidesText">Guides</span></a>
       <button class="btn" onclick="document.getElementById('importInput').click()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg> <span id="shellImportText">Import</span></button>
       <button class="btn" onclick="exportData()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"/></svg> <span id="shellExportText">Export</span></button>
       <button class="btn btn-primary" onclick="createTrip()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> <span id="shellNewTripText">New Trip</span></button>
@@ -4045,7 +4045,7 @@ function applyShellText(){
   set('shellTitle', T.title);
   set('shellTagline', T.tagline);
   set('shellImportText', T.importBtn);
-  { const gb = document.getElementById('shellGuidesBtn'); if(gb){ gb.href = '../travel-guides/?lang=' + (LANG==='fr'?'fr':'en'); gb.title = LANG==='fr' ? 'Guides de voyage (PDF)' : 'Travel guides (PDF)'; } }
+  { const gb = document.getElementById('shellGuidesBtn'); if(gb){ gb.href = 'https://docdrew-console.netlify.app/tools/travel-guides/?lang=' + (LANG==='fr'?'fr':'en'); if(location.hostname!=='docdrew-console.netlify.app'){ gb.target='_blank'; gb.rel='noopener'; } gb.title = LANG==='fr' ? 'Guides de voyage (PDF)' : 'Travel guides (PDF)'; } }
   set('shellExportText', T.exportBtn);
   set('shellNewTripText', T.newTripBtn);
   set('shellTripsHeading', T.tripsHeading);
