@@ -275,8 +275,10 @@
   .rail{ display:flex; flex-direction:column; gap:8px; min-height:0; }
   .rail-left .panel:nth-child(1){ flex:1; }
   .globes-stack{ display:flex; flex-direction:column; gap:8px; min-height:0; }
-  .globes-stack .globe-panel{ flex:1; min-height:0; }
-  .globes-stack .globe-body{ aspect-ratio: 1 / 1; height:100%; width:auto; max-width:100%; margin:0 auto; }
+  .globes-stack .globe-panel{ flex:0 0 auto; }
+  .globes-stack .globe-body{ flex:0 0 auto; aspect-ratio: 1 / 1; width:100%; height:auto; }
+  /* Weather + Sky Watch sit under the globe and take the rest of the middle column */
+  .rail-mid{ flex:1 1 0; min-height:0; }
   /* right rail is an independent accordion — each panel toggles open/closed on its own,
      and the whole column scrolls as one unit instead of each box fighting a squeezed
      internal max-height. */
@@ -486,18 +488,19 @@
   }
   .globe-head{
     flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
-    padding:10px 16px; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:18px; color:var(--cyan);
+    padding:6px 12px; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:15px; color:var(--cyan);
   }
+  .globe-head > span:first-child{ white-space:nowrap; }
   .globe-head .n{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15px; color:var(--text-dim); letter-spacing:0; text-transform:none; }
   .globe-body{ flex:1; min-height:0; position:relative; }
   .globe-body canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
   .globe-body canvas:active{ cursor:grabbing; }
   .globe-footer{
-    flex:0 0 auto; display:flex; flex-direction:column; gap:6px;
-    padding:10px 16px 12px; border-top:1px solid var(--grid-line);
+    flex:0 0 auto; display:flex; flex-direction:column; gap:3px;
+    padding:5px 12px 6px; border-top:1px solid var(--grid-line);
   }
   .globe-legend{
-    display:flex; flex-direction:row; flex-wrap:wrap; row-gap:5px; column-gap:16px; font-size:14px; color:var(--text-dim);
+    display:flex; flex-direction:row; flex-wrap:wrap; row-gap:2px; column-gap:12px; font-size:12px; color:var(--text-dim);
     font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   .globe-legend span{ display:flex; align-items:center; gap:5px; }
@@ -515,7 +518,7 @@
     box-shadow:0 0 5px rgba(255,210,0,0.6);
   }
   .globe-hint{
-    font-size:13px; color:var(--text-dim);
+    font-size:11.5px; color:var(--text-dim);
     font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-align:left;
   }
   .globe-tooltip{
@@ -776,35 +779,24 @@
             <div class="globe-hint">drag to rotate &amp; tilt · click a marker</div>
           </div>
         </section>
+        <aside class="rail rail-right rail-mid" aria-label="Weather and conditions">
+          <div class="rail-spacer" aria-hidden="true"></div>
+          <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
+            <div class="panel-head"><span>Weather</span><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°F</button><i class="panel-chevron">▾</i></div>
+            <div class="panel-body scroll" id="wx-body">
+              <div class="empty-state">Loading weather…</div>
+            </div>
+          </section>
+          <section class="panel round-l" data-accent="teal" data-panel-key="skywatch" aria-label="Sky watch">
+            <div class="panel-head"><span>Sky Watch</span><i class="panel-chevron">▾</i></div>
+            <div class="panel-body scroll" id="skywatch-body">
+              <div class="empty-state">Loading sky data…</div>
+            </div>
+          </section>
+        </aside>
       </div>
 
-      <aside class="rail rail-right" aria-label="Weather and conditions">
-        <div class="rail-spacer" aria-hidden="true"></div>
-        <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
-          <div class="panel-head"><span>Weather</span><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°F</button><i class="panel-chevron">▾</i></div>
-          <div class="panel-body scroll" id="wx-body">
-            <div class="empty-state">Loading weather…</div>
-          </div>
-        </section>
-        <section class="panel" data-accent="teal" data-panel-key="skywatch" aria-label="Sky watch">
-          <div class="panel-head"><span>Sky Watch</span><i class="panel-chevron">▾</i></div>
-          <div class="panel-body scroll" id="skywatch-body">
-            <div class="empty-state">Loading sky data…</div>
-          </div>
-        </section>
-        <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Sports scores">
-          <div class="panel-head">
-            <span>Sports</span>
-            <button class="head-btn" id="sports-edit-btn" type="button">Edit</button>
-            <i class="panel-chevron">▾</i>
-          </div>
-          <div class="panel-body scroll" id="sports-body">
-            <div class="empty-state">Loading scores…</div>
-          </div>
-        </section>
-      </aside>
-
-      <aside class="rail rail-right" aria-label="Media and finance">
+      <aside class="rail rail-right" aria-label="Lists and media">
         <div class="rail-spacer" aria-hidden="true"></div>
         <section class="panel" data-accent="violet" data-panel-key="tasks" aria-label="Tasks">
           <div class="panel-head"><span>Tasks</span><i class="panel-chevron">▾</i></div>
@@ -818,7 +810,7 @@
           <div class="panel-head"><span>Groceries</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="grocery-body"></div>
         </section>
-        <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
+        <section class="panel round-l" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
           <div class="panel-head">
             <span>Podcasts</span>
             <button class="head-btn" id="podcasts-edit-btn" type="button">Edit</button>
@@ -828,6 +820,28 @@
             <div class="video-tiles" id="video-tiles">
               <div class="podcast-empty">Loading…</div>
             </div>
+          </div>
+        </section>
+      </aside>
+
+      <aside class="rail rail-right" aria-label="Links, sports and finance">
+        <div class="rail-spacer" aria-hidden="true"></div>
+        <section class="panel" data-accent="amber" data-panel-key="quicklinks" aria-label="Links">
+          <div class="panel-head">
+            <span>Links</span>
+            <button class="head-btn" id="links-edit-btn" type="button">Edit</button>
+            <i class="panel-chevron">▾</i>
+          </div>
+          <div class="panel-body scroll" id="links-body"></div>
+        </section>
+        <section class="panel" data-accent="crimson" data-panel-key="sports" aria-label="Sports scores">
+          <div class="panel-head">
+            <span>Sports</span>
+            <button class="head-btn" id="sports-edit-btn" type="button">Edit</button>
+            <i class="panel-chevron">▾</i>
+          </div>
+          <div class="panel-body scroll" id="sports-body">
+            <div class="empty-state">Loading scores…</div>
           </div>
         </section>
         <section class="panel" data-accent="amber" data-panel-key="markets" aria-label="Stock quotes">
@@ -843,14 +857,6 @@
         <section class="panel" data-accent="gold" data-panel-key="currency" aria-label="Currency converter">
           <div class="panel-head"><span>Currency</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="fx-body"></div>
-        </section>
-        <section class="panel" data-accent="amber" data-panel-key="quicklinks" aria-label="Links">
-          <div class="panel-head">
-            <span>Links</span>
-            <button class="head-btn" id="links-edit-btn" type="button">Edit</button>
-            <i class="panel-chevron">▾</i>
-          </div>
-          <div class="panel-body scroll" id="links-body"></div>
         </section>
         <section class="panel round-l" data-accent="frost" data-panel-key="settings" aria-label="Console settings">
           <div class="panel-head">
@@ -3656,7 +3662,7 @@
     ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
     G2.w = rect.width; G2.h = rect.height;
     G2.cx = rect.width / 2; G2.cy = rect.height / 2;
-    G2.radius = Math.max(40, Math.min(rect.width, rect.height) * 0.42);
+    G2.radius = Math.max(40, Math.min(rect.width, rect.height) * 0.47);
   }
 
   function project2(lat, lon, rotationDeg, tiltDeg){
