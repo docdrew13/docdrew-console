@@ -104,6 +104,22 @@ further edits on top of it.
 - Git push auth on the iMac uses a classic GitHub token (repo scope) saved in the macOS
   keychain (set up 2026-09-27; expires in a year).
 
+## Sports panel
+
+All client-side, straight from ESPN's public site.api (ESPN blocks Netlify's servers, so
+`netlify/functions/sports.mts` isn't used by any page).
+
+- **Teams** show a sport/league tag (e.g. "Michigan Wolverines · Football") and only appear
+  when they have a live game, or when ESPN reports the league in regular season/postseason
+  (`season.type` 2 or 3) and there's a next scheduled game. Off-season, preseason,
+  eliminated or finished teams are hidden (still listed in Edit mode so they can be removed).
+- **Tennis** shows only Grand Slams, 1000s and 500s. ESPN doesn't expose a tier, so it's a
+  per-tour whitelist of ESPN tournament ids (`TENNIS_TIERS`, verified against the 2026
+  calendars; Paris Masters matched by name). Review it each January when the calendar
+  changes. Matches are filtered to ones with a player ranked 1–50 (ESPN rankings
+  endpoint, cached 6h). Each tournament header expands to show every live / latest-day
+  result / next-day match. No qualifying tournament on → no tennis section at all.
+
 ## Testing
 
 - `test_radar.py` (Playwright, not committed/shipped — a local dev artifact) mocks
