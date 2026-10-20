@@ -14,6 +14,17 @@ interface FeedConfig {
   url: string;
 }
 
+// Reuters and AP publish no RSS feeds, and CNN's legacy feeds stopped updating in 2023,
+// so those three come through Google News RSS filtered to the outlet's own domain
+// (last 2 days). Headlines arrive as "Title - Outlet" and links go via news.google.com.
+function gnews(name: string, site: string, topic = ""): FeedConfig {
+  const q = encodeURIComponent(`site:${site}${topic ? " " + topic : ""} when:2d`);
+  return { name, url: `https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en` };
+}
+const REUTERS = (t = "") => gnews("Reuters", "reuters.com", t);
+const AP = (t = "") => gnews("AP", "apnews.com", t);
+const CNN = (t = "") => gnews("CNN", "cnn.com", t);
+
 // Each category now blends 2-3 outlets instead of pulling from a single source.
 // Picks lean mainstream/centrist-to-center-left-or-right, deliberately avoiding
 // Fox News and fringe/conspiracy outlets, per the request to keep those out.
@@ -22,20 +33,32 @@ const SOURCES: Record<string, FeedConfig[]> = {
     { name: "BBC", url: "http://feeds.bbci.co.uk/news/rss.xml" },
     { name: "NPR", url: "https://feeds.npr.org/1001/rss.xml" },
     { name: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml" },
+    REUTERS(),
+    AP(),
+    CNN(),
   ],
   "us-politics": [
     { name: "HuffPost", url: "https://www.huffpost.com/section/politics/feed" },
     { name: "NPR Politics", url: "https://feeds.npr.org/1014/rss.xml" },
     { name: "The Hill", url: "https://thehill.com/feed/" },
+    REUTERS("politics"),
+    AP("politics"),
+    CNN("politics"),
   ],
   "world-politics": [
     { name: "BBC World", url: "http://feeds.bbci.co.uk/news/world/rss.xml" },
     { name: "NPR World", url: "https://feeds.npr.org/1004/rss.xml" },
     { name: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml" },
+    REUTERS("world"),
+    AP("world news"),
+    CNN("world"),
   ],
   economics: [
     { name: "BBC Business", url: "http://feeds.bbci.co.uk/news/business/rss.xml" },
     { name: "NPR Business", url: "https://feeds.npr.org/1006/rss.xml" },
+    REUTERS("economy"),
+    AP("economy business"),
+    CNN("business economy"),
   ],
   "apple-tech": [
     { name: "9to5Mac", url: "https://9to5mac.com/feed/" },
@@ -45,25 +68,36 @@ const SOURCES: Record<string, FeedConfig[]> = {
   "ai-tech": [
     { name: "TechCrunch AI", url: "https://techcrunch.com/category/artificial-intelligence/feed/" },
     { name: "NPR Technology", url: "https://feeds.npr.org/1019/rss.xml" },
+    REUTERS("artificial intelligence"),
+    AP("artificial intelligence"),
   ],
   "general-tech-science": [
     { name: "Ars Technica", url: "http://feeds.arstechnica.com/arstechnica/index" },
     { name: "NPR Technology", url: "https://feeds.npr.org/1019/rss.xml" },
+    REUTERS("science technology"),
+    AP("science technology"),
   ],
   "health-medicine": [
     { name: "BBC Health", url: "http://feeds.bbci.co.uk/news/health/rss.xml" },
     { name: "NPR Health", url: "https://feeds.npr.org/1128/rss.xml" },
     { name: "STAT News", url: "https://www.statnews.com/feed/" },
+    REUTERS("health"),
+    AP("health"),
+    CNN("health"),
   ],
   canada: [
     { name: "Global News", url: "https://globalnews.ca/feed/" },
     { name: "CTV News", url: "https://www.ctvnews.ca/rss/ctvnews-ca-top-stories-public-rss-1.822009" },
+    REUTERS("Canada"),
+    AP("Canada"),
   ],
   quebec: [{ name: "Global News Montreal", url: "https://globalnews.ca/montreal/feed/" }],
   entertainment: [
     { name: "BBC Entertainment", url: "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml" },
     { name: "NPR Culture", url: "https://feeds.npr.org/1008/rss.xml" },
     { name: "HuffPost", url: "https://www.huffpost.com/section/entertainment/feed" },
+    AP("entertainment"),
+    CNN("entertainment"),
   ],
 
   // French Canadian console (/fr/) — same 11 categories. La Presse (Quebec) covers most
@@ -165,7 +199,12 @@ async function fetchFeed(feed: FeedConfig): Promise<NewsItem[]> {
   });
   if (!res.ok) throw new Error("upstream status " + res.status);
   const xml = await res.text();
-  return parseItems(xml, 12).map((it) => ({ ...it, sourceLabel: feed.name }));
+  const isGoogle = feed.url.includes("news.google.com");
+  return parseItems(xml, 12).map((it) => ({
+    ...it,
+    ...(isGoogle ? { title: it.title.replace(/\s+-\s+[^-]{2,40}$/, ""), snippet: "" } : {}),
+    sourceLabel: feed.name,
+  }));
 }
 
 // Blend multiple outlets by alternating between them (source A's newest, source B's
