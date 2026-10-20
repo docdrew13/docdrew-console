@@ -269,7 +269,7 @@
   .globes-stack{ display:flex; flex-direction:column; gap:8px; min-height:0; }
   .globes-stack .globe-panel{ flex:0 0 auto; }
   .globes-stack .globe-body{ flex:0 0 auto; aspect-ratio: 1 / 1; width:100%; height:auto; }
-  /* Weather + Sky Watch sit under the globe and take the rest of the middle column */
+  /* Weather (with Sky Watch + Snow Report inside it) sits under the globe and takes the rest of the middle column */
   .rail-mid{ flex:1 1 0; min-height:0; }
   /* right rail is an independent accordion — each panel toggles open/closed on its own,
      and the whole column scrolls as one unit instead of each box fighting a squeezed
@@ -773,16 +773,10 @@
         </section>
         <aside class="rail rail-right rail-mid" aria-label="Weather and conditions">
           <div class="rail-spacer" aria-hidden="true"></div>
-          <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
+          <section class="panel round-l" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
             <div class="panel-head"><span>Weather</span><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°C</button><i class="panel-chevron">▾</i></div>
             <div class="panel-body scroll" id="wx-body">
               <div class="empty-state">Loading weather…</div>
-            </div>
-          </section>
-          <section class="panel round-l" data-accent="teal" data-panel-key="skywatch" aria-label="Sky watch">
-            <div class="panel-head"><span>Sky Watch</span><i class="panel-chevron">▾</i></div>
-            <div class="panel-body scroll" id="skywatch-body">
-              <div class="empty-state">Loading sky data…</div>
             </div>
           </section>
         </aside>
@@ -1897,6 +1891,7 @@
       html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + fmtTemp(data.today.max) + "°</b>High</div><div class=\"wx-stat\"><b>" + fmtTemp(data.today.min) + "°</b>Low</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synced</div></div>";
     }
     html += buildSnowReportHtml(lastBromontData, snowExpanded);
+    html += buildSkyWatchHtml(lastAuroraData, skyExpanded);
     html += '<button type="button" class="wx-more-link" id="wx-more-btn">Full forecast →</button>';
     wxBody.innerHTML = html;
     if(wxEditing) renderWxEditor();
@@ -1906,6 +1901,12 @@
       if(data.place && typeof data.place.latitude === "number"){
         openLocationDetail(data.place.latitude, data.place.longitude, { name: data.place.name });
       }
+    });
+    if(skyExpanded) drawSkyMoon();
+    var skyToggleBtn = $("sky-toggle-btn");
+    if(skyToggleBtn) skyToggleBtn.addEventListener("click", function(){
+      skyExpanded = !skyExpanded;
+      renderWx(lastHomeWxData);
     });
     var snowToggleBtn = $("snow-toggle-btn");
     if(snowToggleBtn) snowToggleBtn.addEventListener("click", function(){
@@ -2157,13 +2158,15 @@
     ctx.strokeStyle = "rgba(232,236,242,0.35)"; ctx.lineWidth = 1; ctx.stroke();
   }
 
-  function renderSkyWatch(auroraData){
-    var body = $("skywatch-body");
-    if(!body) return;
+  function buildSkyWatchHtml(auroraData, expanded){
+    var skyLabel = "Sky Watch";
+    if(!expanded){
+      return '<div class="snow-report-collapsed"><button type="button" class="wx-more-link" id="sky-toggle-btn">🌙 ' + skyLabel + " →</button></div>";
+    }
     var phase = moonPhaseFraction(new Date());
     var illum = Math.round((1 - Math.cos(phase * 2 * Math.PI)) / 2 * 100);
 
-    var html = '<div class="sky-row">' +
+    var html = '<div class="snow-report"><div class="snow-report-head">🌙 ' + skyLabel + '</div><div class="sky-row">' +
       '<canvas class="moon-icon" id="moon-canvas" width="36" height="36"></canvas>' +
       '<div><div class="sky-value">' + moonPhaseName(phase) + '</div><div class="sky-sub">' + illum + '% illuminated</div></div>' +
     '</div>';
@@ -2177,13 +2180,19 @@
       html += '<div class="kp-badge">—</div><div><div class="sky-value">Aurora forecast</div><div class="sky-sub">Feed unavailable</div></div>';
     }
     html += '</div>';
+    html += '<button type="button" class="wx-more-link" id="sky-toggle-btn">' + "▲ Hide" + '</button></div>';
+    return html;
+  }
 
-    body.innerHTML = html;
+  // the moon is a <canvas>, so it has to be painted after the panel's innerHTML is set
+  function drawSkyMoon(){
     var moonCanvas = $("moon-canvas");
-    if(moonCanvas) drawMoonIcon(moonCanvas, phase);
+    if(moonCanvas) drawMoonIcon(moonCanvas, moonPhaseFraction(new Date()));
   }
 
   var lastAuroraData = null;
+  // Collapsed by default, same as the snow report; not persisted.
+  var skyExpanded = false;
   async function loadAurora(){
     try{
       var data = await getJSON("/api/aurora");
@@ -2191,7 +2200,7 @@
     }catch(err){
       lastAuroraData = null;
     }
-    renderSkyWatch(lastAuroraData);
+    if(wxViewMode === "home" && lastHomeWxData) renderWx(lastHomeWxData);
   }
 
   /* ============================================================
@@ -4164,7 +4173,7 @@
   // new widgets default to collapsed regardless of prior stored state — keeps the console
   // compact by default per the "must fit without scrolling" constraint; once a user
   // explicitly opens/closes one, that choice persists like the original four panels.
-  ["skywatch", "sports", "settings"].forEach(function(k){
+  ["sports", "settings"].forEach(function(k){
     if(!(k in railCollapse)) railCollapse[k] = true;
   });
 
@@ -4204,7 +4213,6 @@
     syncBootstrap("todos", function(){ return todos; }, function(v){ todos = v; writeLS(LS.todos, todos); }, renderTodos);
     syncBootstrap("groceries", function(){ return groceries; }, function(v){ groceries = v; writeLS(LS.groceries, groceries); }, renderGroceries);
     syncBootstrap("log", function(){ return captainsLog; }, function(v){ captainsLog = v; writeLS(LS.captainsLog, captainsLog); }, renderLog);
-    renderSkyWatch(null);
 
     resizeCanvas2();
     if(window.ResizeObserver){ new ResizeObserver(debounce(resizeCanvas2, 120)).observe(weatherGlobeBody); }
@@ -4241,7 +4249,7 @@
     setInterval(loadBromont, 900000);
     // loadSports() self-schedules its next poll (fast while something's live, slow otherwise).
     setInterval(loadIss, 15000);
-    setInterval(function(){ renderSkyWatch(lastAuroraData); }, 600000); // keep moon icon fresh
+    setInterval(function(){ if(skyExpanded && wxViewMode === "home" && lastHomeWxData) renderWx(lastHomeWxData); }, 600000); // keep moon icon fresh
     if(!REDUCED_MOTION) setInterval(rotateShipStatus, 9000);
   }
 
