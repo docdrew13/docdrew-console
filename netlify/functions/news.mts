@@ -22,20 +22,31 @@ const SOURCES: Record<string, FeedConfig[]> = {
     { name: "BBC", url: "http://feeds.bbci.co.uk/news/rss.xml" },
     { name: "NPR", url: "https://feeds.npr.org/1001/rss.xml" },
     { name: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml" },
+    { name: "CBS News", url: "https://www.cbsnews.com/latest/rss/main" },
+    { name: "PBS NewsHour", url: "https://www.pbs.org/newshour/feeds/rss/headlines" },
+    { name: "ABC News", url: "https://abcnews.com/abcnews/topstories" },
   ],
   "us-politics": [
     { name: "HuffPost", url: "https://www.huffpost.com/section/politics/feed" },
     { name: "NPR Politics", url: "https://feeds.npr.org/1014/rss.xml" },
     { name: "The Hill", url: "https://thehill.com/feed/" },
+    { name: "CBS News", url: "https://www.cbsnews.com/latest/rss/politics" },
+    { name: "PBS NewsHour", url: "https://www.pbs.org/newshour/feeds/rss/politics" },
   ],
   "world-politics": [
     { name: "BBC World", url: "http://feeds.bbci.co.uk/news/world/rss.xml" },
     { name: "NPR World", url: "https://feeds.npr.org/1004/rss.xml" },
     { name: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml" },
+    { name: "CBS News", url: "https://www.cbsnews.com/latest/rss/world" },
+    { name: "PBS NewsHour", url: "https://www.pbs.org/newshour/feeds/rss/world" },
+    { name: "ABC News", url: "https://abcnews.com/abcnews/internationalheadlines" },
   ],
   economics: [
     { name: "BBC Business", url: "http://feeds.bbci.co.uk/news/business/rss.xml" },
     { name: "NPR Business", url: "https://feeds.npr.org/1006/rss.xml" },
+    { name: "CBS News", url: "https://www.cbsnews.com/latest/rss/moneywatch" },
+    { name: "PBS NewsHour", url: "https://www.pbs.org/newshour/feeds/rss/economy" },
+    { name: "ABC News", url: "https://abcnews.com/abcnews/businessheadlines" },
   ],
   "apple-tech": [
     { name: "9to5Mac", url: "https://9to5mac.com/feed/" },
@@ -49,11 +60,16 @@ const SOURCES: Record<string, FeedConfig[]> = {
   "general-tech-science": [
     { name: "Ars Technica", url: "http://feeds.arstechnica.com/arstechnica/index" },
     { name: "NPR Technology", url: "https://feeds.npr.org/1019/rss.xml" },
+    { name: "CBS News", url: "https://www.cbsnews.com/latest/rss/technology" },
+    { name: "ABC News", url: "https://abcnews.com/abcnews/technologyheadlines" },
   ],
   "health-medicine": [
     { name: "BBC Health", url: "http://feeds.bbci.co.uk/news/health/rss.xml" },
     { name: "NPR Health", url: "https://feeds.npr.org/1128/rss.xml" },
     { name: "STAT News", url: "https://www.statnews.com/feed/" },
+    { name: "CBS News", url: "https://www.cbsnews.com/latest/rss/health" },
+    { name: "PBS NewsHour", url: "https://www.pbs.org/newshour/feeds/rss/health" },
+    { name: "ABC News", url: "https://abcnews.com/abcnews/healthheadlines" },
   ],
   canada: [
     { name: "Global News", url: "https://globalnews.ca/feed/" },
@@ -64,6 +80,8 @@ const SOURCES: Record<string, FeedConfig[]> = {
     { name: "BBC Entertainment", url: "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml" },
     { name: "NPR Culture", url: "https://feeds.npr.org/1008/rss.xml" },
     { name: "HuffPost", url: "https://www.huffpost.com/section/entertainment/feed" },
+    { name: "CBS News", url: "https://www.cbsnews.com/latest/rss/entertainment" },
+    { name: "ABC News", url: "https://abcnews.com/abcnews/entertainmentheadlines" },
   ],
 
   // French Canadian console (/fr/) — same 11 categories. La Presse (Quebec) covers most
@@ -150,9 +168,11 @@ function parseItems(xml: string, max = 12): NewsItem[] {
       block.match(/<media:content[^>]*url=["']([^"']+)["'][^>]*>/i) ||
       block.match(/<media:thumbnail[^>]*url=["']([^"']+)["'][^>]*>/i);
     const imgTag = block.match(/<img[^>]+src=["']([^"']+)["']/i);
+    const bareImage = extractTag(block, "image").trim();
     if (enclosure) image = enclosure[1];
     else if (media) image = media[1];
     else if (imgTag) image = imgTag[1];
+    else if (/^https?:\/\//i.test(bareImage)) image = bareImage;
 
     if (title && link) items.push({ title, link, pubDate, snippet: desc, image });
   }
