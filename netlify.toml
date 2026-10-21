@@ -4,3 +4,20 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# Pages were renamed: / (English) -> /for-andrew/, /fr/ (French) -> /for-sylvain/.
+# Old bookmarks keep working. (Not forced: only applies because no file exists at the old path.)
+[[redirects]]
+  from = "/"
+  to = "/for-andrew/"
+  status = 302
+
+[[redirects]]
+  from = "/fr"
+  to = "/for-sylvain/"
+  status = 301
+
+[[redirects]]
+  from = "/fr/*"
+  to = "/for-sylvain/:splat"
+  status = 301
