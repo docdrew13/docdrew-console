@@ -20,8 +20,8 @@ with continuous deployment from GitHub.
 
 Four static pages, each a large single-file HTML doc with inline CSS/JS:
 
-- `public/index.html` — main English console
-- `public/fr/index.html` — French console (mirrors index.html, translated strings)
+- `public/for-andrew/index.html` — main English console (Andrew)
+- `public/for-sylvain/index.html` — French console (Sylvain) (mirrors index.html, translated strings)
 - `public/for-peter/index.html` — preconfigured for Andrew's brother Peter (Wakefield, RI)
 - `public/for-susie/index.html` — preconfigured for Susie (light theme — note different
   color literals in places, e.g. cloud-haze rendering uses `rgba(230,220,205,...)` here
