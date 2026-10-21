@@ -135,3 +135,10 @@ All client-side, straight from ESPN's public site.api (ESPN blocks Netlify's ser
 
 - None currently blocking. Last confirmed-live fix: the tilt-drag-direction restore,
   commit `5c6f90c`.
+
+## Data separation: English (Andrew) vs French (Sylvain)
+- `public/index.html` = Andrew: keeps the plain `dds-*` localStorage keys and sync owner `main`.
+- `public/fr/index.html` = Sylvain: own `dds-sylvain-*` keys and sync owner `sylvain` (Tasks, Notes, Links, settings).
+- **Groceries is the one joint list**: both pages use localStorage key `dds-shared-groceries` and sync owner `shared`
+  (`syncOwnerFor()` in each page). `sync.mts` seeds `groceries:shared` once from the old `groceries:main` list.
+- Peter / Susie are unchanged (fully separate). Code/features still apply to all four pages as before.

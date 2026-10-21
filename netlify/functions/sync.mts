@@ -10,7 +10,9 @@ import { getStore } from "@netlify/blobs";
 // centralizing it doesn't lower that trust boundary, since anyone who could already open
 // the page could already see/edit the data client-side.
 const COLLECTIONS = new Set(["todos", "log", "groceries"]);
-const OWNERS = new Set(["main", "peter", "susie"]);
+// "main" = Andrew (English page), "sylvain" = French page, "shared" = the joint Groceries list
+// used by those two pages only. Peter and Susie each keep their own, fully separate.
+const OWNERS = new Set(["main", "sylvain", "shared", "peter", "susie"]);
 const MAX_ITEMS = 500;
 const MAX_BODY_BYTES = 256 * 1024;
 
@@ -38,7 +40,17 @@ export default async (req: Request) => {
 
   if (req.method === "GET") {
     try {
-      const data = await store.get(key, { type: "json" });
+      let data = await store.get(key, { type: "json" });
+      // One-time seed: the first time the joint Groceries list is ever read, start it from the
+      // list the English + French pages already shared (stored under "main"). A list that was
+      // written and later emptied is [] (not null), so it never re-seeds.
+      if (data === null && collection === "groceries" && owner === "shared") {
+        const legacy = await store.get("groceries:main", { type: "json" });
+        if (Array.isArray(legacy) && legacy.length > 0) {
+          await store.setJSON(key, legacy);
+          data = legacy;
+        }
+      }
       return jsonResponse(Array.isArray(data) ? data : []);
     } catch (err) {
       return jsonResponse({ error: "read_failed", message: String(err) }, 502);

@@ -911,7 +911,7 @@
     wxCity: "dds-wx-city",
     links: "dds-links",
     todos: "dds-todos",
-    groceries: "dds-groceries",
+    groceries: "dds-shared-groceries", // shared by the English + French pages only
     railCollapse: "dds-rail-collapse",
     captainsLog: "dds-captains-log",
     homeCity: "dds-home-city",
@@ -1191,12 +1191,17 @@
      is pushed up to seed it instead of being wiped. After that, every
      local write is also pushed to the server.
   ============================================================ */
+  // Per-person data (Tasks, Notes) is scoped to this page's owner; Groceries is the one
+  // collection shared between the English (Andrew) and French (Sylvain) pages, so it lives
+  // under the common "shared" owner. Peter's and Susie's pages keep everything their own.
   var SYNC_OWNER = "main";
+  var SYNC_SHARED = { groceries: true };
+  function syncOwnerFor(collection){ return SYNC_SHARED[collection] ? "shared" : SYNC_OWNER; }
   function syncPull(collection){
-    return getJSON("/api/sync?collection=" + collection + "&owner=" + SYNC_OWNER).catch(function(){ return null; });
+    return getJSON("/api/sync?collection=" + collection + "&owner=" + syncOwnerFor(collection)).catch(function(){ return null; });
   }
   function syncPush(collection, data){
-    fetch("/api/sync?collection=" + collection + "&owner=" + SYNC_OWNER, {
+    fetch("/api/sync?collection=" + collection + "&owner=" + syncOwnerFor(collection), {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(data)

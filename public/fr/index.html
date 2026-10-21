@@ -903,24 +903,42 @@
   // Declared early (before WORLD_CITIES/homeCity below) since that code reads LS.homeCity
   // at definition time, not just inside a function called later.
   var LS = {
-    symbols: "dds-symbols",
-    fxFrom: "dds-fx-from",
-    fxTo: "dds-fx-to",
-    fxAmt: "dds-fx-amt",
-    wxCity: "dds-wx-city",
-    links: "dds-links",
-    todos: "dds-todos",
-    groceries: "dds-groceries",
-    railCollapse: "dds-rail-collapse",
-    captainsLog: "dds-captains-log",
-    homeCity: "dds-home-city",
-    brandName: "dds-brand-name",
-    snowRegion: "dds-snow-region",
-    sportsTeams: "dds-sports-teams",
-    podcasts: "dds-podcasts",
-    wxUnit: "dds-wx-unit",
-    theme: "dds-theme"
+    symbols: "dds-sylvain-symbols",
+    fxFrom: "dds-sylvain-fx-from",
+    fxTo: "dds-sylvain-fx-to",
+    fxAmt: "dds-sylvain-fx-amt",
+    wxCity: "dds-sylvain-wx-city",
+    links: "dds-sylvain-links",
+    todos: "dds-sylvain-todos",
+    groceries: "dds-shared-groceries", // shared by the English + French pages only
+    railCollapse: "dds-sylvain-rail-collapse",
+    captainsLog: "dds-sylvain-captains-log",
+    homeCity: "dds-sylvain-home-city",
+    brandName: "dds-sylvain-brand-name",
+    snowRegion: "dds-sylvain-snow-region",
+    sportsTeams: "dds-sylvain-sports-teams",
+    podcasts: "dds-sylvain-podcasts",
+    wxUnit: "dds-sylvain-wx-unit",
+    theme: "dds-sylvain-theme"
   };
+
+  // Sylvain's page keeps its own saved data (Tasks, Notes, Links, settings) under "dds-sylvain-*",
+  // fully separate from Andrew's English page (which keeps the plain "dds-*" keys). Only Groceries
+  // is shared between the two. One time, on first load, carry the look-and-feel *settings* over
+  // from the old shared keys so nothing visibly resets -- but NOT Tasks / Notes / Links, which
+  // start fresh for Sylvain.
+  (function(){
+    try{
+      ["symbols","fxFrom","fxTo","fxAmt","wxCity","railCollapse","homeCity","brandName",
+       "snowRegion","sportsTeams","podcasts","wxUnit","theme"].forEach(function(k){
+        var oldKey = "dds-" + LS[k].slice("dds-sylvain-".length);
+        if(localStorage.getItem(LS[k]) === null){
+          var v = localStorage.getItem(oldKey);
+          if(v !== null) localStorage.setItem(LS[k], v);
+        }
+      });
+    }catch(e){}
+  })();
 
   // Look toggle — flips between the cool cyan "starship" look and the warm "reading lamp"
   // look. Applied to <html> as early as possible (right after LS, before any rendering) so
@@ -1190,12 +1208,17 @@
      is pushed up to seed it instead of being wiped. After that, every
      local write is also pushed to the server.
   ============================================================ */
-  var SYNC_OWNER = "main";
+  // Per-person data (Tasks, Notes) is scoped to this page's owner; Groceries is the one
+  // collection shared between the English (Andrew) and French (Sylvain) pages, so it lives
+  // under the common "shared" owner. Peter's and Susie's pages keep everything their own.
+  var SYNC_OWNER = "sylvain";
+  var SYNC_SHARED = { groceries: true };
+  function syncOwnerFor(collection){ return SYNC_SHARED[collection] ? "shared" : SYNC_OWNER; }
   function syncPull(collection){
-    return getJSON("/api/sync?collection=" + collection + "&owner=" + SYNC_OWNER).catch(function(){ return null; });
+    return getJSON("/api/sync?collection=" + collection + "&owner=" + syncOwnerFor(collection)).catch(function(){ return null; });
   }
   function syncPush(collection, data){
-    fetch("/api/sync?collection=" + collection + "&owner=" + SYNC_OWNER, {
+    fetch("/api/sync?collection=" + collection + "&owner=" + syncOwnerFor(collection), {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(data)
