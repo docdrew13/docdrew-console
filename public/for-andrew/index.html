@@ -607,6 +607,10 @@
   .grocery-sharehead{ display:flex; align-items:center; justify-content:space-between; font-size:14px; font-weight:700; color:var(--text); }
   .grocery-sharehead button{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:16px; padding:2px 4px; }
   .grocery-sharebox input{ width:100%; box-sizing:border-box; margin-top:8px; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:7px 9px; font-size:14px; }
+  .grocery-lang{ display:flex; align-items:center; gap:6px; margin-top:14px; font-size:14px; color:var(--text-dim); }
+  .grocery-lang button{ background:transparent; color:var(--text); border:1px solid var(--grid-line); border-radius:6px; padding:4px 10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .grocery-lang button[aria-pressed="true"]{ background:var(--crimson); color:var(--crimson-ink); border-color:var(--crimson); }
+  .grocery-lang + .grocery-actions{ margin-top:8px; }
   .grocery-note{ margin-top:10px; font-size:14px; color:var(--text-dim); }
 
   /* ============ TICKER ============ */
@@ -4151,12 +4155,32 @@
     shareMsg: function(n){ return "Grocery list (" + n + (n === 1 ? " item" : " items") + "):"; },
     sortLocale: "en"
   };
+  // The joint list can be shared in either language, whichever page you are on.
+  var G_SHARE = {
+    en: { title: "Grocery list", pick: "Share in", msg: function(n){ return "Grocery list (" + n + (n === 1 ? " item" : " items") + "):"; } },
+    fr: { title: "Liste d’épicerie", pick: "Partager en", msg: function(n){ return "Liste d’épicerie (" + n + (n === 1 ? " article" : " articles") + ") :"; } }
+  };
+  var G_OTHER_LABELS = {
+    frozen: "Surgelés",
+    household: "Entretien ménager",
+    dairy: "Produits laitiers et œufs",
+    meat: "Viande et poisson",
+    bakery: "Boulangerie",
+    beverages: "Boissons",
+    snacks: "Collations",
+    produce: "Fruits et légumes",
+    pantry: "Garde-manger",
+    other: "Autre"
+  };
+  var G_SHARE_LS = "dds-grocery-share-lang";
   var G_OWNER = (typeof syncOwnerFor === "function") ? syncOwnerFor("groceries") : SYNC_OWNER;
   var G_SYNC_URL = "/api/sync?collection=groceries&owner=" + G_OWNER;
   var G_KEEP_DONE_MS = 7 * 24 * 3600 * 1000;   // checked-off items are cleaned out for good after a week
   var groceryShowDone = false, groceryLastWrite = 0, groceryTried = {};
   var groceryShareUrl = "", groceryShareMsg = "", groceryShareCount = 0, groceryShareBusy = false, groceryNote = "", groceryNoteTimer = null;
   var groceryFocusInput = false;
+  var groceryShareLang = readLS(G_SHARE_LS, G_LANG); if(groceryShareLang !== "en" && groceryShareLang !== "fr") groceryShareLang = G_LANG;
+  function gTextIn(g, L){ return (L === "fr" ? g.fr : g.en) || g.text; }
 
   function gText(g){
     if(G_TRANSLATE){ var t = (G_LANG === "fr") ? g.fr : g.en; if(t) return t; }
@@ -4231,25 +4255,26 @@
     if(groceryShareBusy) return;
     var open = groceries.filter(function(g){ return !g.done; });
     if(!open.length){ gNote(G_STR.nothing); return; }
+    var L = groceryShareLang;
     var by = {};
     open.forEach(function(g){
       var k = (g.category && GROCERY_LABELS[g.category]) ? g.category : GROCERY_OTHER_KEY;
-      (by[k] = by[k] || []).push(gText(g));
+      (by[k] = by[k] || []).push(gTextIn(g, L));
     });
     var groups = GROCERY_ORDER.filter(function(k){ return by[k]; }).map(function(k){
-      return { label: GROCERY_LABELS[k], items: by[k].sort(function(a, b){ return a.localeCompare(b, G_STR.sortLocale); }) };
+      return { label: (L === G_LANG ? GROCERY_LABELS : G_OTHER_LABELS)[k], items: by[k].sort(function(a, b){ return a.localeCompare(b, L); }) };
     });
     groceryShareBusy = true; groceryNote = ""; renderGroceries();
     fetch("/api/grocery-share", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ lang: G_LANG, title: G_STR.shareTitle, from: G_FROM, groups: groups })
+      body: JSON.stringify({ lang: L, title: G_SHARE[L].title, from: G_FROM, groups: groups })
     }).then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); }).then(function(res){
       groceryShareBusy = false;
       if(!res.ok || !res.d || !res.d.id) throw new Error("no id");
       groceryShareUrl = location.origin + "/l/" + res.d.id;
       groceryShareCount = open.length;
-      groceryShareMsg = G_STR.shareMsg(open.length);
+      groceryShareMsg = G_SHARE[L].msg(open.length);
       renderGroceries();
     }).catch(function(){ groceryShareBusy = false; gNote(G_STR.shareErr); });
   }
@@ -4335,6 +4360,17 @@
       done.forEach(function(g){ groceryBody.appendChild(gRow(g)); });
     }
 
+    if(G_TRANSLATE && open.length){
+      var lg = el("div", "grocery-lang");
+      lg.appendChild(document.createTextNode(G_SHARE[G_LANG].pick + " "));
+      ["en", "fr"].forEach(function(code){
+        var b = el("button"); b.type = "button"; b.textContent = code.toUpperCase();
+        b.setAttribute("aria-pressed", groceryShareLang === code ? "true" : "false");
+        b.addEventListener("click", function(){ groceryShareLang = code; writeLS(G_SHARE_LS, code); groceryShareUrl = ""; renderGroceries(); });
+        lg.appendChild(b);
+      });
+      groceryBody.appendChild(lg);
+    }
     var actions = el("div", "grocery-actions");
     if(open.length){
       var sb = el("button", "grocery-btn primary");
