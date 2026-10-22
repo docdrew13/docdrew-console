@@ -21,3 +21,9 @@
   from = "/fr/*"
   to = "/for-sylvain/:splat"
   status = 301
+
+# Short share links for the Grocery list: /l/<id> shows the shared list page.
+[[redirects]]
+  from = "/l/*"
+  to = "/list/?id=:splat"
+  status = 200

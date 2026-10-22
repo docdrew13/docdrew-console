@@ -592,17 +592,31 @@
   .todo-add input{ flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:16px; }
   .todo-add button{ flex:0 0 auto; background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
 
-  .grocery-category{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim); margin:10px 0 4px; }
-  .grocery-category:first-child{ margin-top:0; }
-  .grocery-row{ display:flex; align-items:center; gap:8px; width:100%; padding:4px 0; border-bottom:1px solid var(--grid-soft); }
-  .grocery-row input[type="checkbox"]{ accent-color:var(--crimson); width:15px; height:15px; flex:none; }
-  .grocery-text{ flex:1; font-size:17.5px; color:var(--text); }
-  .grocery-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:19px; }
-  .grocery-del:hover{ color:var(--bad); }
-  .grocery-empty{ color:var(--text-dim); font-size:15px; padding:6px 0 10px; }
-  .grocery-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
-  .grocery-add input{ flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:16px; }
-  .grocery-add button{ flex:0 0 auto; background:var(--crimson); color:var(--crimson-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
+  .grocery-category{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim); margin:14px 0 2px; }
+  .grocery-summary{ font-size:13px; color:var(--text-dim); margin:12px 0 0; }
+  .grocery-add + .grocery-summary{ margin-top:10px; }
+  .grocery-row{ display:flex; align-items:center; gap:12px; width:100%; padding:9px 2px; min-height:42px; max-height:90px; border-bottom:1px solid var(--grid-soft); cursor:pointer; box-sizing:border-box; transition:opacity .28s ease, max-height .28s ease, padding .28s ease, min-height .28s ease; }
+  .grocery-row.leaving{ opacity:0; max-height:0; min-height:0; padding-top:0; padding-bottom:0; overflow:hidden; border-bottom-width:0; }
+  .grocery-row input[type="checkbox"]{ accent-color:var(--crimson); width:20px; height:20px; flex:none; margin:0; cursor:pointer; }
+  .grocery-text{ flex:1; min-width:0; font-size:17.5px; color:var(--text); overflow-wrap:anywhere; }
+  .grocery-row.done .grocery-text{ text-decoration:line-through; color:var(--text-dim); }
+  .grocery-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:17px; padding:6px 4px; opacity:.55; }
+  .grocery-row:hover .grocery-del, .grocery-del:focus-visible{ opacity:1; }
+  .grocery-del:hover{ color:var(--bad); opacity:1; }
+  .grocery-empty{ color:var(--text-dim); font-size:15px; padding:12px 0 8px; }
+  .grocery-add{ display:flex; gap:6px; width:100%; }
+  .grocery-add input{ flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:8px 10px; font-size:16px; }
+  .grocery-add button{ flex:0 0 auto; background:var(--crimson); color:var(--crimson-ink); border:0; border-radius:6px; padding:0 14px; font-weight:700; font-size:15.5px; cursor:pointer; }
+  .grocery-actions{ display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+  .grocery-btn{ display:inline-block; background:transparent; color:var(--text); border:1px solid var(--grid-line); border-radius:6px; padding:7px 11px; font-size:14.5px; font-weight:600; cursor:pointer; text-decoration:none; line-height:1.2; font-family:inherit; }
+  .grocery-btn:hover{ border-color:var(--crimson); }
+  .grocery-btn.primary{ background:var(--crimson); color:var(--crimson-ink); border-color:var(--crimson); }
+  .grocery-btn[disabled]{ opacity:.6; cursor:default; }
+  .grocery-sharebox{ margin-top:12px; padding:10px; border:1px solid var(--crimson); border-radius:8px; background:var(--panel-2); }
+  .grocery-sharehead{ display:flex; align-items:center; justify-content:space-between; font-size:14px; font-weight:700; color:var(--text); }
+  .grocery-sharehead button{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:16px; padding:2px 4px; }
+  .grocery-sharebox input{ width:100%; box-sizing:border-box; margin-top:8px; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:7px 9px; font-size:14px; }
+  .grocery-note{ margin-top:10px; font-size:14px; color:var(--text-dim); }
 
   /* ============ TICKER ============ */
   /* ============ DETAIL OVERLAY ============ */
@@ -4076,13 +4090,19 @@
 
 
   /* ============================================================
-     GROCERIES — free-form add, auto-sorted into shopping categories
-     by simple keyword matching (no network call); checking an item
-     off removes it immediately instead of leaving it struck through.
+     GROCERIES — add items, auto-sorted into shopping categories
+     by simple keyword matching (no network call). Tap an item to check
+     it off: by default checked items disappear (a "Show checked-off"
+     button brings them back so a misclick can be undone, and they are
+     cleaned out for good after a week). "Share" makes a short link to a
+     tidy checkbox page you can text to anyone.
      Stored items keep a language-neutral category KEY (never the
      translated label) so a shared list (see LS.groceries above)
      renders with the right-language header no matter which page's
-     browser tab it's viewed from.
+     browser tab it's viewed from. On the joint Andrew/Sylvain list each
+     item also carries both an English ("en") and a French ("fr") version;
+     the English page shows "en", the French page shows "fr", and the
+     missing side is filled in automatically by /api/grocery-translate.
   ============================================================ */
   var groceryBody = $("grocery-body");
   var groceries = readLS(LS.groceries, DEFAULT_GROCERIES);
@@ -4124,18 +4144,193 @@
     return GROCERY_OTHER_KEY;
   }
 
+  var G_LANG = "en";          // which language this page shows
+  var G_TRANSLATE = false;     // joint Andrew/Sylvain list only: keep en + fr versions of every item
+  var G_FROM = "Susie";          // name shown on a shared link
+  var G_STR = {
+    placeholder: "Add an item…", add: "Add",
+    empty: "List is empty — add what you need above.",
+    allSet: "All set — nothing left to buy!",
+    toBuy: function(n){ return n + " to buy"; },
+    share: "Share", making: "Making link…",
+    showDone: function(n){ return "Show checked-off (" + n + ")"; },
+    hideDone: "Hide checked-off",
+    clearDone: "Clear checked-off",
+    doneHead: "Checked off",
+    linkReady: function(n){ return "Link ready · " + n + (n === 1 ? " item" : " items"); },
+    text: "Text it", nativeShare: "Share…", copy: "Copy link", copied: "Copied!", close: "Close",
+    shareErr: "Couldn't make a link. Try again.", nothing: "Nothing to share yet.",
+    remove: "Remove",
+    shareTitle: "Grocery list",
+    shareMsg: function(n){ return "Grocery list (" + n + (n === 1 ? " item" : " items") + "):"; },
+    sortLocale: "en"
+  };
+  var G_OWNER = (typeof syncOwnerFor === "function") ? syncOwnerFor("groceries") : SYNC_OWNER;
+  var G_SYNC_URL = "/api/sync?collection=groceries&owner=" + G_OWNER;
+  var G_KEEP_DONE_MS = 7 * 24 * 3600 * 1000;   // checked-off items are cleaned out for good after a week
+  var groceryShowDone = false, groceryLastWrite = 0, groceryTried = {};
+  var groceryShareUrl = "", groceryShareMsg = "", groceryShareCount = 0, groceryShareBusy = false, groceryNote = "", groceryNoteTimer = null;
+  var groceryFocusInput = false;
+
+  function gText(g){
+    if(G_TRANSLATE){ var t = (G_LANG === "fr") ? g.fr : g.en; if(t) return t; }
+    return g.text;
+  }
+  function gSave(){
+    groceryLastWrite = Date.now();
+    groceryShareUrl = "";            // a link made earlier no longer matches the list
+    writeLS(LS.groceries, groceries);
+    syncPush("groceries", groceries);
+  }
+  function gPrune(){
+    var now = Date.now();
+    groceries = groceries.filter(function(g){ return !(g.done && g.doneTs && now - g.doneTs > G_KEEP_DONE_MS); });
+  }
+  function gNote(msg){
+    groceryNote = msg;
+    clearTimeout(groceryNoteTimer);
+    groceryNoteTimer = setTimeout(function(){ groceryNote = ""; renderGroceries(); }, 4000);
+    renderGroceries();
+  }
+
+  /* ---- add (one item, or several separated by commas / new lines) ---- */
+  function gAdd(raw){
+    var parts = String(raw).split(/\n|,\s+|;\s*/).map(function(s){ return s.trim(); }).filter(Boolean);
+    if(!parts.length) return;
+    parts.forEach(function(text, i){
+      var lower = text.toLowerCase();
+      var dup = groceries.filter(function(g){
+        return [g.text, g.en, g.fr].some(function(v){ return v && String(v).toLowerCase() === lower; });
+      })[0];
+      if(dup){ if(dup.done){ dup.done = false; delete dup.doneTs; } return; }   // already listed: just un-check it
+      var item = { id: "g" + Date.now() + "-" + i + Math.random().toString(36).slice(2, 5), text: text, category: categorizeGrocery(text) };
+      if(G_TRANSLATE) item[G_LANG] = text;   // what was typed is the page's own language; the other side is filled in below
+      groceries.push(item);
+    });
+    gSave();
+    groceryFocusInput = true;
+    renderGroceries();
+    gTranslatePending();
+  }
+
+  /* ---- English <-> French for the joint list ---- */
+  function gTranslatePending(){
+    if(!G_TRANSLATE) return;
+    var need = groceries.filter(function(g){ return (!g.en || !g.fr) && !groceryTried[g.id]; }).slice(0, 40);
+    if(!need.length) return;
+    need.forEach(function(g){ groceryTried[g.id] = true; });
+    fetch("/api/grocery-translate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ items: need.map(function(g){ return { id: g.id, text: g.text }; }) })
+    }).then(function(r){ return r.ok ? r.json() : []; }).then(function(res){
+      if(!Array.isArray(res) || !res.length) return;
+      var changed = false;
+      res.forEach(function(t){
+        var g = groceries.filter(function(x){ return x.id === t.id; })[0];
+        if(!g) return;
+        if(!g.en){ g.en = t.en; changed = true; }
+        if(!g.fr){ g.fr = t.fr; changed = true; }
+        if(g.category === GROCERY_OTHER_KEY){
+          var c = categorizeGrocery(gText(g));
+          if(c !== GROCERY_OTHER_KEY) g.category = c;
+        }
+      });
+      if(changed){ gSave(); renderGroceries(); }
+    }).catch(function(){ /* offline or no key: the item just keeps showing as typed */ });
+  }
+
+  /* ---- share: snapshot -> short link -> text / copy ---- */
+  function gShare(){
+    if(groceryShareBusy) return;
+    var open = groceries.filter(function(g){ return !g.done; });
+    if(!open.length){ gNote(G_STR.nothing); return; }
+    var by = {};
+    open.forEach(function(g){
+      var k = (g.category && GROCERY_LABELS[g.category]) ? g.category : GROCERY_OTHER_KEY;
+      (by[k] = by[k] || []).push(gText(g));
+    });
+    var groups = GROCERY_ORDER.filter(function(k){ return by[k]; }).map(function(k){
+      return { label: GROCERY_LABELS[k], items: by[k].sort(function(a, b){ return a.localeCompare(b, G_STR.sortLocale); }) };
+    });
+    groceryShareBusy = true; groceryNote = ""; renderGroceries();
+    fetch("/api/grocery-share", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ lang: G_LANG, title: G_STR.shareTitle, from: G_FROM, groups: groups })
+    }).then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); }).then(function(res){
+      groceryShareBusy = false;
+      if(!res.ok || !res.d || !res.d.id) throw new Error("no id");
+      groceryShareUrl = location.origin + "/l/" + res.d.id;
+      groceryShareCount = open.length;
+      groceryShareMsg = G_STR.shareMsg(open.length);
+      renderGroceries();
+    }).catch(function(){ groceryShareBusy = false; gNote(G_STR.shareErr); });
+  }
+  function gCopy(text, btn){
+    function ok(){ btn.textContent = G_STR.copied; setTimeout(function(){ btn.textContent = G_STR.copy; }, 1600); }
+    function fallback(){
+      var inp = document.getElementById("grocery-share-url");
+      if(inp){ inp.focus(); inp.select(); try{ document.execCommand("copy"); ok(); }catch(e){} }
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(ok).catch(fallback); }
+    else fallback();
+  }
+
+  /* ---- render ---- */
+  function gRow(g){
+    var row = el("label", "grocery-row" + (g.done ? " done" : ""));
+    row.innerHTML = '<input type="checkbox"' + (g.done ? " checked" : "") + '><span class="grocery-text">' + escapeHtml(gText(g)) +
+      '</span><button type="button" class="grocery-del" aria-label="' + escapeHtml(G_STR.remove) + '" title="' + escapeHtml(G_STR.remove) + '">✕</button>';
+    row.querySelector("input").addEventListener("change", function(){
+      var now = this.checked;
+      function apply(){
+        g.done = now;
+        if(now) g.doneTs = Date.now(); else delete g.doneTs;
+        gSave(); renderGroceries();
+      }
+      if(now && !groceryShowDone){ row.classList.add("leaving"); setTimeout(apply, 280); }   // fade out, then it's gone
+      else apply();
+    });
+    row.querySelector(".grocery-del").addEventListener("click", function(e){
+      e.preventDefault(); e.stopPropagation();
+      groceries = groceries.filter(function(x){ return x.id !== g.id; });
+      gSave(); renderGroceries();
+    });
+    return row;
+  }
+
   function renderGroceries(){
+    var oldInput = $("grocery-input");
+    var keepVal = oldInput ? oldInput.value : "";
+    var hadFocus = groceryFocusInput || (oldInput && document.activeElement === oldInput);
+    groceryFocusInput = false;
     groceryBody.innerHTML = "";
-    if(groceries.length === 0){
+
+    var open = groceries.filter(function(g){ return !g.done; });
+    var done = groceries.filter(function(g){ return g.done; });
+
+    var addRow = el("div", "grocery-add");
+    addRow.innerHTML = '<input type="text" id="grocery-input" autocomplete="off" enterkeyhint="done" placeholder="' + escapeHtml(G_STR.placeholder) + '"><button type="button" id="grocery-add-btn">' + escapeHtml(G_STR.add) + '</button>';
+    groceryBody.appendChild(addRow);
+    var input = addRow.querySelector("input");
+    input.value = keepVal;
+    function submit(){ var v = input.value; input.value = ""; gAdd(v); }
+    addRow.querySelector("button").addEventListener("click", submit);
+    input.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); submit(); } });
+
+    if(open.length === 0){
       var empty = el("div", "grocery-empty");
-      empty.textContent = "List is empty — add what you need below.";
+      empty.textContent = groceries.length ? G_STR.allSet : G_STR.empty;
       groceryBody.appendChild(empty);
     } else {
+      var sum = el("div", "grocery-summary");
+      sum.textContent = G_STR.toBuy(open.length);
+      groceryBody.appendChild(sum);
       var byCategory = {};
-      groceries.forEach(function(g){
+      open.forEach(function(g){
         var key = (g.category && GROCERY_LABELS[g.category]) ? g.category : GROCERY_OTHER_KEY;
-        if(!byCategory[key]) byCategory[key] = [];
-        byCategory[key].push(g);
+        (byCategory[key] = byCategory[key] || []).push(g);
       });
       GROCERY_ORDER.forEach(function(key){
         var items = byCategory[key];
@@ -4143,37 +4338,99 @@
         var head = el("div", "grocery-category");
         head.textContent = GROCERY_LABELS[key];
         groceryBody.appendChild(head);
-        items.forEach(function(g){
-          var row = el("div", "grocery-row");
-          row.innerHTML = '<input type="checkbox"><span class="grocery-text">' + escapeHtml(g.text) + '</span><button type="button" class="grocery-del">✕</button>';
-          row.querySelector("input").addEventListener("change", function(){
-            groceries = groceries.filter(function(x){ return x.id !== g.id; });
-            writeLS(LS.groceries, groceries); syncPush("groceries", groceries);
-            renderGroceries();
-          });
-          row.querySelector(".grocery-del").addEventListener("click", function(){
-            groceries = groceries.filter(function(x){ return x.id !== g.id; });
-            writeLS(LS.groceries, groceries); syncPush("groceries", groceries);
-            renderGroceries();
-          });
-          groceryBody.appendChild(row);
-        });
+        items.forEach(function(g){ groceryBody.appendChild(gRow(g)); });
       });
     }
-    var addRow = el("div", "grocery-add");
-    addRow.innerHTML = '<input type="text" id="grocery-input" placeholder="Add an item…"><button type="button" id="grocery-add-btn">Add</button>';
-    groceryBody.appendChild(addRow);
-    function addGrocery(){
-      var input = $("grocery-input");
-      var text = input.value.trim();
-      if(!text) return;
-      groceries.push({ id: "g" + Date.now(), text: text, category: categorizeGrocery(text) });
-      writeLS(LS.groceries, groceries); syncPush("groceries", groceries);
-      renderGroceries();
+
+    if(groceryShowDone && done.length){
+      var dh = el("div", "grocery-category");
+      dh.textContent = G_STR.doneHead;
+      groceryBody.appendChild(dh);
+      done.forEach(function(g){ groceryBody.appendChild(gRow(g)); });
     }
-    $("grocery-add-btn").addEventListener("click", addGrocery);
-    $("grocery-input").addEventListener("keydown", function(e){ if(e.key === "Enter") addGrocery(); });
+
+    var actions = el("div", "grocery-actions");
+    if(open.length){
+      var sb = el("button", "grocery-btn primary");
+      sb.type = "button"; sb.textContent = groceryShareBusy ? G_STR.making : G_STR.share; sb.disabled = groceryShareBusy;
+      sb.addEventListener("click", gShare);
+      actions.appendChild(sb);
+    }
+    if(done.length){
+      var tb = el("button", "grocery-btn");
+      tb.type = "button"; tb.textContent = groceryShowDone ? G_STR.hideDone : G_STR.showDone(done.length);
+      tb.addEventListener("click", function(){ groceryShowDone = !groceryShowDone; renderGroceries(); });
+      actions.appendChild(tb);
+    }
+    if(groceryShowDone && done.length){
+      var cb = el("button", "grocery-btn");
+      cb.type = "button"; cb.textContent = G_STR.clearDone;
+      cb.addEventListener("click", function(){
+        groceries = groceries.filter(function(g){ return !g.done; });
+        gSave(); renderGroceries();
+      });
+      actions.appendChild(cb);
+    }
+    if(actions.childNodes.length) groceryBody.appendChild(actions);
+
+    if(groceryShareUrl){
+      var box = el("div", "grocery-sharebox");
+      var smsBody = groceryShareMsg + "\n" + groceryShareUrl;
+      box.innerHTML = '<div class="grocery-sharehead"><span>' + escapeHtml(G_STR.linkReady(groceryShareCount)) + '</span><button type="button" aria-label="' + escapeHtml(G_STR.close) + '" title="' + escapeHtml(G_STR.close) + '">✕</button></div>' +
+        '<input type="text" readonly id="grocery-share-url" value="' + escapeHtml(groceryShareUrl) + '">' +
+        '<div class="grocery-actions" style="margin-top:8px"><a class="grocery-btn primary" href="sms:?&amp;body=' + encodeURIComponent(smsBody) + '">' + escapeHtml(G_STR.text) + '</a></div>';
+      var bActions = box.querySelector(".grocery-actions");
+      if(navigator.share){
+        var nb = el("button", "grocery-btn");
+        nb.type = "button"; nb.textContent = G_STR.nativeShare;
+        nb.addEventListener("click", function(){ navigator.share({ text: groceryShareMsg, url: groceryShareUrl }).catch(function(){}); });
+        bActions.appendChild(nb);
+      }
+      var cpb = el("button", "grocery-btn");
+      cpb.type = "button"; cpb.textContent = G_STR.copy;
+      cpb.addEventListener("click", function(){ gCopy(groceryShareMsg + " " + groceryShareUrl, cpb); });
+      bActions.appendChild(cpb);
+      box.querySelector(".grocery-sharehead button").addEventListener("click", function(){ groceryShareUrl = ""; renderGroceries(); });
+      box.querySelector("input").addEventListener("focus", function(){ this.select(); });
+      groceryBody.appendChild(box);
+    }
+    if(groceryNote){
+      var note = el("div", "grocery-note");
+      note.textContent = groceryNote;
+      groceryBody.appendChild(note);
+    }
+
+    if(hadFocus){ input.focus(); try{ input.setSelectionRange(input.value.length, input.value.length); }catch(e){} }
   }
+
+  /* ---- load + keep fresh across devices ----
+     The server copy is the shared truth: pull on load, whenever the tab comes back into view,
+     and once a minute while it is open, so an item added on one device (and its French/English
+     version) shows up on the other. "x-sync-exists" lets an emptied list stay empty instead of
+     being refilled from a stale device. */
+  function groceryRefresh(initial){
+    fetch(G_SYNC_URL, { cache: "no-store" }).then(function(r){
+      if(!r.ok) return null;
+      var exists = r.headers.get("x-sync-exists") === "1";
+      return r.json().then(function(items){ return { exists: exists, items: items }; });
+    }).then(function(remote){
+      if(!remote || !Array.isArray(remote.items)) return;
+      if(Date.now() - groceryLastWrite < 4000) return;   // don't clobber a change that was just made here
+      if(remote.items.length > 0 || remote.exists){
+        if(JSON.stringify(remote.items) !== JSON.stringify(groceries)){
+          groceries = remote.items; gPrune();
+          writeLS(LS.groceries, groceries);
+          renderGroceries();
+        }
+      } else if(initial && groceries.length > 0){
+        syncPush("groceries", groceries);   // server never had a list: seed it from this device
+      }
+      gTranslatePending();
+    }).catch(function(){});
+  }
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) groceryRefresh(false); });
+  setInterval(function(){ if(!document.hidden) groceryRefresh(false); }, 60000);
+  gPrune();
 
   /* ============================================================
      RIGHT-RAIL ACCORDION — Weather / Podcasts / Markets / Currency
@@ -4221,7 +4478,7 @@
     renderGroceries();
     renderLog();
     syncBootstrap("todos", function(){ return todos; }, function(v){ todos = v; writeLS(LS.todos, todos); }, renderTodos);
-    syncBootstrap("groceries", function(){ return groceries; }, function(v){ groceries = v; writeLS(LS.groceries, groceries); }, renderGroceries);
+    groceryRefresh(true);
     syncBootstrap("log", function(){ return captainsLog; }, function(v){ captainsLog = v; writeLS(LS.captainsLog, captainsLog); }, renderLog);
 
     resizeCanvas2();

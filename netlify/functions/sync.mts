@@ -51,7 +51,12 @@ export default async (req: Request) => {
           data = legacy;
         }
       }
-      return jsonResponse(Array.isArray(data) ? data : []);
+      // x-sync-exists tells the client the list has really been written before (even if it is
+      // now empty), so an emptied shared list is not mistaken for a never-used one and refilled
+      // from a stale device.
+      const res = jsonResponse(Array.isArray(data) ? data : []);
+      if (data !== null) res.headers.set("x-sync-exists", "1");
+      return res;
     } catch (err) {
       return jsonResponse({ error: "read_failed", message: String(err) }, 502);
     }
