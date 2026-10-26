@@ -4148,7 +4148,7 @@
     clearDone: "Clear checked-off",
     doneHead: "Checked off",
     linkReady: function(n){ return "Link ready · " + n + (n === 1 ? " item" : " items"); },
-    text: "Text it", nativeShare: "Share…", copy: "Copy link", copied: "Copied!", close: "Close",
+    copyList: "Copy list", copiedList: "List copied!", text: "Text it", nativeShare: "Share…", copy: "Copy link", copied: "Copied!", close: "Close",
     shareErr: "Couldn't make a link. Try again.", nothing: "Nothing to share yet.",
     remove: "Remove",
     shareTitle: "Grocery list",
@@ -4204,16 +4204,43 @@
   }
 
   /* ---- add (one item, or several separated by commas / new lines) ---- */
+  // Turns pasted text into items. Understands lists made by "Copy list": the "Grocery list (7 items):" header is skipped,
+  // "- " / "•" / "[ ]" bullets are stripped, and a category heading (either language) files the lines under it.
+  function gParse(raw){
+    raw = String(raw);
+    var multi = /\r|\n/.test(raw);
+    var lines = multi ? raw.split(/\r\n|\r|\n/) : [raw];
+    var headings = {};
+    [GROCERY_LABELS, G_OTHER_LABELS].forEach(function(map){
+      Object.keys(map).forEach(function(k){ headings[map[k].toLowerCase()] = k; });
+    });
+    var out = [], cat = null;
+    lines.forEach(function(line){
+      line = line.trim();
+      if(!line) return;
+      var bulleted = /^([-–—•*·▪◦☐☑✓]|\[[ xX]?\]|\d+[.)])\s*/.test(line);
+      line = line.replace(/^([-–—•*·▪◦☐☑✓]|\[[ xX]?\]|\d+[.)])\s*/, "").trim();
+      if(!line) return;
+      if(multi && /\(\d+\s+[^)]+\)\s*:?\s*$/.test(line) && !bulleted) return;   // "Grocery list (7 items):"
+      var h = line.replace(/\s*:\s*$/, "").toLowerCase();
+      if(multi && !bulleted && headings[h]){ cat = headings[h]; return; }
+      var pieces = multi ? [line] : line.split(/,\s+|;\s*/);
+      pieces.forEach(function(p){ p = p.trim(); if(p) out.push({ text: p, cat: cat }); });
+    });
+    return out;
+  }
+
   function gAdd(raw){
-    var parts = String(raw).split(/\n|,\s+|;\s*/).map(function(s){ return s.trim(); }).filter(Boolean);
+    var parts = gParse(raw);
     if(!parts.length) return;
-    parts.forEach(function(text, i){
+    parts.forEach(function(part, i){
+      var text = part.text;
       var lower = text.toLowerCase();
       var dup = groceries.filter(function(g){
         return [g.text, g.en, g.fr].some(function(v){ return v && String(v).toLowerCase() === lower; });
       })[0];
       if(dup){ if(dup.done){ dup.done = false; delete dup.doneTs; } return; }   // already listed: just un-check it
-      var item = { id: "g" + Date.now() + "-" + i + Math.random().toString(36).slice(2, 5), text: text, category: categorizeGrocery(text) };
+      var item = { id: "g" + Date.now() + "-" + i + Math.random().toString(36).slice(2, 5), text: text, category: part.cat || categorizeGrocery(text) };
       if(G_TRANSLATE) item[G_LANG] = text;   // what was typed is the page's own language; the other side is filled in below
       groceries.push(item);
     });
@@ -4278,14 +4305,35 @@
       renderGroceries();
     }).catch(function(){ groceryShareBusy = false; gNote(G_STR.shareErr); });
   }
-  function gCopy(text, btn){
-    function ok(){ btn.textContent = G_STR.copied; setTimeout(function(){ btn.textContent = G_STR.copy; }, 1600); }
+  function gCopy(text, btn, label, doneLabel){
+    label = label || G_STR.copy; doneLabel = doneLabel || G_STR.copied;
+    function ok(){ btn.textContent = doneLabel; setTimeout(function(){ btn.textContent = label; }, 1600); }
     function fallback(){
-      var inp = document.getElementById("grocery-share-url");
-      if(inp){ inp.focus(); inp.select(); try{ document.execCommand("copy"); ok(); }catch(e){} }
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try{ if(document.execCommand("copy")) ok(); }catch(e){}
+      document.body.removeChild(ta);
     }
     if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(ok).catch(fallback); }
     else fallback();
+  }
+  // The open items as plain text, grouped under their category headings (in the chosen share language).
+  function gListText(){
+    var L = groceryShareLang, by = {};
+    groceries.filter(function(g){ return !g.done; }).forEach(function(g){
+      var k = (g.category && GROCERY_LABELS[g.category]) ? g.category : GROCERY_OTHER_KEY;
+      (by[k] = by[k] || []).push(gTextIn(g, L));
+    });
+    var n = 0, blocks = [];
+    GROCERY_ORDER.forEach(function(k){
+      if(!by[k]) return;
+      n += by[k].length;
+      var label = (L === G_LANG ? GROCERY_LABELS : G_OTHER_LABELS)[k];
+      blocks.push(label + "\n" + by[k].sort(function(a, b){ return a.localeCompare(b, L); }).map(function(x){ return "- " + x; }).join("\n"));
+    });
+    return G_SHARE[L].msg(n) + "\n\n" + blocks.join("\n\n");
   }
 
   /* ---- render ---- */
@@ -4329,6 +4377,11 @@
     function submit(){ var v = input.value; input.value = ""; gAdd(v); }
     addRow.querySelector("button").addEventListener("click", submit);
     input.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); submit(); } });
+    // A pasted multi-line list (e.g. from "Copy list" or a note) is imported whole instead of being squashed onto one line.
+    input.addEventListener("paste", function(e){
+      var txt = (e.clipboardData || window.clipboardData).getData("text");
+      if(txt && /\r|\n/.test(txt.trim())){ e.preventDefault(); gAdd(txt); }
+    });
 
     if(open.length === 0){
       var empty = el("div", "grocery-empty");
@@ -4412,6 +4465,10 @@
       cpb.type = "button"; cpb.textContent = G_STR.copy;
       cpb.addEventListener("click", function(){ gCopy(groceryShareMsg + " " + groceryShareUrl, cpb); });
       bActions.appendChild(cpb);
+      var clb = el("button", "grocery-btn");
+      clb.type = "button"; clb.textContent = G_STR.copyList;
+      clb.addEventListener("click", function(){ gCopy(gListText(), clb, G_STR.copyList, G_STR.copiedList); });
+      bActions.appendChild(clb);
       box.querySelector(".grocery-sharehead button").addEventListener("click", function(){ groceryShareUrl = ""; renderGroceries(); });
       box.querySelector("input").addEventListener("focus", function(){ this.select(); });
       groceryBody.appendChild(box);
