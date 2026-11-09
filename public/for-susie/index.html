@@ -3264,7 +3264,12 @@
     return d.getUTCFullYear() + "-" + String(d.getUTCMonth()+1).padStart(2,"0") + "-" + String(d.getUTCDate()).padStart(2,"0");
   }
 
-  async function loadEarthMosaicForDate(dateStr){
+  // GIBS layers tried in order for each date. VIIRS returned HTTP 503 for every tile on
+  // 2026-11-09 (layer-specific outage; MODIS Terra/Aqua on the same server were fine), which
+  // left the globe with no continents — so fall through to the MODIS true-color layers.
+  var EARTH_LAYERS = ["VIIRS_SNPP_CorrectedReflectance_TrueColor", "MODIS_Terra_CorrectedReflectance_TrueColor", "MODIS_Aqua_CorrectedReflectance_TrueColor"];
+
+  async function loadEarthMosaicForDate(dateStr, layer){
     var grid = EARTH_TILE_MATRIX[EARTH_TILE_ZOOM];
     var cols = grid.cols, rows = grid.rows, tileSize = 512;
     var w = cols * tileSize, h = rows * tileSize;
@@ -3278,7 +3283,7 @@
         img.crossOrigin = "anonymous";
         img.onload = function(){ offCtx.drawImage(img, col * tileSize, row * tileSize); resolve(true); };
         img.onerror = function(){ resolve(false); }; // e.g. a tile GIBS hasn't backfilled yet — leave transparent
-        img.src = "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/"
+        img.src = "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/" + layer + "/default/"
           + dateStr + "/250m/" + EARTH_TILE_ZOOM + "/" + row + "/" + col + ".jpg";
       });
     }
@@ -3334,7 +3339,9 @@
       var now = new Date();
       for(var back = 0; back <= 4; back++){
         var d = new Date(now.getTime() - back * 86400000);
-        if(await loadEarthMosaicForDate(ymd(d))) return;
+        for(var li = 0; li < EARTH_LAYERS.length; li++){
+          if(await loadEarthMosaicForDate(ymd(d), EARTH_LAYERS[li])) return;
+        }
       }
     }catch(err){
       // keep showing whatever mosaic (or the gradient fallback) we already had
