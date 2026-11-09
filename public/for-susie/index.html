@@ -510,6 +510,7 @@
   .legend-dot.blue{ background:#5AA7E8; box-shadow:0 0 6px #5AA7E8; }
   .legend-dot.red{ background:#FF6B5E; box-shadow:0 0 6px #FF6B5E; }
   .legend-dot.frost{ background:var(--frost); box-shadow:0 0 6px var(--frost); }
+  .legend-dot.iss{ background:#ff10f0; box-shadow:0 0 8px #ff10f0; }
   .legend-dot.gold{ background:var(--gold); box-shadow:0 0 6px var(--gold); }
   .legend-dot.haze{ background:rgba(230,220,205,0.85); }
   .legend-dot.precip-grad{
@@ -788,7 +789,7 @@
               <span><i class="legend-dot haze"></i>Cloud cover</span>
               <span><i class="legend-dot precip-grad"></i>Live radar (light→heavy)</span>
                             <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montreal</span></span>
-              <span><i class="legend-dot frost"></i>ISS</span>
+              <span><i class="legend-dot iss"></i>ISS</span>
             </div>
             <div class="globe-hint">drag to rotate &amp; tilt · click a marker</div>
           </div>
@@ -3843,13 +3844,13 @@
         var baseRIss = 4 * scaleIss;
         ctx2.beginPath();
         ctx2.arc(pIss.x, pIss.y, baseRIss + pulse*3*scaleIss, 0, Math.PI*2);
-        ctx2.strokeStyle = "rgba(142,201,255," + (0.6*scaleIss) + ")";
+        ctx2.strokeStyle = "rgba(255,16,240," + (0.6*scaleIss) + ")";
         ctx2.lineWidth = 1.4;
         ctx2.stroke();
 
         ctx2.beginPath();
         ctx2.arc(pIss.x, pIss.y, baseRIss, 0, Math.PI*2);
-        ctx2.fillStyle = "rgba(142,201,255," + (0.95*scaleIss) + ")";
+        ctx2.fillStyle = "rgba(255,16,240," + (0.95*scaleIss) + ")";
         ctx2.fill();
 
         renderedMarkers2.push({ x: pIss.x, y: pIss.y, r: Math.max(10, baseRIss + 7), type: "iss", ref: issData });
