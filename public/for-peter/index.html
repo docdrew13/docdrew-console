@@ -4169,6 +4169,10 @@
   var groceryShowDone = false, groceryLastWrite = 0, groceryTried = {};
   var groceryShareUrl = "", groceryShareMsg = "", groceryShareCount = 0, groceryShareBusy = false, groceryNote = "", groceryNoteTimer = null;
   var groceryFocusInput = false;
+  var G_SHARE = { en: { msg: G_STR.shareMsg } };   // English only: no second language to share in
+  var G_OTHER_LABELS = {};
+  var groceryShareLang = "en";
+  function gTextIn(g, L){ return g.text; }
 
   function gText(g){
     if(G_TRANSLATE){ var t = (G_LANG === "fr") ? g.fr : g.en; if(t) return t; }
