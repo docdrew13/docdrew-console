@@ -9,10 +9,12 @@ import { getStore } from "@netlify/blobs";
 // (each list already lived in the visiting browser's own localStorage, unauthenticated) --
 // centralizing it doesn't lower that trust boundary, since anyone who could already open
 // the page could already see/edit the data client-side.
-const COLLECTIONS = new Set(["todos", "log", "groceries"]);
+const COLLECTIONS = new Set(["todos", "log", "groceries", "reminders"]);
 // "main" = Andrew (English page), "sylvain" = French page, "shared" = the joint Groceries list
 // used by those two pages only. Peter and Susie each keep their own, fully separate.
-const OWNERS = new Set(["main", "sylvain", "shared", "peter", "susie"]);
+// "aviva" / "andrea" are the personal lists of those two pages; "aa-shared" is the live-shared
+// Groceries + Reminders list (collections "groceries" and "reminders") between them.
+const OWNERS = new Set(["main", "sylvain", "shared", "peter", "susie", "aviva", "andrea", "aa-shared"]);
 const MAX_ITEMS = 500;
 const MAX_BODY_BYTES = 256 * 1024;
 

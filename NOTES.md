@@ -143,3 +143,22 @@ All client-side, straight from ESPN's public site.api (ESPN blocks Netlify's ser
   (`syncOwnerFor()` in each page). `sync.mts` seeds `groceries:shared` once from the old `groceries:main` list.
 - Peter / Susie are unchanged (fully separate). Code/features still apply to all four pages as before.
 - Old `/` and `/fr/` addresses redirect (see `netlify.toml`). Peter/Susie's FR toggle still points at `/fr/` and rides the redirect.
+
+## Aviva and Andrea consoles (2026-11-17)
+- `public/for-aviva/index.html` and `public/for-andrea/index.html` — English only, generated from `for-peter` by `Claude outputs/build_aa.py`
+  (re-run it after changing for-peter, or edit the two pages directly; the script is a one-off generator, not part of the deploy).
+- Differences from Peter's page: no Weather Systems globe (the drawing code stays but never starts: `HAS_GLOBE` is false), no FR link,
+  no Canadian/Quebec news tabs, home = Hudson, OH 44236, Links = Foodie Collection / Travel Planner / Climate,
+  Sports = Cleveland Guardians (MLB id 5) + Cleveland Cavaliers (NBA id 5). The Indians were renamed Guardians in 2022; ESPN only lists Guardians.
+- News tabs: Aviva gets "Social Work" + "Animal Services"; Andrea gets "Pediatric Dentistry". Feeds are in `netlify/functions/news.mts`
+  (direct publisher feeds so stories open inline; a dead feed drops out silently). `FeedConfig.match` is an optional keyword filter.
+- **Shared vs personal data:** Tasks / Notes / Links / settings are personal (`dds-aviva-*` or `dds-andrea-*`, sync owner `aviva` / `andrea`).
+  **Groceries and Shared Reminders are one list shared live by both** (localStorage `dds-aa-shared-*`, sync owner `aa-shared`,
+  collections `groceries` and `reminders`). Both pages poll the server every 8 s while visible and on focus; every change is pushed.
+  The two shared panels have an amber outline and a "⇄ Shared" badge (`data-shared` attribute + `.shared-tag`).
+- Shared Reminders panel sits in the middle column under Weather (where the globe was). Items: text, optional due date, who added it.
+  Share/Text reuses `/api/grocery-share` + `/l/<id>`, so the recipient gets the same tick-off checkbox page.
+- Sync is last-writer-wins on the whole array (same as Groceries elsewhere): two people editing within the same few seconds can overwrite each other.
+- Known bug in for-peter (and for-susie, same template): adding a Grocery item throws `G_OTHER_LABELS is not defined` — the share/paste code was copied
+  over without the English+French definitions. The Aviva/Andrea pages define English-only stand-ins (search "G_OTHER_LABELS").
+- The top search box on every page submits to Google web search (`google.com/search?q=`), hardcoded.

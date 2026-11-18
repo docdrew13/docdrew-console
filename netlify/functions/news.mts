@@ -12,6 +12,9 @@ interface NewsItem {
 interface FeedConfig {
   name: string;
   url: string;
+  // Optional keyword filter (regex source, case-insensitive) for broad feeds on a narrow topic.
+  // Matching items come first; unmatched ones only fill in if fewer than 3 match.
+  match?: string;
 }
 
 // Each category now blends 2-3 outlets instead of pulling from a single source.
@@ -76,6 +79,23 @@ const SOURCES: Record<string, FeedConfig[]> = {
     { name: "CTV News", url: "https://www.ctvnews.ca/rss/ctvnews-ca-top-stories-public-rss-1.822009" },
   ],
   quebec: [{ name: "Global News Montreal", url: "https://globalnews.ca/montreal/feed/" }],
+  // Aviva's / Andrea's consoles. Direct publisher feeds only (no search-engine redirect links),
+  // so every story can open inline in the panel. A feed that is down simply drops out of the mix.
+  "pediatric-dentistry": [
+    { name: "Medical Xpress Dentistry", url: "https://medicalxpress.com/rss-feed/dentistry-news/", match: "child|pediatric|paediatric|kids|infant|adolescen|teen|toddler|baby|school|fluoride|caries|cavit|sealant|orthodon|oral health" },
+    { name: "Dentistry Today", url: "https://www.dentistrytoday.com/category/clinical-insights/pediatric-dentistry/feed/" },
+    { name: "Medical Xpress", url: "https://medicalxpress.com/rss-feed/search/?search=pediatric+dentistry" },
+  ],
+  "social-work": [
+    { name: "The Imprint", url: "https://imprintnews.org/feed" },
+    { name: "Rural Health Info Hub", url: "https://www.ruralhealthinfo.org/rss/news/topics/child-welfare.xml" },
+    { name: "The Guardian — Social care", url: "https://www.theguardian.com/society/social-care/rss" },
+  ],
+  "animal-services": [
+    { name: "Animal Sheltering", url: "https://www.animalsheltering.org/feed" },
+    { name: "Alley Cat Allies", url: "https://www.alleycat.org/feed/" },
+    { name: "The Guardian — Animal welfare", url: "https://www.theguardian.com/world/animal-welfare/rss" },
+  ],
   entertainment: [
     { name: "BBC Entertainment", url: "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml" },
     { name: "NPR Culture", url: "https://feeds.npr.org/1008/rss.xml" },
@@ -185,7 +205,14 @@ async function fetchFeed(feed: FeedConfig): Promise<NewsItem[]> {
   });
   if (!res.ok) throw new Error("upstream status " + res.status);
   const xml = await res.text();
-  return parseItems(xml, 12).map((it) => ({ ...it, sourceLabel: feed.name }));
+  let items = parseItems(xml, feed.match ? 40 : 12);
+  if (feed.match) {
+    const re = new RegExp(feed.match, "i");
+    const hit = items.filter((it) => re.test(it.title + " " + it.snippet));
+    items = hit.length >= 3 ? hit : hit.concat(items.filter((it) => !hit.includes(it)));
+    items = items.slice(0, 12);
+  }
+  return items.map((it) => ({ ...it, sourceLabel: feed.name }));
 }
 
 // Blend multiple outlets by alternating between them (source A's newest, source B's
