@@ -195,7 +195,7 @@
   }
   .lang-switch:hover{ color:var(--text); border-color:var(--cyan); }
   .theme-switch{
-    position:absolute; top:50%; right:60px; transform:translateY(-50%); display:inline-flex; align-items:center; justify-content:center;
+    position:absolute; top:50%; right:16px; transform:translateY(-50%); display:inline-flex; align-items:center; justify-content:center;
     width:34px; height:31px; border-radius:8px; background:var(--panel-2); border:1px solid var(--grid-line);
     color:var(--text-dim); font-size:16px; cursor:pointer; padding:0;
   }
@@ -691,7 +691,7 @@
     .search input{ font-size:14px; padding:6px 8px; width:130px; }
     .search button{ font-size:13px; padding:6px 10px; width:70px; }
     .lang-switch{ width:28px; height:26px; font-size:11px; right:10px; }
-    .theme-switch{ width:28px; height:26px; font-size:14px; right:46px; }
+    .theme-switch{ width:28px; height:26px; font-size:14px; right:10px; }
   }
   @media (max-width: 900px){
     .stardate{ display:none; }
@@ -707,7 +707,7 @@
     .search input{ width:76px; padding:5px 6px; }
     .search button{ padding:5px 7px; font-size:12px; width:60px; }
     .lang-switch{ width:22px; height:20px; font-size:9.5px; right:8px; }
-    .theme-switch{ width:22px; height:20px; font-size:12px; right:36px; }
+    .theme-switch{ width:22px; height:20px; font-size:12px; right:8px; }
   }
   /* Below ~1020px, even the shrunk single-row layout has too many rigid pieces (brand+city,
      stardate+date, greeting, clock, search, language switch) to fit without either forcing
@@ -765,7 +765,6 @@
         <button type="submit">Go</button>
       </form>
       <button class="theme-switch" id="theme-toggle-btn" type="button" title="Toggle light / dark look">☀</button>
-      <a class="lang-switch" href="/fr/" title="Passer en français">FR</a>
     </header>
 
     <main class="deck">
