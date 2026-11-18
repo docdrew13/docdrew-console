@@ -3,13 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Maria's Console</title>
-<meta name="description" content="A full-screen live console — weather, markets and world news plotted on a rotating globe. Preconfigured for Maria.">
+<title>Maria's Desktop</title>
+<meta name="description" content="Weather, news, scores, groceries and reminders in one place. Set up for Maria.">
 <meta name="robots" content="noindex, nofollow">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305070C'/%3E%3Cpath d='M32 10 54 46H10Z' fill='none' stroke='%23FFA94D' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='36' r='4.5' fill='%2352D8DE'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FFF7EC'/%3E%3Ccircle cx='32' cy='32' r='12' fill='%23D98A2B'/%3E%3C/svg%3E">
 <style>
   /* ============ TOKENS ============ */
   :root{
+    /* Warm "reading lamp" palette flipped to a light/white page
+       (easier to read than a dark screen) — same tokens, same panels, same functions as the
+       main console, just light backgrounds with dark warm-brown text instead of the reverse.
+       Accent hues are pulled to a medium depth so they stay legible both as text on the white
+       page AND as the bright little colored bands behind panel headers/badges. --frost is
+       deliberately kept blue: it's the "cold" cue for the snow report and ISS marker, and
+       stays legible as "cold" even in a warm page. */
+    --void:#DCE6EC;
+    --panel:#FFF7EC;
+    --panel-2:#FCEDD6;
+    --grid-line:#E6D3B4;
+    --grid-soft:#F3E7D2;
+    --text:#2A1C10;
+    --text-dim:#7C6852;
+    --amber:#D98A2B;
+    --amber-ink:#3A2408;
+    --amber-dim:#8A5A28;
+    --gold:#C79A2E;
+    --gold-ink:#3A2C05;
+    --cyan:#C85F35;
+    --cyan-ink:#3A1810;
+    --cyan-dim:#8A4A32;
+    --violet:#B0578C;
+    --violet-ink:#331828;
+    --good:#5A9E3E;
+    --bad:#D14A38;
+    --teal:#A67B35;
+    --teal-ink:#2E2408;
+    --frost:#3F84C9;
+    --frost-ink:#0B2A44;
+    --crimson:#D14A72;
+    --crimson-ink:#3A0A18;
+    color-scheme: light;
+  }
+
+  /* Dark look — the cool cyan "starship bridge" defaults from the main console, offered
+     here as the alternate to the warm light look above. Toggled via the sun/moon button
+     next to the FR/EN switch; the choice is remembered per browser (see LS.theme below). */
+  :root[data-theme="dark"]{
     --void:#05070C;
     --panel:#0D1420;
     --panel-2:#121C2C;
@@ -25,49 +64,17 @@
     --cyan:#52D8DE;
     --cyan-ink:#052B2D;
     --cyan-dim:#2B6E72;
-    --violet:#4C8DFF;
-    --violet-ink:#0A1F3D;
+    --violet:#B98CE8;
+    --violet-ink:#241535;
     --good:#4FD68C;
     --bad:#FF6B5E;
     --teal:#4FD6B0;
     --teal-ink:#06342A;
     --frost:#8EC9FF;
     --frost-ink:#0B2A44;
-    --crimson:#4FBF7A;
-    --crimson-ink:#0C3320;
+    --crimson:#FF6F91;
+    --crimson-ink:#3A0A18;
     color-scheme: dark;
-  }
-
-  /* Light look — same tokens, warm "reading lamp" values instead of the cool cyan
-     "starship bridge" defaults above. Toggled via the sun/moon button next to the FR/EN
-     switch; the choice is remembered per browser (see LS.theme in the script below). */
-  :root[data-theme="light"]{
-    --void:#DCE6EC;
-    --panel:#F1F1F0;
-    --panel-2:#E6E6E4;
-    --grid-line:#D5D5D2;
-    --grid-soft:#EAEAE8;
-    --text:#23281F;
-    --text-dim:#5E6F63;
-    --amber:#D98A2B;
-    --amber-ink:#3A2408;
-    --amber-dim:#8A5A28;
-    --gold:#C79A2E;
-    --gold-ink:#3A2C05;
-    --cyan:#C85F35;
-    --cyan-ink:#3A1810;
-    --cyan-dim:#8A4A32;
-    --violet:#2F6FCF;
-    --violet-ink:#0E2647;
-    --good:#5A9E3E;
-    --bad:#D14A38;
-    --teal:#A67B35;
-    --teal-ink:#2E2408;
-    --frost:#3F84C9;
-    --frost-ink:#0B2A44;
-    --crimson:#3E8F5E;
-    --crimson-ink:#0C2E1C;
-    color-scheme: light;
   }
 
   *{ box-sizing:border-box; }
@@ -84,14 +91,14 @@
   }
   body{
     background:
-      radial-gradient(1200px 700px at 18% -10%, rgba(82,216,222,0.06), transparent 60%),
-      radial-gradient(900px 600px at 100% 110%, rgba(76,141,255,0.06), transparent 60%),
+      radial-gradient(1200px 700px at 18% -10%, rgba(255,138,92,0.10), transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, rgba(216,154,194,0.10), transparent 60%),
       var(--void);
   }
-  :root[data-theme="light"] body{
+  :root[data-theme="dark"] body{
     background:
-      radial-gradient(1200px 700px at 18% -10%, rgba(255,138,92,0.10), transparent 60%),
-      radial-gradient(900px 600px at 100% 110%, rgba(62,143,94,0.10), transparent 60%),
+      radial-gradient(1200px 700px at 18% -10%, rgba(82,216,222,0.06), transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, rgba(185,140,232,0.06), transparent 60%),
       var(--void);
   }
   ::selection{ background:var(--amber); color:var(--amber-ink); }
@@ -136,7 +143,7 @@
   .brand-mark{
     width:26px; height:26px; flex:none;
     background: conic-gradient(from 220deg, var(--amber), var(--gold), var(--amber));
-    clip-path: polygon(50% 6%, 94% 88%, 6% 88%);
+    border-radius:50%;
   }
   .brand-name{
     font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; letter-spacing:0.08em;
@@ -164,8 +171,9 @@
     border-left:1px solid var(--grid-line); padding-left:16px; line-height:1.2;
   }
   .stardate{
-    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size:16px; color:var(--cyan); letter-spacing:0.04em;
+    /* Hidden on Peter's page — no "stardate" sci-fi flourish, just the plain warm
+       date shown on the line below (.subline) still displays. */
+    display:none;
   }
 
   .subline{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13.5px; color:var(--text-dim); }
@@ -757,12 +765,12 @@
       <div class="brand-block">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-name" id="brand-name">MARIA'S CONSOLE</span>
+          <span class="brand-name" id="brand-name">MARIA'S DESKTOP</span>
         </div>
         <select class="brand-city-select" id="home-city-select" aria-label="Home city"></select>
       </div>
       <div class="stardate-block">
-        <span class="stardate" id="stardate">STARDATE —</span>
+        <span class="stardate" id="stardate"></span>
         <div class="subline" id="date-text">—</div>
         <div class="subline subline-short" id="date-text-short">—</div>
       </div>
@@ -780,7 +788,7 @@
       <aside class="rail rail-left">
         <section class="panel round-l" data-accent="violet" aria-label="News feed">
           <div class="panel-head">
-            <span>Newswire</span>
+            <span>News</span>
           </div>
           <div class="news-tabs-bar" id="news-tabs"></div>
           <div class="panel-body no-pad scroll" id="news-body">
@@ -792,7 +800,7 @@
       <div class="globes-stack">
         <section class="globe-panel" aria-label="Live weather and orbital tracking" data-accent="weather">
           <div class="globe-head">
-            <span>Weather Systems</span>
+            <span>Weather</span>
             <span class="n" id="weather-globe-count">syncing…</span>
           </div>
           <div class="globe-body" id="weather-globe-body">
@@ -890,14 +898,14 @@
           <div class="panel-head"><span>Currency</span><i class="panel-chevron">▾</i></div>
           <div class="panel-body scroll" id="fx-body"></div>
         </section>
-        <section class="panel round-l" data-accent="frost" data-panel-key="settings" aria-label="Console settings">
+        <section class="panel round-l" data-accent="frost" data-panel-key="settings" aria-label="Settings">
           <div class="panel-head">
             <span>Settings</span>
             <i class="panel-chevron">▾</i>
           </div>
           <div class="panel-body" id="settings-body">
             <div class="settings-io-row">
-              <button class="head-btn" id="settings-export-btn" type="button" title="Download all your console settings as one file">Export Settings</button>
+              <button class="head-btn" id="settings-export-btn" type="button" title="Download all your settings as one file">Export Settings</button>
               <button class="head-btn" id="settings-import-btn" type="button" title="Restore settings from a previously exported file">Import Settings</button>
               <input type="file" id="settings-import-file" accept="application/json" hidden>
             </div>
@@ -908,10 +916,10 @@
     </main>
 
     <div class="footer-strip">
-      <div class="ship-status-wrap" aria-label="Ship status">
+      <div class="ship-status-wrap" aria-label="Status">
         <div class="ship-status-track" id="ship-status-track">
-          <span class="ship-status" id="ship-status">Systems nominal</span>
-          <span class="ship-status" id="ship-status-dup" aria-hidden="true">Systems nominal</span>
+          <span class="ship-status" id="ship-status">Welcome</span>
+          <span class="ship-status" id="ship-status-dup" aria-hidden="true">Welcome</span>
         </div>
       </div>
       <div class="footer-sep"></div>
@@ -978,7 +986,7 @@
   // look. Applied to <html> as early as possible (right after LS, before any rendering) so
   // there's no flash of the wrong look on load. See toggleTheme() further down for the
   // button wiring, and the globe drawing code for how the canvas colors follow along too.
-  var pageTheme = readLS(LS.theme, "dark"); // "dark" | "light"
+  var pageTheme = readLS(LS.theme, "light"); // "dark" | "light" — opens warm by default
   document.documentElement.setAttribute("data-theme", pageTheme);
 
   // "Top Stories" is pinned first (the default/home tab, catching general news that
@@ -1173,27 +1181,19 @@
   var DEFAULT_TODOS = [];
   var DEFAULT_GROCERIES = [];
   var DEFAULT_LOG = [
-    { id: "seed-1", text: "Console fully operational. All systems nominal.", ts: new Date().toISOString() }
+    { id: "seed-1", text: "Welcome — everything's set up and ready.", ts: new Date().toISOString() }
   ];
 
   var SHIP_STATUS_LINES = [
-    "Shields nominal · Warp core stable",
-    "Deflector array calibrated",
-    "Life support: optimal",
-    "Comm relays synced with Starfleet Command",
-    "Sensor sweep: no anomalies detected",
-    "Replicator queue: nominal",
-    "Structural integrity field: 100%",
-    "Impulse engines standing by",
-    "Navigational deflector: green",
-    "Auxiliary power: online",
-    "Long-range sensors: all clear",
-    "Holodeck safety protocols: engaged",
-    "Transporter buffer: stable",
-    "Subspace relay: strong signal",
-    "Bridge systems: fully operational",
-    "Environmental controls: within tolerance",
-    "Astrometric survey: in progress"
+    "Coffee's on \u2014 take your time",
+    "Nothing urgent today, just take it easy",
+    "Weather's tracked, so you don't have to think about it",
+    "Home base set to Wakefield, RI",
+    "News, weather, and scores, all in one place",
+    "Groceries shared with Peter and Julia",
+    "Everything's set up \u2014 just click around",
+    "Glad you're here \u2014 make yourself comfortable",
+    "Just for you, Maria"
   ];
 
   /* ============================================================
@@ -1288,15 +1288,15 @@
     var start = new Date(Date.UTC(now.getUTCFullYear(), 0, 0));
     var doy = Math.floor((now - start) / 86400000);
     var frac = Math.floor(((now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds())/86400) * 10);
-    $("stardate").textContent = "STARDATE " + now.getUTCFullYear() + "." + String(doy).padStart(3,"0") + "." + frac;
+    $("stardate").textContent = "";
   }
   updateClock();
   setInterval(updateClock, 1000);
 
   /* ============================================================
-     BRAND NAME (editable, top-left "MARIA'S CONSOLE")
+     BRAND NAME (editable, top-left "MARIA'S DESKTOP")
   ============================================================ */
-  var brandName = readLS(LS.brandName, "MARIA'S CONSOLE");
+  var brandName = readLS(LS.brandName, "MARIA'S DESKTOP");
   var brandEditing = false;
   function renderBrandName(){
     if(brandEditing) return;
@@ -1324,7 +1324,7 @@
       if(closed) return;
       closed = true;
       var typed = input.value.trim();
-      brandName = typed || "MARIA'S CONSOLE";
+      brandName = typed || "MARIA'S DESKTOP";
       writeLS(LS.brandName, brandName);
       brandEditing = false;
       renderBrandName();
@@ -4060,7 +4060,7 @@
         });
         if(!applied) throw new Error("nothing_recognized");
       }catch(err){
-        settingsIoStatus("Couldn't read that file — not a docdrew console export.", true);
+        settingsIoStatus("Couldn't read that file — not a settings export from this site.", true);
         return;
       }
       settingsIoStatus("Imported " + applied + " settings — reloading…", false);
