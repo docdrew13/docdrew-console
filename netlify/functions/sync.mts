@@ -16,7 +16,7 @@ const COLLECTIONS = new Set(["todos", "log", "groceries", "reminders"]);
 // Groceries + Reminders list (collections "groceries" and "reminders") between them.
 // "julia" is Julia's personal list; "pj-shared" is the live-shared Groceries + Reminders between Peter and Julia
 // (seeded once from Peter's earlier personal grocery list).
-const OWNERS = new Set(["main", "sylvain", "shared", "peter", "susie", "aviva", "andrea", "aa-shared", "julia", "pj-shared"]);
+const OWNERS = new Set(["main", "sylvain", "shared", "peter", "susie", "aviva", "andrea", "aa-shared", "julia", "pj-shared", "maria"]);
 const MAX_ITEMS = 500;
 const MAX_BODY_BYTES = 256 * 1024;
 
