@@ -14,7 +14,9 @@ const COLLECTIONS = new Set(["todos", "log", "groceries", "reminders"]);
 // used by those two pages only. Peter and Susie each keep their own, fully separate.
 // "aviva" / "andrea" are the personal lists of those two pages; "aa-shared" is the live-shared
 // Groceries + Reminders list (collections "groceries" and "reminders") between them.
-const OWNERS = new Set(["main", "sylvain", "shared", "peter", "susie", "aviva", "andrea", "aa-shared"]);
+// "julia" is Julia's personal list; "pj-shared" is the live-shared Groceries + Reminders between Peter and Julia
+// (seeded once from Peter's earlier personal grocery list).
+const OWNERS = new Set(["main", "sylvain", "shared", "peter", "susie", "aviva", "andrea", "aa-shared", "julia", "pj-shared"]);
 const MAX_ITEMS = 500;
 const MAX_BODY_BYTES = 256 * 1024;
 
@@ -56,6 +58,14 @@ export default async (req: Request) => {
       // x-sync-exists tells the client the list has really been written before (even if it is
       // now empty), so an emptied shared list is not mistaken for a never-used one and refilled
       // from a stale device.
+      // Same one-time seed for Peter + Julia: start their shared Groceries from Peter's old personal list.
+      if (data === null && collection === "groceries" && owner === "pj-shared") {
+        const legacy = await store.get("groceries:peter", { type: "json" });
+        if (Array.isArray(legacy) && legacy.length > 0) {
+          await store.setJSON(key, legacy);
+          data = legacy;
+        }
+      }
       const res = jsonResponse(Array.isArray(data) ? data : []);
       if (data !== null) res.headers.set("x-sync-exists", "1");
       return res;
