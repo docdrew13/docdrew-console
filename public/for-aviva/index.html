@@ -725,6 +725,15 @@
     .theme-switch{ top:14px; transform:none; }
   }
 
+  /* Weather: change location (search any city or ZIP) */
+  .wx-loc-box{ padding:8px 10px 10px; border-bottom:1px solid var(--grid-line); }
+  .wx-loc-box form{ display:flex; gap:6px; }
+  .wx-loc-box input{ flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:7px 9px; font-size:15px; }
+  .wx-loc-box button[type="submit"]{ flex:0 0 auto; background:var(--cyan); color:var(--cyan-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:14.5px; cursor:pointer; }
+  .wx-loc-results button{ display:block; width:100%; text-align:left; margin-top:5px; background:transparent; color:var(--text); border:1px solid var(--grid-line); border-radius:6px; padding:7px 9px; font-size:14.5px; cursor:pointer; }
+  .wx-loc-results button:hover{ border-color:var(--cyan); }
+  .wx-loc-results .wx-loc-msg{ margin-top:6px; font-size:13.5px; color:var(--text-dim); }
+
   /* Shared Reminders (Aviva + Andrea) */
   .rem-add{ display:flex; flex-wrap:wrap; gap:6px; width:100%; }
   .rem-add input[type="text"]{ flex:1 1 150px; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:8px 10px; font-size:16px; }
@@ -784,7 +793,11 @@
         <aside class="rail rail-right rail-mid" aria-label="Weather and conditions">
           <div class="rail-spacer" aria-hidden="true"></div>
           <section class="panel round-l" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
-            <div class="panel-head"><span>Weather</span><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°C</button><i class="panel-chevron">▾</i></div>
+            <div class="panel-head"><span>Weather</span><button class="head-btn" id="wx-loc-btn" type="button" title="Change location (search any city or ZIP)">📍</button><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°C</button><i class="panel-chevron">▾</i></div>
+            <div class="wx-loc-box" id="wx-loc-box" hidden>
+              <form id="wx-loc-form"><input type="text" id="wx-loc-input" placeholder="City or ZIP" autocomplete="off" aria-label="Search for a city or ZIP code"><button type="submit">Find</button></form>
+              <div class="wx-loc-results" id="wx-loc-results"></div>
+            </div>
             <div class="panel-body scroll" id="wx-body">
               <div class="empty-state">Loading weather…</div>
             </div>
@@ -1340,6 +1353,7 @@
       html += "</optgroup>";
     });
     sel.innerHTML = html;
+    if(!WORLD_CITIES.some(function(c){ return c.name === homeCity.name; })){ sel.insertAdjacentHTML("afterbegin", '<option value="' + escapeHtml(homeCity.name) + '">' + escapeHtml(homeCity.name) + "</option>"); }
     sel.value = homeCity.name;
     sel.title = "Set your home city — moves the globe marker, local weather, and clock";
     syncHomeLabels();
@@ -4737,6 +4751,85 @@
     }).catch(function(){});
   }
   rPrune();
+
+  /* ============================================================
+     WEATHER LOCATION PICKER — with no globe to click, the Weather panel gets a 📍 button that
+     searches any city or ZIP (Open-Meteo geocoding, no key) and makes it the home location:
+     weather, header clock/timezone, and snow-report region all follow.
+  ============================================================ */
+  var US_STATES = { AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",CT:"Connecticut",DE:"Delaware",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming",DC:"District of Columbia" };
+  var wxLocBox = $("wx-loc-box"), wxLocInput = $("wx-loc-input"), wxLocResults = $("wx-loc-results");
+  function wxLocMsg(t){ wxLocResults.innerHTML = '<div class="wx-loc-msg">' + escapeHtml(t) + "</div>"; }
+  function wxLocLabel(r){
+    var st = "";
+    if(r.country_code === "US" && r.admin1){
+      st = r.admin1;
+      Object.keys(US_STATES).forEach(function(k){ if(US_STATES[k] === r.admin1) st = k; });
+    } else if(r.admin1){ st = r.admin1; }
+    return r.name + (st ? ", " + st : "") + (r.country_code && r.country_code !== "US" ? ", " + (r.country || r.country_code) : "");
+  }
+  function wxLocSearch(q){
+    q = q.trim();
+    if(q.length < 2){ wxLocMsg("Type a city or ZIP code."); return; }
+    var name = q, hint = "";
+    if(q.indexOf(",") > -1){ name = q.split(",")[0].trim(); hint = q.split(",").slice(1).join(",").trim().toLowerCase(); }
+    else if(/^[A-Za-z .'-]+\s+[A-Za-z]{2}$/.test(q) && US_STATES[q.slice(-2).toUpperCase()]){ name = q.slice(0, -2).trim(); hint = q.slice(-2).toLowerCase(); }
+    wxLocMsg("Searching…");
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(name) + "&count=10&language=en&format=json")
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var res = (d && d.results) || [];
+        if(hint){
+          var f = res.filter(function(r){
+            var a1 = (r.admin1 || "").toLowerCase(), cc = (r.country_code || "").toLowerCase(), c = (r.country || "").toLowerCase();
+            var full = (US_STATES[hint.toUpperCase()] || "").toLowerCase();
+            return a1 === hint || a1.indexOf(hint) === 0 || (full && a1 === full) || cc === hint || c.indexOf(hint) === 0;
+          });
+          if(f.length) res = f;
+        }
+        res = res.slice(0, 6);
+        if(!res.length){ wxLocMsg("No match. Try a city name or ZIP code."); return; }
+        wxLocResults.innerHTML = "";
+        res.forEach(function(r){
+          var b = el("button", "");
+          b.type = "button";
+          b.textContent = wxLocLabel(r) + (r.admin2 ? " (" + r.admin2 + ")" : "");
+          b.addEventListener("click", function(){ wxSetLocation({ name: wxLocLabel(r), region: "Custom", lat: r.latitude, lon: r.longitude, tz: r.timezone || HOME_TZ }); });
+          wxLocResults.appendChild(b);
+        });
+      })
+      .catch(function(){ wxLocMsg("Search is unavailable right now."); });
+  }
+  function wxSetLocation(c){
+    homeCity = c;
+    HOME = { name: c.name, lat: c.lat, lon: c.lon };
+    HOME_TZ = c.tz;
+    writeLS(LS.homeCity, homeCity);
+    updateClock();
+    syncHomeLabels();
+    var sel = $("home-city-select");
+    if(sel){
+      var has = Array.prototype.some.call(sel.options, function(o){ return o.value === c.name; });
+      if(!has){ var o = document.createElement("option"); o.value = c.name; o.textContent = c.name; sel.insertBefore(o, sel.firstChild); }
+      sel.value = c.name;
+    }
+    wxPlace = { name: c.name, lat: c.lat, lon: c.lon };
+    writeLS(LS.wxCity, wxPlace);
+    snowRegion = { name: c.name, lat: c.lat, lon: c.lon };
+    writeLS(LS.snowRegion, snowRegion);
+    lastBromontData = null;
+    wxViewMode = "home";
+    wxLocBox.hidden = true;
+    wxLocInput.value = ""; wxLocResults.innerHTML = "";
+    loadHomeWeather();
+    if(snowExpanded) loadBromont();
+  }
+  $("wx-loc-btn").addEventListener("click", function(e){
+    e.stopPropagation();
+    wxLocBox.hidden = !wxLocBox.hidden;
+    if(!wxLocBox.hidden){ wxLocInput.focus(); wxLocMsg("Search a city or ZIP, e.g. “Hudson, OH”, “44236” or “Paris”."); }
+  });
+  $("wx-loc-form").addEventListener("submit", function(e){ e.preventDefault(); wxLocSearch(wxLocInput.value); });
 
   /* ============================================================
      RIGHT-RAIL ACCORDION — Weather / Podcasts / Markets / Currency

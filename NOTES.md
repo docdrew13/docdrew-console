@@ -162,3 +162,4 @@ All client-side, straight from ESPN's public site.api (ESPN blocks Netlify's ser
 - Known bug in for-peter (and for-susie, same template): adding a Grocery item throws `G_OTHER_LABELS is not defined` — the share/paste code was copied
   over without the English+French definitions. The Aviva/Andrea pages define English-only stand-ins (search "G_OTHER_LABELS").
 - The top search box on every page submits to Google web search (`google.com/search?q=`), hardcoded.
+- Weather has a visible 📍 button (search any city or ZIP via Open-Meteo geocoding, client-side) since there is no globe to click. Picking a place sets weather, header clock/timezone and the snow-report region together; it is remembered per browser.
