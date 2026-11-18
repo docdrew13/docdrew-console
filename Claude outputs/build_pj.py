@@ -62,6 +62,8 @@ j = rep(j, '''  var DEFAULT_SPORTS_TEAMS = [
     { sport: "basketball", league: "womens-college-basketball", teamId: "41", label: "UConn Huskies" }
   ];''', '  var DEFAULT_SPORTS_TEAMS = [];')
 j = j.replace("Peter's in Wakefield, RI", "Julia is in Wakefield, RI").replace("Preset for Peter", "Preset for Julia").replace("for Peter", "for Julia")
+j = rep(j, '    { key: "health-medicine", label: "Health & Medicine" },\n',
+        '    { key: "health-medicine", label: "Health & Medicine" },\n    { key: "nursing", label: "Nursing" },\n')
 os.makedirs(ROOT + "/public/for-julia", exist_ok=True)
 open(ROOT + "/public/for-julia/index.html", "w", encoding="utf-8").write(j)
 print("ok", len(j), sorted(set(re.findall(r"(?i)peter", j))))

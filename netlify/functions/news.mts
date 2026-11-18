@@ -86,6 +86,12 @@ const SOURCES: Record<string, FeedConfig[]> = {
     { name: "Dentistry Today", url: "https://www.dentistrytoday.com/category/clinical-insights/pediatric-dentistry/feed/" },
     { name: "Medical Xpress", url: "https://medicalxpress.com/rss-feed/search/?search=pediatric+dentistry" },
   ],
+  // Julia's console. Direct publisher feeds so stories open inline; a dead feed drops out silently.
+  nursing: [
+    { name: "Rural Health Info Hub — Nurses", url: "https://www.ruralhealthinfo.org/rss/news/topics/nurses.xml" },
+    { name: "Nursing Times", url: "https://www.nursingtimes.net/feed" },
+    { name: "American Nurse", url: "https://www.myamericannurse.com/feed/" },
+  ],
   "social-work": [
     { name: "The Imprint", url: "https://imprintnews.org/feed" },
     { name: "Rural Health Info Hub", url: "https://www.ruralhealthinfo.org/rss/news/topics/child-welfare.xml" },
