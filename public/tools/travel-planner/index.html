@@ -1,4 +1,12 @@
-<!DOCTYPE html>
+<!DOCTYPE html><script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Travel Planner",
+  "schemaVersion": 1,
+  "description": "Travel Planner dashboard — tracks multiple trips with itineraries (day-by-day activities), bookings & documents (flights, hotels, confirmations), countdowns, and status badges. Empty shell for now; Claude adds trip content here after researching trips described in chat, and it also supports manual editing, export/import JSON backup, and print.",
+  "mcpTools": [],
+  "mcpServerNames": []
+}
+</script>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -193,19 +201,6 @@
   .trip-subrow input:hover, .trip-subrow input:focus{border-color:var(--border);background:var(--surface);outline:none;}
   .trip-subrow input[type="date"]{color:var(--text);}
 
-  .filters-bar{
-    display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 14px;padding:9px 12px;
-    background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);
-  }
-  .filters-bar-toggle{
-    display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--text);
-    font-size:13px;font-weight:700;cursor:pointer;padding:2px 4px;border-radius:6px;
-  }
-  .filters-bar-toggle:hover{color:var(--primary);}
-  .filters-bar-summary{
-    color:var(--text-muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;
-  }
-
   .transport-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 20px;}
   .transport-chip{
     display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 9px;border-radius:99px;
@@ -235,6 +230,15 @@
     background:var(--amber-light);border-radius:var(--radius-sm);padding:9px 13px;margin:-10px 0 18px;line-height:1.4;
   }
 
+  .trip-filters-toggle{
+    display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;
+    padding:8px 2px;margin:0 0 4px;color:var(--text-muted);font-size:12px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.05em;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  }
+  .trip-filters-toggle:hover{color:var(--text);}
+  .trip-filters-box{margin-top:12px;}
+  .trip-filters-box.collapsed{display:none;}
+
   .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px;}
   .tab-btn{
     padding:9px 14px;font-size:13px;font-weight:700;color:var(--text-muted);
@@ -245,7 +249,7 @@
   .tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
 
   .notes-box{
-    width:100%;min-height:480px;border:1px solid var(--border);border-radius:var(--radius-md);
+    width:100%;min-height:340px;border:1px solid var(--border);border-radius:var(--radius-md);
     background:var(--surface);color:var(--text);padding:10px 12px;font-family:inherit;font-size:13px;
     resize:vertical;
   }
@@ -487,24 +491,6 @@
   .tt-neigh-row b{color:var(--text-muted);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:1px;}
   .tt-source{font-size:10.5px;color:var(--text-muted);margin-top:16px;font-style:italic;}
 
-  /* ---------- Travel Tools: Around Me ---------- */
-  .am-locate-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
-  .am-or{color:var(--text-muted);font-size:12.5px;}
-  .am-search-input{flex:1;min-width:220px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:13.5px;font-family:inherit;}
-  .am-label{font-size:12px;color:var(--text-muted);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
-  .am-label strong{color:var(--text);}
-  .am-section{margin-bottom:20px;}
-  .am-section-title{display:flex;align-items:center;gap:7px;font-weight:700;font-size:13.5px;color:var(--teal);margin-bottom:10px;}
-  .am-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
-  .am-card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px 13px;text-decoration:none;color:inherit;transition:border-color .12s;}
-  .am-card:hover{border-color:var(--teal);}
-  .am-card.am-notable{border-left:3px solid var(--teal);}
-  .am-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;}
-  .am-card-name{font-weight:700;font-size:13px;color:var(--text);}
-  .am-badge{color:var(--teal);flex-shrink:0;}
-  .am-card-addr{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
-  .am-card-dist{font-size:11px;color:var(--teal);font-weight:700;margin-top:6px;}
-
   /* ---------- Travel Tools: Quick Research ---------- */
   .tt-qr-form{background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px 18px;margin-bottom:18px;}
   .tt-qr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:12px;}
@@ -616,8 +602,7 @@
 
 <script>
 /* =========================================================
-   TRAVEL PLANNER (copie autonome iCloud / standalone iCloud copy)
-   -- BILINGUAL (EN / FR-CA)
+   TRAVEL PLANNER -- BILINGUAL (EN / FR-CA)
    Self-contained dashboard with a language toggle chosen at
    the start. EN and FR are two independent trip datasets
    (STATE_BY_LANG.en / .fr) sharing the same code -- switching
@@ -663,13 +648,7 @@ const ICONS = {
   dollar: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
   cloud: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a5 5 0 1 1 1.3-9.8A6 6 0 0 1 22 12a4.5 4.5 0 0 1-4.5 7Z"/></svg>',
   shield: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>',
-  search: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
-  coffee: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a3 3 0 0 1 0 6h-1"/><path d="M3 8h14v6a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg>',
-  utensils: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7a2 2 0 0 0 4 0V2M5 9v13M16 2s-3 2-3 6 3 4 3 4v10"/></svg>',
-  bag: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1 14H5Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>',
-  palette: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A4.2 4.2 0 0 0 21.5 11c0-5-4.3-9-9.5-9Z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="8" r="1.2"/></svg>',
-  museum: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6M6 10v7M10 10v7M14 10v7M18 10v7"/></svg>',
-  flag: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V3"/><path d="M4 4h13l-2 4 2 4H4"/></svg>'
+  search: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
 };
 const TYPE_ICON = {
   flight: ICONS.plane, hotel: ICONS.bed, car: ICONS.car, train: ICONS.train,
@@ -916,6 +895,7 @@ function toggleAccessibilityNeed(tripId, val){
 function goHome(){ ui.selectedTripId=null; ui.activeSection='trips'; render(); }
 function selectTrip(id){ ui.selectedTripId=id; ui.activeTab='itinerary'; ui.activeSection='trips'; render(); }
 function setTab(tab){ ui.activeTab=tab; render(); }
+function toggleTripFilters(){ ui.filtersCollapsed = !ui.filtersCollapsed; render(); }
 function showLongWeekends(){ ui.activeSection='longweekends'; ui.selectedTripId=null; if(!ui.lwList) ui.lwList='noDog'; render(); }
 function setLwList(list){ ui.lwList=list; render(); }
 function showTravelTools(){ ui.activeSection='traveltools'; ui.selectedTripId=null; if(!ui.ttTool) ui.ttTool='climate'; if(ui.ttDest===undefined) ui.ttDest = state.trips.length? state.trips[0].id : '__other__'; render(); }
@@ -1283,7 +1263,7 @@ const SEED_STATE_EN = {
       travelers: '2',
       departureAirport: 'YUL',
       cabinClass: 'premium',
-      notes: 'ARRONDISSEMENT-BY-ARRONDISSEMENT LOCAL-LIVING GUIDE\n\nFor living locally during a long stay, not just sightseeing through it — organized by arrondissement, working outward from the center. Base neighborhoods (4th, 5th, 6th) covered in depth.\n\n1ST ARR. — LOUVRE / PALAIS ROYAL: Grand and monumental near the Louvre, quieter and residential further from Rue de Rivoli. Museums: the Louvre (go early or late, pick one wing); Musée de l\'Orangerie for Monet\'s Water Lilies; Sainte-Chapelle; Bourse de Commerce (Pinault Collection) for contemporary art; the Conciergerie (Marie Antoinette\'s prison, few crowds). Local living: Palais Royal Gardens, a quieter locals\' version of the Tuileries with the striped Buren Columns; Galerie Véro-Dodat, a beautifully preserved 1826 covered passage. Cafés: Angelina on Rue de Rivoli for hot chocolate; Café Saint Honoré; Jean-Paul Hévin for chocolates. Restaurants: Au Pied de Cochon (classic, open late); Poulette near Châtelet. Shopping: Place Vendôme for jewelry; La Samaritaine, the restored Art Nouveau/Art Deco department store; E. Dehillerin for French kitchenware.\n\n2ND ARR. — BOURSE: Smallest, least touristed, good for slow wandering. Local living: Rue Montorgueil, a pedestrian market street (boulangeries, fromageries, fruit stands) — the everyday shopping street here. Covered passages: Galerie Vivienne, Passage des Panoramas (oldest in Paris, 1799), Passage du Grand Cerf, quieter Passage Bourg-l\'Abbé. Sights: the free Oval Reading Room at the Bibliothèque Nationale (Richelieu site); Grand Rex cinema (Art Deco, backstage tours). Cafés: Stohrer on Rue Montorgueil, oldest pâtisserie in Paris (1730), invented the baba au rhum; A La Mère de Famille for chocolate; Plaq for bean-to-bar chocolate and hot chocolate. Restaurants: Le Chardonnay (truffle croque monsieur); Le Petit Vendôme (steak au poivre); Les Saveurs de l\'Orient in Passage des Panoramas (Moroccan).\n\n3RD/4TH ARR. — LE MARAIS: Best match for food, markets, and wandering — one of the trip\'s recommended bases. Museums/sights: Notre-Dame (reopened Dec. 2024, free, climb the towers if booked ahead); Place des Vosges, the oldest planned square in Paris; Musée Carnavalet (history of Paris, free); Musée Picasso; Maison Victor Hugo. Markets: Marché des Enfants Rouges, the oldest covered food market in Paris (1615) — try Chez Alain Miam Miam for sandwiches; Marché aux Fleurs, the flower market on Île de la Cité. Local living: Rue François-Miron has two genuinely medieval half-timbered houses; Passage de l\'Ancre, the oldest covered passage, now a quiet residential corner; Tour Saint-Jacques, climbable May–November, rooftop views. Cafés: Berthillon on Île Saint-Louis for gelato; Carette on Place des Vosges for hot chocolate; Maison Georges Larnicol for kouign-amann. Restaurants: L\'As du Falafel; Au Petit Versailles du Marais; Bistrot des Tournelles. Shopping: boutiques, vintage, and jewelers around Rue des Francs-Bourgeois and Rue Vieille du Temple.\n\n5TH ARR. — LATIN QUARTER: The oldest part of Paris (Roman Lutetia, 52 BC) and personally recommended as the most lived-in, local-feeling base by the Life in Rural France piece. Museums/sights: the Panthéon (crypts hold Voltaire, Rousseau, Marie Curie, Victor Hugo); Cluny Museum, built into actual Roman bath ruins, with the Lady and the Unicorn tapestries; Jardin des Plantes; Arènes de Lutèce, a 1st-century Roman amphitheater where locals play pétanque. Local living: Rue Mouffetard, the market street to know here — best 10am–1pm, especially Saturdays, closed Sunday afternoon/Monday, start at Square Saint-Médard; Place Monge Market (Wed/Fri/Sun, 7am–2:30pm) as a more local alternative. Books: Shakespeare and Company (expect a line); the bouquinistes (book stalls) along the Seine between Pont Neuf and Pont de la Tournelle, closed in winter. Hidden corners: Arab World Institute\'s rooftop terrace; Musée Curie (small, free, her actual former lab); Rue du Chat-qui-Pêche, the narrowest street in Paris. Cafés: A. Lacroix Patisserie near Notre-Dame (lifelike fruit pastries, also good for lunch); Odette (choux pastries). Restaurants: cheap, cheerful bistros throughout, especially around the Sorbonne.\n\n6TH ARR. — SAINT-GERMAIN-DES-PRÉS: The grown-up café-culture neighborhood, one of the trip\'s three recommended bases. Café de Flore and Les Deux Magots sit across from each other by the Église Saint-Germain-des-Prés — pricier, not the best food, but worth one coffee each for the history (Sartre, de Beauvoir, Hemingway all drank here). Museums/sights: Jardin du Luxembourg, arguably the best central park in Paris; Église Saint-Sulpice, with a striking Cavaillé-Coll organ; Musée Delacroix, small, in his former home/studio. Local living: Cour du Commerce Saint-André, a small covered passage off Boulevard Saint-Germain with Le Procope (often called the oldest restaurant in Paris); Rue de Buci, an 800-year-old street dense with restaurants and bars; Mazarin Library, the oldest public library in France (1643), free to walk through. Cafés: Plaq; Chapon et La Chocolaterie de l\'Église (chocolate mousse in a paper cone). Restaurants: Breizh Café (Breton galettes); La Jacobine (coq au vin); Bistro des Augustins (potato gratins); Le Jardin Saint Germain (book ahead, confit de canard). Shopping: boutiques, bookstores, and chocolatiers along Boulevard Saint-Germain itself.\n\n7TH ARR. — EIFFEL TOWER / INVALIDES: More polished and residential, excellent museums a few blocks off the Champ de Mars. Museums/sights: the Eiffel Tower (book online ahead); Musée d\'Orsay, the world\'s largest Impressionist collection, in a former train station; Musée Rodin, sculptures in an 18th-century mansion and garden; Les Invalides, including Napoleon\'s tomb. Local living: Rue Cler, a pedestrian market street good for picnic supplies for the Champ de Mars, with Fromagerie Cantin and Fromagerie de Grenelle nearby; Marché Saxe-Breteuil (Thu/Sat mornings, 7–2:30), lined up almost perfectly with the Eiffel Tower. Shopping: Le Bon Marché, the oldest department store in Paris and the only one on the Left Bank; La Grande Épicerie next door, a genuinely fun luxury food hall. Cafés: Maison Bergeron (hand-painted ceilings, viennoiseries). Restaurants: Au Bon Accueil on Rue Montessuy (reserve the terrace for a tower view); Les Antiquaires near the Orsay (excellent bœuf bourguignon). Quiet Eiffel Tower viewpoints: Rue de l\'Université and Rue Buenos Ayres frame the tower between Haussmann buildings; Place de Sydney and Avenue de Montessuy are quieter alternatives.\n\n8TH ARR. — ÉLYSÉES: Upscale and monumental along the Champs-Élysées, genuinely residential a few blocks off it. Museums/sights: Musée Jacquemart-André, a 19th-century mansion turned museum, often nearly empty even in high season; Petit Palais, free, with Monet, Cézanne, and Rodin, plus a lovely courtyard café; Galerie Dior (book weeks ahead, sells out). Local living: Parc Monceau, the neighborhood\'s actual local park, more residential than the Tuileries or Luxembourg; La Madeleine, styled like a Greek temple outside, Baroque inside, far less crowded than Notre-Dame. Shopping: the Golden Triangle (Avenue Montaigne, Avenue George V, the Champs-Élysées) for flagship couture; Rue du Faubourg Saint-Honoré for Hermès and Cartier. On the first Sunday of most months the Champs-Élysées closes to cars 11am–5pm — a genuinely different, more local atmosphere. Food here leans toward hotel dining — plan meals elsewhere and treat the 8th as a sightseeing/shopping day.\n\n18TH ARR. — MONTMARTRE: Village-on-a-hill, best treated as atmosphere rather than a checklist. Only became part of Paris in 1860; go early (~9am) for Sacré-Cœur without the crowds. Local living: Rue de l\'Abreuvoir, one of the prettiest short streets in Paris, running from the pink café La Maison Rose down to Place Dalida; 38 staircases woven through the hill\'s streets, worth stumbling onto (Rue Foyatier, Rue du Mont-Cenis, Rue Girardon); Vigne du Clos Montmartre, the last working vineyard within Paris city limits (visible from the street); Musée de Montmartre with the attached Renoir Gardens. Food street: Rue Lepic (between Rue des Abbesses and Boulevard de Clichy) — fromagerie, chocolaterie, bakeries, and Café des Deux Moulins (an Amélie filming location); Le Consulat, a classic café once frequented by Van Gogh, Monet, and Picasso; Gilles Marchal for madeleines; Boris Lumé Bakery for kouign-amann croissants. Sights: Sacré-Cœur (climb into the dome for 360° views, not just the front steps); Place du Tertre for street artists; Cimetière de Montmartre, quieter and equally atmospheric as Père-Lachaise; the Moulin Rouge at the bottom of Rue Lepic.\n\nFor this stay specifically: the 5th (Latin Quarter) gives the most lived-in daily texture (Rue Mouffetard as an everyday market, cheap bistros, old bookshops). The 4th (Marais) is strongest if food and markets matter most day to day. The 6th (Saint-Germain) is the most polished and central, with Luxembourg Gardens and Boulevard Saint-Germain\'s cafés at the door. All three are close enough to treat this entire guide as one neighborhood over a month — the 1st, 2nd, 7th, and 8th are all a 15–25 minute walk away, and Montmartre is a quick Métro ride.\n\nFull arrondissement guide with sources: paris-arrondissement-local-living-guide.md, saved alongside this planner.\n\nSCOPE NOTE: most guides recommend 4-7 days for Paris itself -- 21-30 days is far beyond that, so this is built as Paris as a home base with train extensions radiating out, matching the Train transport mode selected. An Airbnb-first stay fits naturally with a month-long trip (kitchen, laundry, more space than a hotel room).\n\nBest time to go: May and September are the sweet spot -- mild weather (15-23C), manageable crowds, better rates than summer. June-Aug has the longest days but steepest prices and worst queues. Winter (Dec-Feb) is cheapest by far (~35% lower hotel rates than July) with thin crowds if you don\'t mind cold, short days.\n\nOptional international extension (Eurostar from Gare du Nord): London (<2.5h, requires UK passport control, not Schengen), Brussels (~1.5h), Amsterdam (~3.5h). Fares from ~e44 one-way in shoulder season -- book early, prices rise closer to departure.\n\nTrim to ~21 days: cut 2-3 Paris flex/rest days and shorten Provence/Riviera to Avignon only (skip Nice, saves ~3 days). Stretch to 30 days: add a 3-4 day Eurostar extension (London, or Brussels+Amsterdam) after returning to Paris.\n\nFull research doc with sources: paris-rail-trip.md, saved alongside this planner.',
+      notes: 'ARRONDISSEMENT-BY-ARRONDISSEMENT LOCAL-LIVING GUIDE\n\nFor living locally during a long stay, not just sightseeing through it — organized by arrondissement, working outward from the center. Base neighborhoods (4th, 5th, 6th) covered in depth.\n\n1ST ARR. — LOUVRE / PALAIS ROYAL: Grand and monumental near the Louvre, quieter and residential further from Rue de Rivoli. Museums: the Louvre (go early or late, pick one wing); Musée de l\'Orangerie for Monet\'s Water Lilies; Sainte-Chapelle; Bourse de Commerce (Pinault Collection) for contemporary art; the Conciergerie (Marie Antoinette\'s prison, few crowds). Local living: Palais Royal Gardens, a quieter locals\' version of the Tuileries with the striped Buren Columns; Galerie Véro-Dodat, a beautifully preserved 1826 covered passage. Cafés: Angelina on Rue de Rivoli for hot chocolate; Café Saint Honoré; Jean-Paul Hévin for chocolates. Restaurants: Au Pied de Cochon (classic, open late); Poulette near Châtelet. Shopping: Place Vendôme for jewelry; La Samaritaine, the restored Art Nouveau/Art Deco department store; E. Dehillerin for French kitchenware.\n\n2ND ARR. — BOURSE: Smallest, least touristed, good for slow wandering. Local living: Rue Montorgueil, a pedestrian market street (boulangeries, fromageries, fruit stands) — the everyday shopping street here. Covered passages: Galerie Vivienne, Passage des Panoramas (oldest in Paris, 1799), Passage du Grand Cerf, quieter Passage Bourg-l\'Abbé. Sights: the free Oval Reading Room at the Bibliothèque Nationale (Richelieu site); Grand Rex cinema (Art Deco, backstage tours). Cafés: Stohrer on Rue Montorgueil, oldest pâtisserie in Paris (1730), invented the baba au rhum; A La Mère de Famille for chocolate; Plaq for bean-to-bar chocolate and hot chocolate. Restaurants: Le Chardonnay (truffle croque monsieur); Le Petit Vendôme (steak au poivre); Les Saveurs de l\'Orient in Passage des Panoramas (Moroccan).\n\n3RD/4TH ARR. — LE MARAIS: Best match for food, markets, and wandering — one of the trip\'s recommended bases. Museums/sights: Notre-Dame (reopened Dec. 2024, free, climb the towers if booked ahead); Place des Vosges, the oldest planned square in Paris; Musée Carnavalet (history of Paris, free); Musée Picasso; Maison Victor Hugo. Markets: Marché des Enfants Rouges, the oldest covered food market in Paris (1615) — try Chez Alain Miam Miam for sandwiches; Marché aux Fleurs, the flower market on Île de la Cité. Local living: Rue François-Miron has two genuinely medieval half-timbered houses; Passage de l\'Ancre, the oldest covered passage, now a quiet residential corner; Tour Saint-Jacques, climbable May–November, rooftop views. Cafés: Berthillon on Île Saint-Louis for gelato; Carette on Place des Vosges for hot chocolate; Maison Georges Larnicol for kouign-amann. Restaurants: L\'As du Falafel; Au Petit Versailles du Marais; Bistrot des Tournelles. Shopping: boutiques, vintage, and jewelers around Rue des Francs-Bourgeois and Rue Vieille du Temple.\n\n5TH ARR. — LATIN QUARTER: The oldest part of Paris (Roman Lutetia, 52 BC) and personally recommended as the most lived-in, local-feeling base by the Life in Rural France piece. Museums/sights: the Panthéon (crypts hold Voltaire, Rousseau, Marie Curie, Victor Hugo); Cluny Museum, built into actual Roman bath ruins, with the Lady and the Unicorn tapestries; Jardin des Plantes; Arènes de Lutèce, a 1st-century Roman amphitheater where locals play pétanque. Local living: Rue Mouffetard, the market street to know here — best 10am–1pm, especially Saturdays, closed Sunday afternoon/Monday, start at Square Saint-Médard; Place Monge Market (Wed/Fri/Sun, 7am–2:30pm) as a more local alternative. Books: Shakespeare and Company (expect a line); the bouquinistes (book stalls) along the Seine between Pont Neuf and Pont de la Tournelle, closed in winter. Hidden corners: Arab World Institute\'s rooftop terrace; Musée Curie (small, free, her actual former lab); Rue du Chat-qui-Pêche, the narrowest street in Paris. Cafés: A. Lacroix Patisserie near Notre-Dame (lifelike fruit pastries, also good for lunch); Odette (choux pastries). Restaurants: cheap, cheerful bistros throughout, especially around the Sorbonne.\n\n6TH ARR. — SAINT-GERMAIN-DES-PRÉS: The grown-up café-culture neighborhood, one of the trip\'s three recommended bases. Café de Flore and Les Deux Magots sit across from each other by the Église Saint-Germain-des-Prés — pricier, not the best food, but worth one coffee each for the history (Sartre, de Beauvoir, Hemingway all drank here). Museums/sights: Jardin du Luxembourg, arguably the best central park in Paris; Église Saint-Sulpice, with a striking Cavaillé-Coll organ; Musée Delacroix, small, in his former home/studio. Local living: Cour du Commerce Saint-André, a small covered passage off Boulevard Saint-Germain with Le Procope (often called the oldest restaurant in Paris); Rue de Buci, an 800-year-old street dense with restaurants and bars; Mazarin Library, the oldest public library in France (1643), free to walk through. Cafés: Plaq; Chapon et La Chocolaterie de l\'Église (chocolate mousse in a paper cone). Restaurants: Breizh Café (Breton galettes); La Jacobine (coq au vin); Bistro des Augustins (potato gratins); Le Jardin Saint Germain (book ahead, confit de canard). Shopping: boutiques, bookstores, and chocolatiers along Boulevard Saint-Germain itself.\n\n7TH ARR. — EIFFEL TOWER / INVALIDES: More polished and residential, excellent museums a few blocks off the Champ de Mars. Museums/sights: the Eiffel Tower (book online ahead); Musée d\'Orsay, the world\'s largest Impressionist collection, in a former train station; Musée Rodin, sculptures in an 18th-century mansion and garden; Les Invalides, including Napoleon\'s tomb. Local living: Rue Cler, a pedestrian market street good for picnic supplies for the Champ de Mars, with Fromagerie Cantin and Fromagerie de Grenelle nearby; Marché Saxe-Breteuil (Thu/Sat mornings, 7–2:30), lined up almost perfectly with the Eiffel Tower. Shopping: Le Bon Marché, the oldest department store in Paris and the only one on the Left Bank; La Grande Épicerie next door, a genuinely fun luxury food hall. Cafés: Maison Bergeron (hand-painted ceilings, viennoiseries). Restaurants: Au Bon Accueil on Rue Montessuy (reserve the terrace for a tower view); Les Antiquaires near the Orsay (excellent bœuf bourguignon). Quiet Eiffel Tower viewpoints: Rue de l\'Université and Rue Buenos Ayres frame the tower between Haussmann buildings; Place de Sydney and Avenue de Montessuy are quieter alternatives.\n\n8TH ARR. — ÉLYSÉES: Upscale and monumental along the Champs-Élysées, genuinely residential a few blocks off it. Museums/sights: Musée Jacquemart-André, a 19th-century mansion turned museum, often nearly empty even in high season; Petit Palais, free, with Monet, Cézanne, and Rodin, plus a lovely courtyard café; Galerie Dior (book weeks ahead, sells out). Local living: Parc Monceau, the neighborhood\'s actual local park, more residential than the Tuileries or Luxembourg; La Madeleine, styled like a Greek temple outside, Baroque inside, far less crowded than Notre-Dame. Shopping: the Golden Triangle (Avenue Montaigne, Avenue George V, the Champs-Élysées) for flagship couture; Rue du Faubourg Saint-Honoré for Hermès and Cartier. On the first Sunday of most months the Champs-Élysées closes to cars 11am–5pm — a genuinely different, more local atmosphere. Food here leans toward hotel dining — plan meals elsewhere and treat the 8th as a sightseeing/shopping day.\n\n18TH ARR. — MONTMARTRE: Village-on-a-hill, best treated as atmosphere rather than a checklist. Only became part of Paris in 1860; go early (~9am) for Sacré-Cœur without the crowds. Local living: Rue de l\'Abreuvoir, one of the prettiest short streets in Paris, running from the pink café La Maison Rose down to Place Dalida; 38 staircases woven through the hill\'s streets, worth stumbling onto (Rue Foyatier, Rue du Mont-Cenis, Rue Girardon); Vigne du Clos Montmartre, the last working vineyard within Paris city limits (visible from the street); Musée de Montmartre with the attached Renoir Gardens. Food street: Rue Lepic (between Rue des Abbesses and Boulevard de Clichy) — fromagerie, chocolaterie, bakeries, and Café des Deux Moulins (an Amélie filming location); Le Consulat, a classic café once frequented by Van Gogh, Monet, and Picasso; Gilles Marchal for madeleines; Boris Lumé Bakery for kouign-amann croissants. Sights: Sacré-Cœur (climb into the dome for 360° views, not just the front steps); Place du Tertre for street artists; Cimetière de Montmartre, quieter and equally atmospheric as Père-Lachaise; the Moulin Rouge at the bottom of Rue Lepic.\n\nFor this stay specifically: the 5th (Latin Quarter) gives the most lived-in daily texture (Rue Mouffetard as an everyday market, cheap bistros, old bookshops). The 4th (Marais) is strongest if food and markets matter most day to day. The 6th (Saint-Germain) is the most polished and central, with Luxembourg Gardens and Boulevard Saint-Germain\'s cafés at the door. All three are close enough to treat this entire guide as one neighborhood over a month — the 1st, 2nd, 7th, and 8th are all a 15–25 minute walk away, and Montmartre is a quick Métro ride.\n\nFull arrondissement guide with sources: paris-arrondissement-local-living-guide.md, saved alongside this planner.\n\nBest time to go: May and September are the sweet spot -- mild weather (15-23C), manageable crowds, better rates than summer. June-Aug has the longest days but steepest prices and worst queues. Winter (Dec-Feb) is cheapest by far (~35% lower hotel rates than July) with thin crowds if you don\'t mind cold, short days.\n\nOptional international extension (Eurostar from Gare du Nord): London (<2.5h, requires UK passport control, not Schengen), Brussels (~1.5h), Amsterdam (~3.5h). Fares from ~e44 one-way in shoulder season -- book early, prices rise closer to departure.\n\nTrim to ~21 days: cut 2-3 Paris flex/rest days and shorten Provence/Riviera to Avignon only (skip Nice, saves ~3 days). Stretch to 30 days: add a 3-4 day Eurostar extension (London, or Brussels+Amsterdam) after returning to Paris.\n\nFull research doc with sources: paris-rail-trip.md, saved alongside this planner.',
       days: [
         { id:'pd1', date:'', label:'Day 1', activities:[{ id:'pa1', time:'Arrival', title:'Arrive Paris', location:'Settle into apartment, evening near the Eiffel Tower', estCost:'2000', notes:'' }] },
         { id:'pd2', date:'', label:'Day 2', activities:[{ id:'pa2', time:'Full day', title:'Paris', location:'Louvre, Tuileries Garden', estCost:'40', notes:'' }] },
@@ -1452,6 +1432,909 @@ const SEED_STATE_EN = {
       ],
       driveMinHours: '',
       driveMaxHours: ''
+    },
+    {
+      "id": "id-bs7h6nb8sv5s",
+      "name": "Andrew's 60th",
+      "destination": "Istanbul to Trieste & Rome",
+      "startDate": "2027-10-25",
+      "endDate": "2027-11-19",
+      "travelers": "2",
+      "departureAirport": "YUL",
+      "cabinClass": "premium",
+      "notes": "RESEARCH SUMMARY (edit or delete anything below as you decide):\n\nOpen-jaw loop: YUL → Istanbul (depart Oct 25), 2 hotel nights, Oceania Marina cruise Oct 28–Nov 7 (Istanbul → Trieste), 2 nights in Trieste, train to Rome, 10 nights in an Airbnb, fly home from Rome Nov 19.\n\nCruise price: $5,400 per person, $10,800 for two. On Oceania's site (CAD) that is the PH2 Penthouse Suite promo fare; Veranda promo fares are CA$3,675–3,800, so the Penthouse costs roughly CA$3,200–3,400 more for two. Official port times: Bozcaada 7–5, Thessaloniki 7–4, Milos 9–6, Katakolon 9–6, sea day, Kotor 7–5, Dubrovnik 7–5, Split 7–3 (short), Koper 9–7, Trieste disembark 8 AM.\n\nExcursions: Oceania has published only some tours so far (Bozcaada 6, Thessaloniki 1, Milos 0, Katakolon 1, Kotor 1, Dubrovnik 1, Split 1, Koper 1). Each port day lists the published tours with CAD prices plus typical independent ideas (marked unverified). Istanbul has no shore excursions on embark day. Leading picks: Troy, Olympia in 3D, Old Town and walls on foot in Kotor and Dubrovnik, Diocletian's Palace on foot in Split.\n\nFlights: Turkish Airlines and Air Transat fly YUL–IST nonstop (~10h40). Air Canada flies FCO–YUL nonstop. Book two one-ways or a Star Alliance multi-city. Verify the Oct 25 and Nov 19 schedules.\n\nRanked decisions: (1) cruise cabin category, (2) book flights and cruise, (3) pick excursions when the list opens, (4) book the Trieste–Rome train later.",
+      "days": [
+        {
+          "id": "id1",
+          "date": "2027-10-25",
+          "label": "Day 1 - Mon",
+          "activities": [
+            {
+              "id": "ia1_1",
+              "time": "Evening",
+              "title": "Depart Montreal (YUL) → Istanbul (IST)",
+              "location": "Turkish Airlines or Air Transat nonstop, ~10h40, overnight",
+              "notes": "Premium/Priority: Turkish Business or Air Transat Club Class. Confirm operating days for Oct 25."
+            }
+          ]
+        },
+        {
+          "id": "id2",
+          "date": "2027-10-26",
+          "label": "Day 2 - Tue",
+          "activities": [
+            {
+              "id": "ia2_1",
+              "time": "Midday",
+              "title": "Arrive Istanbul; check in near Galataport",
+              "location": "Karaköy / Galata",
+              "notes": "Hotel picks: The Peninsula Istanbul (beside the cruise terminal), The Wings Hotels Karaköy, DeCamondo Galata."
+            },
+            {
+              "id": "ia2_2",
+              "time": "Afternoon",
+              "title": "Easy walk: Galata & the Karaköy waterfront",
+              "location": "Galata Tower, Karaköy cafés",
+              "notes": "Light day after the overnight flight."
+            }
+          ]
+        },
+        {
+          "id": "id3",
+          "date": "2027-10-27",
+          "label": "Day 3 - Wed",
+          "activities": [
+            {
+              "id": "ia3_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Sultanahmet: Hagia Sophia, Blue Mosque, Topkapı Palace, Basilica Cistern; Grand Bazaar",
+              "notes": "Istanbul pre-cruise day. Currency: Turkish lira. Suggested order: Sultanahmet in the morning (Hagia Sophia, Blue Mosque, Basilica Cistern, Topkapı), Grand Bazaar after lunch, then back across the Galata Bridge to Karaköy. Book timed entries ahead where offered. Keep Oct 27 evening light so you are rested for embarkation."
+            },
+            {
+              "id": "ia3_2",
+              "time": "Full day",
+              "title": "Istanbul sightseeing day",
+              "location": "Sultanahmet: Hagia Sophia, Blue Mosque, Topkapı Palace, Basilica Cistern; Grand Bazaar",
+              "notes": "Typical full day. Optional: Bosphorus ferry or a hammam. Port choices below are typical for each port (other lines' lists + general knowledge); Oceania's own list for this sailing was not reachable. Check Oceania's Ports & Excursions page before choosing."
+            }
+          ]
+        },
+        {
+          "id": "id4",
+          "date": "2027-10-28",
+          "label": "Day 4 - Thu",
+          "activities": [
+            {
+              "id": "ia4_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Galataport",
+              "notes": "Embarkation: ship open from 1 PM, sails 5 PM. Hotel is a short walk from the Galataport terminal. Carry passports, boarding documents and any onboard-credit paperwork in hand luggage. Currency from here: euro in Greece, Montenegro, Croatia, Slovenia and Italy; Turkish lira in Turkey."
+            },
+            {
+              "id": "ia4_2",
+              "time": "Morning",
+              "title": "Last Istanbul stroll, check out",
+              "location": "Galataport",
+              "notes": ""
+            },
+            {
+              "id": "ia4_3",
+              "time": "1 PM",
+              "title": "Embark Oceania Marina",
+              "location": "Istanbul cruise terminal (Galataport)",
+              "notes": "Embark 1 PM, sail 5 PM."
+            }
+          ]
+        },
+        {
+          "id": "id5",
+          "date": "2027-10-29",
+          "label": "Day 5 - Fri",
+          "activities": [
+            {
+              "id": "ia5_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Port day",
+              "notes": "Port hours 7 AM–5 PM. Troy is on the mainland and Bozcaada is the island, so Troy needs a transfer; confirm in the ship's daily programme whether the ship docks or tenders. Currency: Turkish lira. Oceania describes Bozcaada as a breezy Aegean island with wine, a well-preserved 15th-century castle and a blend of Greek and Turkish character."
+            },
+            {
+              "id": "ia5_2",
+              "time": "7 AM–5 PM",
+              "title": "Bozcaada (Troy), Turkey",
+              "location": "Port day",
+              "notes": "Recommended: Ancient Troy & Museum (5.5 h) for archaeology; Highlights of Bozcaada (3.5 h) for a lighter day. Prices are per person in CAD, from Oceania's Ports & Excursions page for this sailing (as listed Nov 19, 2026; Oceania publishes more excursions closer to sailing)."
+            },
+            {
+              "id": "ia5_3",
+              "time": "Oceania excursion",
+              "title": "Ancient Troy & Museum (BOZ-007)",
+              "location": "Half-day, about 5.5 h, strenuous rating",
+              "notes": "CA$221 pp."
+            },
+            {
+              "id": "ia5_4",
+              "time": "Oceania excursion",
+              "title": "Highlights of Bozcaada (BOZ-002)",
+              "location": "Half-day, about 3.5 h, moderate",
+              "notes": "CA$152 pp."
+            },
+            {
+              "id": "ia5_5",
+              "time": "Oceania excursion",
+              "title": "Bozcaada Walking Tour (BOZ-001)",
+              "location": "Half-day, about 2.5 h, moderate",
+              "notes": "CA$110 pp, the cheapest option."
+            },
+            {
+              "id": "ia5_6",
+              "time": "Oceania excursion",
+              "title": "Easy Bozcaada and Wine Tasting (BOZ-003)",
+              "location": "Half-day, about 2.5 h, easy; Oceania Select",
+              "notes": "CA$360 pp. Island drive, windmills, Agia Paraskevi monastery, Aquarium Beach, tasting at Corvus Vineyard."
+            },
+            {
+              "id": "ia5_7",
+              "time": "Oceania excursion",
+              "title": "Wining & Dining Bozcaada-Style (BOZ-005)",
+              "location": "Half-day, about 2.5 h, moderate, includes a meal",
+              "notes": "CA$221 pp."
+            },
+            {
+              "id": "ia5_8",
+              "time": "Oceania excursion",
+              "title": "Delicacies of Bozcaada (BOZ-006)",
+              "location": "Half-day, about 3 h, easy, includes a meal",
+              "notes": "CA$207 pp."
+            },
+            {
+              "id": "ia5_9",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Walk Bozcaada town on your own",
+              "location": "Harbour, 15th-century castle, shops",
+              "notes": "Small island town; tomato marmalade and local wine are the local buys."
+            }
+          ]
+        },
+        {
+          "id": "id6",
+          "date": "2027-10-30",
+          "label": "Day 6 - Sat",
+          "activities": [
+            {
+              "id": "ia6_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Port day (ship leaves 4 PM)",
+              "notes": "Port hours 7 AM–4 PM. Thessaloniki was a Byzantine capital alongside Constantinople. Currency: euro. Core sights are walkable from the port area; keep a buffer for the 4 PM departure."
+            },
+            {
+              "id": "ia6_2",
+              "time": "7 AM–4 PM",
+              "title": "Thessaloniki, Greece",
+              "location": "Port day (ship leaves 4 PM)",
+              "notes": "Recommended: walk the city on your own, or Vergina if you want one structured outing. Prices are per person in CAD, from Oceania's Ports & Excursions page for this sailing (as listed Nov 19, 2026; Oceania publishes more excursions closer to sailing)."
+            },
+            {
+              "id": "ia6_3",
+              "time": "Oceania excursion",
+              "title": "Royal Treasures of Vergina (THE-003)",
+              "location": "Half-day, about 4¼ h",
+              "notes": "CA$138 pp. Intact Macedonian royal tombs (UNESCO), including the tomb of Philip II, Alexander the Great's father, and the Vergina museum."
+            },
+            {
+              "id": "ia6_4",
+              "time": "Independent idea (typical, unverified)",
+              "title": "City highlights on foot",
+              "location": "Church of St. Demetrius and crypt, Galerius palace complex, Rotunda mosaics, Archaeological Museum",
+              "notes": "Oceania's own port notes list these as the main sights; the Paleochristian and Byzantine monuments are a UNESCO group."
+            }
+          ]
+        },
+        {
+          "id": "id7",
+          "date": "2027-10-31",
+          "label": "Day 7 - Sun",
+          "activities": [
+            {
+              "id": "ia7_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Port day",
+              "notes": "Port hours 9 AM–6 PM. Currency: euro. Milos is a volcanic Cyclades island; Oceania has not posted a description yet. Taxis and buses are limited, so a pre-arranged driver is safer on a short call."
+            },
+            {
+              "id": "ia7_2",
+              "time": "9 AM–6 PM",
+              "title": "Milos, Greece",
+              "location": "Port day",
+              "notes": "Oceania has no description or excursions published for Milos yet (page says 'coming soon'). Recheck later. Ideas below are typical and unverified."
+            },
+            {
+              "id": "ia7_3",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Island tour: Plaka, Klima, Sarakiniko",
+              "location": "Taxi, bus or private driver",
+              "notes": "Hilltop village, fishing hamlet, white volcanic coast."
+            },
+            {
+              "id": "ia7_4",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Boat trip to the Kleftiko sea caves",
+              "location": "Small-boat excursion",
+              "notes": "Weather-dependent in late October."
+            }
+          ]
+        },
+        {
+          "id": "id8",
+          "date": "2027-11-01",
+          "label": "Day 8 - Mon",
+          "activities": [
+            {
+              "id": "ia8_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Port day",
+              "notes": "Port hours 9 AM–6 PM. Currency: euro. Ancient Olympia, where the Games began in 776 B.C., is about 25 miles inland; Oceania's notes also mention a drive to a local vineyard for wine and cheese."
+            },
+            {
+              "id": "ia8_2",
+              "time": "9 AM–6 PM",
+              "title": "Katakolon (Olympia), Greece",
+              "location": "Port day",
+              "notes": "Recommended: Olympia in 3D (4 h), the only published excursion; the ship tour is the safest way to be back on time. Prices are per person in CAD, from Oceania's Ports & Excursions page for this sailing (as listed Nov 19, 2026; Oceania publishes more excursions closer to sailing)."
+            },
+            {
+              "id": "ia8_3",
+              "time": "Oceania excursion",
+              "title": "Olympia in 3D (KAK-005)",
+              "location": "Half-day, about 4 h; about 2.5 h of moderate walking on uneven surfaces",
+              "notes": "CA$207 pp. Not recommended for wheelchair guests or those with walking difficulties. Wear flat, comfortable shoes."
+            },
+            {
+              "id": "ia8_4",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Independent: Katakolon village and beach",
+              "location": "Self-guided",
+              "notes": "Katakolon is a small port; Olympia is about 25 miles inland."
+            }
+          ]
+        },
+        {
+          "id": "id9",
+          "date": "2027-11-02",
+          "label": "Day 9 - Tue",
+          "activities": [
+            {
+              "id": "ia9_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "",
+              "notes": "Sea day, no port. Use it for rest, spa, and booking any specialty restaurants (reserve early on the first days of the voyage). Re-check excursion bookings and confirm Nov 3–6 plans. Pack a small day bag for the Adriatic ports."
+            },
+            {
+              "id": "ia9_2",
+              "time": "All day",
+              "title": "At sea",
+              "location": "",
+              "notes": "Sea day."
+            }
+          ]
+        },
+        {
+          "id": "id10",
+          "date": "2027-11-03",
+          "label": "Day 10 - Wed",
+          "activities": [
+            {
+              "id": "ia10_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Port day (scenic highlight of the voyage)",
+              "notes": "Port hours 7 AM–5 PM. Currency: euro. Walled medieval Kotor sits at the end of a fjord-like bay, so the sail-in is part of the day."
+            },
+            {
+              "id": "ia10_2",
+              "time": "7 AM–5 PM",
+              "title": "Kotor, Montenegro",
+              "location": "Port day (scenic highlight of the voyage)",
+              "notes": "Recommended: be on deck early for the sail-in, walk the old town on your own, and add the panoramic drive only if you want the mountain views. Prices are per person in CAD, from Oceania's Ports & Excursions page for this sailing (as listed Nov 19, 2026; Oceania publishes more excursions closer to sailing)."
+            },
+            {
+              "id": "ia10_3",
+              "time": "Oceania excursion",
+              "title": "Panoramic Montenegro (KOY-007)",
+              "location": "Half-day, about 3½ h, drive-focused",
+              "notes": "CA$207 pp. Mountain road to Njeguši (over 2,600 ft), snack of local ham and cheese, medieval Cetinje (old capital), pass Budva."
+            },
+            {
+              "id": "ia10_4",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Kotor Old Town on foot",
+              "location": "Compact walled town, St. Tryphon Cathedral (consecrated 1166)",
+              "notes": "Oceania's port notes describe twisting pink-paved streets, markets and Byzantine to Venetian architecture. Fortress path is steep."
+            },
+            {
+              "id": "ia10_5",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Boka Bay speedboat or Perast",
+              "location": "Independent",
+              "notes": "Offered by other lines; weather-dependent."
+            }
+          ]
+        },
+        {
+          "id": "id11",
+          "date": "2027-11-04",
+          "label": "Day 11 - Thu",
+          "activities": [
+            {
+              "id": "ia11_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Port day",
+              "notes": "Port hours 7 AM–5 PM. Currency: euro. The walled Old Town is the main draw; Dubrovnik is expensive, so budget for lunch. Late October is calmer than summer."
+            },
+            {
+              "id": "ia11_2",
+              "time": "7 AM–5 PM",
+              "title": "Dubrovnik, Croatia",
+              "location": "Port day",
+              "notes": "Recommended: walk the Old Town and city walls on your own; the one published tour covers the countryside, not the Old Town. Prices are per person in CAD, from Oceania's Ports & Excursions page for this sailing (as listed Nov 19, 2026; Oceania publishes more excursions closer to sailing)."
+            },
+            {
+              "id": "ia11_3",
+              "time": "Oceania excursion",
+              "title": "Panoramic Dubrovnik & Countryside (DBV-021)",
+              "location": "Half-day, about 3 h",
+              "notes": "CA$194 pp. Dalmatian coast drive, Cavtat, 15th-century mill on the Ljuta River in the Konavle Valley with ham, cheese, bread and wine."
+            },
+            {
+              "id": "ia11_4",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Old Town and city-wall walk",
+              "location": "Self-guided or private guide",
+              "notes": "Oceania's notes mention the Franciscan monastery, Rector's Palace and the cathedral. The walls loop takes about 2 hours."
+            },
+            {
+              "id": "ia11_5",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Cavtat and Konavle Valley",
+              "location": "Independent or the ship tour above",
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "id": "id12",
+          "date": "2027-11-05",
+          "label": "Day 12 - Fri",
+          "activities": [
+            {
+              "id": "ia12_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Port day (short: leaves 3 PM)",
+              "notes": "Port hours 7 AM–3 PM, only 8 hours and the earliest departure of the voyage. Currency: euro. Diocletian's Palace dates from about 300 A.D. and is a UNESCO site. Be back on board with margin."
+            },
+            {
+              "id": "ia12_2",
+              "time": "7 AM–3 PM",
+              "title": "Split, Croatia",
+              "location": "Port day (short: leaves 3 PM)",
+              "notes": "Recommended: Diocletian's Palace on foot. The one published tour is an active river-tubing outing. Prices are per person in CAD, from Oceania's Ports & Excursions page for this sailing (as listed Nov 19, 2026; Oceania publishes more excursions closer to sailing)."
+            },
+            {
+              "id": "ia12_3",
+              "time": "Oceania excursion",
+              "title": "River Tubing on Cetina River (SPU-034)",
+              "location": "Half-day, about 4¼ h, active",
+              "notes": "CA$402 pp. Inflatable-tube float through forested hinterland; most expensive of the published excursions."
+            },
+            {
+              "id": "ia12_4",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Diocletian's Palace on foot",
+              "location": "Self-guided",
+              "notes": "UNESCO site in the heart of town, a short walk from the port; archaeological museum nearby (Croatia's oldest, founded 1820)."
+            },
+            {
+              "id": "ia12_5",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Trogir or Salona half-day",
+              "location": "Independent",
+              "notes": "Must fit the 3 PM departure; avoid 8-hour private tours."
+            }
+          ]
+        },
+        {
+          "id": "id13",
+          "date": "2027-11-06",
+          "label": "Day 13 - Sat",
+          "activities": [
+            {
+              "id": "ia13_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Port day (longest Adriatic stop)",
+              "notes": "Port hours 9 AM–7 PM, the longest call of the Adriatic. Currency: euro. Koper was once 'Goat's Island' under Venetian rule; the old town keeps its 15th–18th-century architecture."
+            },
+            {
+              "id": "ia13_2",
+              "time": "9 AM–7 PM",
+              "title": "Koper, Slovenia",
+              "location": "Port day (longest Adriatic stop)",
+              "notes": "Recommended: independent time in Koper and Piran, or Postojna Caves and Predjama Castle if you want a big day out (Oceania's port notes mention both as nearby). Prices are per person in CAD, from Oceania's Ports & Excursions page for this sailing (as listed Nov 19, 2026; Oceania publishes more excursions closer to sailing)."
+            },
+            {
+              "id": "ia13_3",
+              "time": "Oceania excursion",
+              "title": "Nature Reserve Škocjan (KOP-GG1)",
+              "location": "Half-day, about 5 h",
+              "notes": "CA$194 pp. This is a naturalist-led walk in the Škocjan Bay salt-pan wetland reserve (birdlife), not the Škocjan Caves."
+            },
+            {
+              "id": "ia13_4",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Koper old town",
+              "location": "Praetor's Palace, main square",
+              "notes": "Venetian-influenced Old Town steps from the pier."
+            },
+            {
+              "id": "ia13_5",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Piran",
+              "location": "Short coach or taxi ride",
+              "notes": "Venetian Gothic coastal town; typical independent trip."
+            },
+            {
+              "id": "ia13_6",
+              "time": "Independent idea (typical, unverified)",
+              "title": "Postojna Caves & Predjama Castle",
+              "location": "Independent or private driver",
+              "notes": "Named in Oceania's port notes as nearby."
+            }
+          ]
+        },
+        {
+          "id": "id14",
+          "date": "2027-11-07",
+          "label": "Day 14 - Sun",
+          "activities": [
+            {
+              "id": "ia14_1",
+              "time": "Port info",
+              "title": "Port briefing",
+              "location": "Trieste cruise terminal",
+              "notes": "Final morning: disembark 8 AM. Luggage is taken ashore in the terminal; plan the hotel drop-off before sightseeing. Currency: euro. Trieste Centrale station is about 1 km from Piazza Unità, useful for the Nov 9 train."
+            },
+            {
+              "id": "ia14_2",
+              "time": "8 AM",
+              "title": "Disembark in Trieste",
+              "location": "Trieste cruise terminal",
+              "notes": "Official disembark time 8 AM."
+            },
+            {
+              "id": "ia14_3",
+              "time": "Daytime",
+              "title": "Check in; Piazza Unità d'Italia, Canal Grande, waterfront",
+              "location": "Trieste",
+              "notes": "Hotel picks: Grand Hotel Duchi d'Aosta (on Piazza Unità) or Savoia Excelsior Palace (seafront)."
+            }
+          ]
+        },
+        {
+          "id": "id15",
+          "date": "2027-11-08",
+          "label": "Day 15 - Mon",
+          "activities": [
+            {
+              "id": "ia15_1",
+              "time": "Full day",
+              "title": "Miramare Castle / Duino coast, or Carso & Collio wine day",
+              "location": "Trieste area",
+              "notes": "Flexible day."
+            }
+          ]
+        },
+        {
+          "id": "id16",
+          "date": "2027-11-09",
+          "label": "Day 16 - Tue",
+          "activities": [
+            {
+              "id": "ia16_1",
+              "time": "Morning",
+              "title": "Train Trieste → Rome",
+              "location": "Frecciarossa / Italo",
+              "notes": "About 5h10 fastest; many options need one change (6–7h). Book Business/Executive for the premium cabin."
+            },
+            {
+              "id": "ia16_2",
+              "time": "Afternoon",
+              "title": "Check in to Rome apartment",
+              "location": "Rome",
+              "notes": "Area to target: Monti (first choice) or Prati (quieter)."
+            }
+          ]
+        },
+        {
+          "id": "id17",
+          "date": "2027-11-10",
+          "label": "Day 17 - Wed",
+          "activities": [
+            {
+              "id": "ia17_1",
+              "time": "Full day",
+              "title": "Orientation walk: Pantheon, Piazza Navona, Trevi",
+              "location": "Rome",
+              "notes": "Placeholder: adjust to taste."
+            }
+          ]
+        },
+        {
+          "id": "id18",
+          "date": "2027-11-11",
+          "label": "Day 18 - Thu",
+          "activities": [
+            {
+              "id": "ia18_1",
+              "time": "Full day",
+              "title": "Colosseum, Forum & Palatine",
+              "location": "Rome",
+              "notes": "Placeholder: adjust to taste."
+            }
+          ]
+        },
+        {
+          "id": "id19",
+          "date": "2027-11-12",
+          "label": "Day 19 - Fri",
+          "activities": [
+            {
+              "id": "ia19_1",
+              "time": "Full day",
+              "title": "Vatican Museums & St. Peter's",
+              "location": "Rome",
+              "notes": "Placeholder: adjust to taste."
+            }
+          ]
+        },
+        {
+          "id": "id20",
+          "date": "2027-11-13",
+          "label": "Day 20 - Sat",
+          "activities": [
+            {
+              "id": "ia20_1",
+              "time": "Full day",
+              "title": "Villa Borghese & Spanish Steps",
+              "location": "Rome",
+              "notes": "Placeholder: adjust to taste."
+            }
+          ]
+        },
+        {
+          "id": "id21",
+          "date": "2027-11-14",
+          "label": "Day 21 - Sun",
+          "activities": [
+            {
+              "id": "ia21_1",
+              "time": "Full day",
+              "title": "Day trip: Orvieto or Tivoli",
+              "location": "Rome",
+              "notes": "Placeholder: adjust to taste."
+            }
+          ]
+        },
+        {
+          "id": "id22",
+          "date": "2027-11-15",
+          "label": "Day 22 - Mon",
+          "activities": [
+            {
+              "id": "ia22_1",
+              "time": "Full day",
+              "title": "Trastevere & Janiculum, Testaccio food",
+              "location": "Rome",
+              "notes": "Placeholder: adjust to taste."
+            }
+          ]
+        },
+        {
+          "id": "id23",
+          "date": "2027-11-16",
+          "label": "Day 23 - Tue",
+          "activities": [
+            {
+              "id": "ia23_1",
+              "time": "Full day",
+              "title": "Day trip: Ostia Antica or Naples/Pompeii by train",
+              "location": "Rome",
+              "notes": "Placeholder: adjust to taste."
+            }
+          ]
+        },
+        {
+          "id": "id24",
+          "date": "2027-11-17",
+          "label": "Day 24 - Wed",
+          "activities": [
+            {
+              "id": "ia24_1",
+              "time": "Full day",
+              "title": "Flex day / favourite repeat",
+              "location": "Rome",
+              "notes": "Placeholder: adjust to taste."
+            }
+          ]
+        },
+        {
+          "id": "id25",
+          "date": "2027-11-18",
+          "label": "Day 25 - Thu",
+          "activities": [
+            {
+              "id": "ia25_1",
+              "time": "Full day",
+              "title": "Last full day, packing",
+              "location": "Rome",
+              "notes": "Placeholder: adjust to taste."
+            }
+          ]
+        },
+        {
+          "id": "id26",
+          "date": "2027-11-19",
+          "label": "Day 26 - Fri",
+          "activities": [
+            {
+              "id": "ia26_1",
+              "time": "Daytime",
+              "title": "Rome (FCO) → Montreal (YUL)",
+              "location": "Air Canada nonstop",
+              "notes": "Confirm the Nov 19 nonstop operates and its departure time before booking. Premium: Signature Class or Premium Economy."
+            }
+          ]
+        }
+      ],
+      "bookings": [
+        {
+          "id": "ibk1",
+          "type": "flight",
+          "title": "Flight YUL → IST (2 travelers)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Turkish Airlines / Air Transat",
+          "link": "",
+          "estCost": "0",
+          "notes": "Depart Mon Oct 25, 2027. Business/Club Class. Price not yet checked for these dates."
+        },
+        {
+          "id": "ibk2",
+          "type": "hotel",
+          "title": "Istanbul hotel, 2 nights (Oct 26–28)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "",
+          "link": "",
+          "estCost": "0",
+          "notes": "The Peninsula Istanbul, The Wings Hotels Karaköy or DeCamondo Galata."
+        },
+        {
+          "id": "ibk3",
+          "type": "cruise",
+          "title": "Oceania Marina: Ancient Indulgence, Istanbul → Trieste (Oct 28–Nov 7, 2027)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Oceania Cruises",
+          "link": "https://www.oceaniacruises.com/cruises/MNA271028",
+          "estCost": "10800",
+          "notes": "$5,400 per person (CAD on Oceania's site) matches the PH2 Penthouse Suite promotional fare; 2 travelers = $10,800. Cheaper promo fares on the same page: Veranda B4–B1 CA$3,675–3,800, Concierge Veranda A4–A1 CA$3,850–4,050, PH3 CA$5,275, PH1 CA$5,500, Inside F CA$2,675; categories C and G are wait-listed. Fares exclude airfare; taxes and fees are not stated on the page, so confirm before booking."
+        },
+        {
+          "id": "ibk4",
+          "type": "hotel",
+          "title": "Trieste hotel, 2 nights (Nov 7–9)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "",
+          "link": "",
+          "estCost": "0",
+          "notes": "Grand Hotel Duchi d'Aosta or Savoia Excelsior Palace."
+        },
+        {
+          "id": "ibk5",
+          "type": "train",
+          "title": "Train Trieste → Rome (Nov 9)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Trenitalia Frecciarossa / Italo",
+          "link": "",
+          "estCost": "0",
+          "notes": "Fastest ~5h10, direct and one-change options. Business/Executive class."
+        },
+        {
+          "id": "ibk6",
+          "type": "other",
+          "title": "Rome apartment, 10 nights (Nov 9–19)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Airbnb / vacation rental",
+          "link": "",
+          "estCost": "0",
+          "notes": "Monti or Prati. Look for a lift and a washing machine."
+        },
+        {
+          "id": "ibk7",
+          "type": "flight",
+          "title": "Flight FCO → YUL (2 travelers)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Air Canada (nonstop)",
+          "link": "",
+          "estCost": "0",
+          "notes": "Fri Nov 19, 2027. Confirm the nonstop operates that day; Air Transat is a seasonal alternative."
+        },
+        {
+          "id": "ibk8",
+          "type": "activity",
+          "title": "Excursion to choose: Bozcaada (Oct 29)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Oceania Cruises or independent",
+          "link": "",
+          "estCost": "0",
+          "notes": "Ancient Troy & Museum CA$221 (5.5 h), Highlights CA$152, Walking Tour CA$110, Wine Tasting CA$360, Wining & Dining CA$221, Delicacies CA$207. Details on the Itinerary tab, Day 5. Prices per person in CAD as listed Nov 19, 2026."
+        },
+        {
+          "id": "ibk9",
+          "type": "activity",
+          "title": "Excursion to choose: Thessaloniki (Oct 30)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Oceania Cruises or independent",
+          "link": "",
+          "estCost": "0",
+          "notes": "Royal Treasures of Vergina CA$138 (4¼ h), or the city on foot. Details on the Itinerary tab, Day 6. Prices per person in CAD as listed Nov 19, 2026."
+        },
+        {
+          "id": "ibk10",
+          "type": "activity",
+          "title": "Excursion to choose: Milos (Oct 31)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Oceania Cruises or independent",
+          "link": "",
+          "estCost": "0",
+          "notes": "None published yet; recheck Oceania's page. Details on the Itinerary tab, Day 7. Prices per person in CAD as listed Nov 19, 2026."
+        },
+        {
+          "id": "ibk11",
+          "type": "activity",
+          "title": "Excursion to choose: Katakolon (Nov 1)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Oceania Cruises or independent",
+          "link": "",
+          "estCost": "0",
+          "notes": "Olympia in 3D CA$207 (4 h). Details on the Itinerary tab, Day 8. Prices per person in CAD as listed Nov 19, 2026."
+        },
+        {
+          "id": "ibk12",
+          "type": "activity",
+          "title": "Excursion to choose: Kotor (Nov 3)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Oceania Cruises or independent",
+          "link": "",
+          "estCost": "0",
+          "notes": "Panoramic Montenegro CA$207 (3½ h), or Old Town on foot. Details on the Itinerary tab, Day 10. Prices per person in CAD as listed Nov 19, 2026."
+        },
+        {
+          "id": "ibk13",
+          "type": "activity",
+          "title": "Excursion to choose: Dubrovnik (Nov 4)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Oceania Cruises or independent",
+          "link": "",
+          "estCost": "0",
+          "notes": "Panoramic Dubrovnik & Countryside CA$194 (3 h), or Old Town and walls on foot. Details on the Itinerary tab, Day 11. Prices per person in CAD as listed Nov 19, 2026."
+        },
+        {
+          "id": "ibk14",
+          "type": "activity",
+          "title": "Excursion to choose: Split (Nov 5)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Oceania Cruises or independent",
+          "link": "",
+          "estCost": "0",
+          "notes": "River Tubing on Cetina CA$402 (4¼ h), or Diocletian's Palace on foot. Port closes 3 PM. Details on the Itinerary tab, Day 12. Prices per person in CAD as listed Nov 19, 2026."
+        },
+        {
+          "id": "ibk15",
+          "type": "activity",
+          "title": "Excursion to choose: Koper (Nov 6)",
+          "confirmation": "",
+          "date": "",
+          "time": "",
+          "provider": "Oceania Cruises or independent",
+          "link": "",
+          "estCost": "0",
+          "notes": "Nature Reserve Škocjan CA$194 (5 h), or independent Piran / Postojna. Details on the Itinerary tab, Day 13. Prices per person in CAD as listed Nov 19, 2026."
+        }
+      ],
+      "transportModes": [
+        "air",
+        "cruise"
+      ],
+      "routeType": "loop",
+      "petFriendly": false,
+      "flexibleDates": false,
+      "lengthMin": "",
+      "lengthMax": "",
+      "accommodationPrefs": [
+        "hotel",
+        "airbnb"
+      ],
+      "accessibilityNeeds": [],
+      "waypoints": [
+        {
+          "id": "iwp1",
+          "location": "Istanbul, Turkey",
+          "date": "2027-10-26",
+          "nights": "2",
+          "estNightlyCost": "",
+          "notes": "Karaköy/Galata near the cruise terminal; one full sightseeing day."
+        },
+        {
+          "id": "iwp2",
+          "location": "Cruise: Oceania Marina (Istanbul → Trieste)",
+          "date": "2027-10-28",
+          "nights": "10",
+          "estNightlyCost": "0",
+          "notes": "Bozcaada, Thessaloniki, Milos, Katakolon, sea day, Kotor, Dubrovnik, Split, Koper. Cost is in the cruise booking."
+        },
+        {
+          "id": "iwp3",
+          "location": "Trieste, Italy",
+          "date": "2027-11-07",
+          "nights": "2",
+          "estNightlyCost": "250",
+          "notes": "Duchi d'Aosta or Savoia Excelsior; seen at roughly $160–350/night depending on hotel and date."
+        },
+        {
+          "id": "iwp4",
+          "location": "Rome, Italy (Airbnb)",
+          "date": "2027-11-09",
+          "nights": "10",
+          "estNightlyCost": "",
+          "notes": "Monti or Prati; price not yet checked."
+        }
+      ],
+      "driveMinHours": "",
+      "driveMaxHours": ""
     },
   ],
   longWeekends: {
@@ -1627,7 +2510,7 @@ let STATE_BY_LANG = {
   en: JSON.parse(JSON.stringify(SEED_STATE_EN)),
   fr: JSON.parse(JSON.stringify(SEED_STATE_FR))
 };
-function freshUi(){ return { selectedTripId: null, activeTab: 'itinerary', activeSection: 'trips', lwList: 'noDog', filtersOpen: {}, aroundMe: null }; }
+function freshUi(){ return { selectedTripId: null, activeTab: 'itinerary', activeSection: 'trips', lwList: 'noDog', filtersCollapsed: false }; }
 let UI_BY_LANG = { en: freshUi(), fr: freshUi() };
 let LANG = null;
 let state = null;
@@ -2024,7 +2907,6 @@ function copyTripBrief_EN(tripId){
   } else {
     fallbackCopy(text, onDone);
   }
-  runAiTripBrief(tripId, text);
 }
 function copyTripBrief_FR(tripId){
   const t = getTrip(tripId); if(!t) return;
@@ -2035,7 +2917,6 @@ function copyTripBrief_FR(tripId){
   } else {
     fallbackCopy(text, onDone);
   }
-  runAiTripBrief(tripId, text);
 }
 function printHeaderHtml_EN(t){
   const transportLine = (t.transportModes&&t.transportModes.length) ? ' &middot; ' + t.transportModes.map(transportLabel).join(', ') : '';
@@ -2459,12 +3340,10 @@ function renderTravelTools_EN(){
         <button class="${tool==='climate'?'active':''}" onclick="setTtTool('climate')">${ICONS.cloud} Climate &amp; Weather</button>
         <button class="${tool==='neighborhoods'?'active':''}" onclick="setTtTool('neighborhoods')">${ICONS.home} Neighborhood Finder</button>
         <button class="${tool==='activities'?'active':''}" onclick="setTtTool('activities')">${ICONS.star} Activity Finder</button>
-        <button class="${tool==='aroundme'?'active':''}" onclick="setTtTool('aroundme')">${ICONS.mapPin} Around Me</button>
         <button class="${tool==='currency'?'active':''}" onclick="setTtTool('currency')">${ICONS.dollar} Currency Converter</button>
         <button class="${tool==='research'?'active':''}" onclick="setTtTool('research')">${ICONS.search} Quick Research</button>
       </div>
-      ${tool==='aroundme' ? aroundMeHtml()
-        : tool==='research' ? quickResearchHtml()
+      ${tool==='research' ? quickResearchHtml()
         : tool==='activities' ? activityFinderHtml()
         : tool==='currency' ? currencyConverterHtml()
         : `<div class="tt-dest-picker"><select onchange="setTtDest(this.value)">${destOptions}</select></div>
@@ -2489,15 +3368,13 @@ function renderTravelTools_FR(){
         <p>Consulte les tendances climatiques — et, une fois près du départ, les prévisions réelles — ainsi qu'un portrait quartier par quartier pour choisir où loger, pour toute destination dans ton planificateur ou ailleurs, juste par curiosité (choisis « Autre » dans le menu déroulant). Ces données sont recherchées par Claude et enregistrées comme instantané (le planificateur lui-même n'a pas de connexion internet en direct), alors demande-moi simplement de rafraîchir tout ce qui semble dépassé.</p>
       </div>
       <div class="tt-toggle">
-        <button class="${tool==='climate'?'active':''}" onclick="setTtTool('climate')">${ICONS.cloud} Climat et m\u00e9t\u00e9o</button>
+        <button class="${tool==='climate'?'active':''}" onclick="setTtTool('climate')">${ICONS.cloud} Climat et météo</button>
         <button class="${tool==='neighborhoods'?'active':''}" onclick="setTtTool('neighborhoods')">${ICONS.home} Quartiers</button>
-        <button class="${tool==='activities'?'active':''}" onclick="setTtTool('activities')">${ICONS.star} Activit\u00e9s</button>
-        <button class="${tool==='aroundme'?'active':''}" onclick="setTtTool('aroundme')">${ICONS.mapPin} Autour de moi</button>
+        <button class="${tool==='activities'?'active':''}" onclick="setTtTool('activities')">${ICONS.star} Activités</button>
         <button class="${tool==='currency'?'active':''}" onclick="setTtTool('currency')">${ICONS.dollar} Convertisseur de devises</button>
         <button class="${tool==='research'?'active':''}" onclick="setTtTool('research')">${ICONS.search} Recherche rapide</button>
       </div>
-      ${tool==='aroundme' ? aroundMeHtml()
-        : tool==='research' ? quickResearchHtml()
+      ${tool==='research' ? quickResearchHtml()
         : tool==='activities' ? activityFinderHtml()
         : tool==='currency' ? currencyConverterHtml()
         : `<div class="tt-dest-picker"><select onchange="setTtDest(this.value)">${destOptions}</select></div>
@@ -2999,220 +3876,6 @@ function qrCardHtml_FR(r){
   html += `</div>`;
   return html;
 }
-/* ---------------- Live AI research (optional Netlify Function backend) ----------------
-   If /api/travel-research isn't deployed (or has no API key configured), this fails
-   silently and the request just stays "pending" for the manual copy/paste-to-Claude
-   workflow below -- so this file works identically with or without the backend. */
-const RESEARCH_ENDPOINT = '/api/travel-research';
-const TRIP_BRIEF_ENDPOINT = '/api/trip-brief';
-async function runAiTripBrief(tripId, briefText){
-  const t = (state.trips||[]).find(x=>x.id===tripId);
-  if(!t) return;
-  // Only auto-fill a trip that's still empty -- never overwrite an itinerary the
-  // traveler has already started building or editing by hand.
-  if((t.days && t.days.length) || (t.bookings && t.bookings.length)) return;
-  try {
-    const resp = await fetch(TRIP_BRIEF_ENDPOINT, {
-      method:'POST',
-      headers:{ 'content-type':'application/json' },
-      body: JSON.stringify({ brief: briefText, destination: t.destination, lang: LANG })
-    });
-    if(!resp.ok) return;
-    const data = await resp.json();
-    if(!data || !Array.isArray(data.days)) return;
-    // Re-check after the await in case the traveler started editing while this was in flight.
-    if((t.days && t.days.length) || (t.bookings && t.bookings.length)) return;
-    t.days = data.days.map(d => ({
-      id: uid(), label: d.label || '', date: d.date || '',
-      activities: Array.isArray(d.activities) ? d.activities.map(a => ({
-        id: uid(), time: a.time||'', title: a.title||'', location: a.location||'', notes: a.notes||'', estCost: a.estCost||''
-      })) : []
-    }));
-    t.bookings = Array.isArray(data.bookings) ? data.bookings.map(b => ({
-      id: uid(), type: b.type||'other', title: b.title||'', confirmation:'', date:'', time:'',
-      provider: b.provider||'', link:'', notes: b.notes||'', estCost: b.estCost||''
-    })) : [];
-    if(data.notes){ t.notes = t.notes ? (t.notes + '\n\n' + data.notes) : data.notes; }
-    render();
-    toast(LANG==='fr' ? 'Itinéraire rempli par Claude -- vérifie et ajuste au besoin.' : 'Itinerary filled in by Claude -- review and adjust as needed.');
-  } catch(e) {
-    // No backend configured, or offline -- the copied brief / paste-to-chat workflow still works.
-  }
-}
-async function runAiResearch(reqId, kind){
-  const r = (state.quickResearch||[]).find(x=>x.id===reqId);
-  if(!r) return;
-  try {
-    const resp = await fetch(RESEARCH_ENDPOINT, {
-      method:'POST',
-      headers:{ 'content-type':'application/json' },
-      body: JSON.stringify({
-        kind, location:r.location, category:r.category, startDate:r.startDate,
-        endDate:r.endDate, minDays:r.minDays, maxDays:r.maxDays, notes:r.notes, lang:LANG
-      })
-    });
-    if(!resp.ok) return;
-    const data = await resp.json();
-    if(!data || !data.summary) return;
-    r.status = 'answered';
-    r.summary = data.summary || '';
-    r.options = Array.isArray(data.options) ? data.options.slice(0,6) : [];
-    r.answeredAt = todayStr();
-    render();
-  } catch(e) {
-    // No backend configured, or offline -- request stays pending, no user-facing error.
-  }
-}
-/* ---------------- Around Me: live nearby places via OpenStreetMap (free, no key) ----------------
-   Uses the phone/browser's own location (or a typed place as fallback) plus a Netlify Function
-   that queries OpenStreetMap's Nominatim + Overpass APIs -- real, current places, no API key,
-   no cost. Nothing here is saved to a trip; ask again any time you've moved. */
-const AROUND_ME_ENDPOINT = '/api/around-me';
-const AM_CATEGORIES = [
-  { k:'cafes', icon:'coffee' }, { k:'restaurants', icon:'utensils' }, { k:'shops', icon:'bag' },
-  { k:'galleries', icon:'palette' }, { k:'museums', icon:'museum' }, { k:'landmarks', icon:'flag' }
-];
-const AM_LABELS_EN = { cafes:'Cafes', restaurants:'Restaurants', shops:'Shops', galleries:'Galleries', museums:'Museums', landmarks:'Landmarks & sights' };
-const AM_LABELS_FR = { cafes:'Cafés', restaurants:'Restaurants', shops:'Boutiques', galleries:'Galeries', museums:'Musées', landmarks:'Sites et monuments' };
-function freshAroundMe(){ return { status:'idle', errorMsg:'', label:'', lat:null, lon:null, radius:1200, categories:null, activeFilters:{cafes:true,restaurants:true,shops:true,galleries:true,museums:true,landmarks:true}, askedAt:'' }; }
-function ensureAroundMe(){ if(!ui.aroundMe) ui.aroundMe = freshAroundMe(); return ui.aroundMe; }
-function toggleAmFilter(cat){
-  const am = ensureAroundMe();
-  am.activeFilters[cat] = !am.activeFilters[cat];
-  render();
-}
-function runAroundMeHere(){
-  const am = ensureAroundMe();
-  if(!navigator.geolocation){
-    am.status='error'; am.errorMsg = LANG==='fr' ? "La g\u00e9olocalisation n'est pas disponible sur cet appareil/navigateur." : "Geolocation isn't available on this device/browser.";
-    render(); return;
-  }
-  am.status='loading'; am.errorMsg=''; render();
-  navigator.geolocation.getCurrentPosition(
-    pos => fetchAroundMe({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-    err => {
-      const am2 = ensureAroundMe();
-      am2.status='error';
-      am2.errorMsg = err && err.code===1
-        ? (LANG==='fr' ? "Localisation refus\u00e9e -- autorise l'acc\u00e8s \u00e0 la position dans les r\u00e9glages de ton navigateur, ou cherche un endroit ci-dessous \u00e0 la place." : "Location permission denied -- allow location access in your browser settings, or search a place below instead.")
-        : (LANG==='fr' ? "Impossible d'obtenir ta position. R\u00e9essaie, ou cherche un endroit ci-dessous." : "Couldn't get your location. Try again, or search a place below instead.");
-      render();
-    },
-    { enableHighAccuracy:true, timeout:12000, maximumAge:60000 }
-  );
-}
-function runAroundMeSearch(){
-  const el = document.getElementById('amSearchInput');
-  const q = el ? el.value.trim() : '';
-  if(!q) return;
-  const am = ensureAroundMe();
-  am.status='loading'; am.errorMsg=''; render();
-  fetchAroundMe({ query: q });
-}
-async function fetchAroundMe(payload){
-  const am = ensureAroundMe();
-  try {
-    const resp = await fetch(AROUND_ME_ENDPOINT, {
-      method:'POST', headers:{ 'content-type':'application/json' },
-      body: JSON.stringify(Object.assign({ radius: am.radius, lang: LANG }, payload))
-    });
-    const data = await resp.json().catch(()=>null);
-    if(!resp.ok || !data || data.error){
-      am.status='error';
-      am.errorMsg = LANG==='fr'
-        ? "Recherche indisponible pour l'instant (la fonction en direct n'est peut-\u00eatre pas encore d\u00e9ploy\u00e9e, ou OpenStreetMap est occup\u00e9). R\u00e9essaie dans un moment."
-        : "Live lookup isn't available right now (the live function may not be deployed yet, or OpenStreetMap is busy). Try again in a moment.";
-      render(); return;
-    }
-    am.status='ready';
-    am.label = data.label || '';
-    am.lat = data.lat; am.lon = data.lon;
-    am.categories = data.categories || {};
-    am.askedAt = new Date().toISOString();
-    render();
-  } catch(e){
-    am.status='error';
-    am.errorMsg = LANG==='fr' ? "Hors ligne, ou la fonction en direct n'est pas d\u00e9ploy\u00e9e." : "Offline, or the live function isn't deployed.";
-    render();
-  }
-}
-function amPlaceCard(p){
-  const dist = p.distanceM!=null ? (p.distanceM<1000 ? Math.round(p.distanceM/10)*10+' m' : (p.distanceM/1000).toFixed(1)+' km') : '';
-  const mapsUrl = p.lat && p.lon ? `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((p.name||'')+' '+(p.address||''))}`;
-  return `<a class="am-card ${p.notable?'am-notable':''}" href="${mapsUrl}" target="_blank" rel="noopener">
-    <div class="am-card-top"><span class="am-card-name">${esc(p.name)}</span>${p.notable?`<span class="am-badge">${ICONS.star}</span>`:''}</div>
-    ${p.address ? `<div class="am-card-addr">${esc(p.address)}</div>` : ''}
-    <div class="am-card-dist">${dist}</div>
-  </a>`;
-}
-function aroundMeHtml_EN(){
-  const am = ensureAroundMe();
-  const hasResults = am.status==='ready' && am.categories;
-  let body = '';
-  if(am.status==='loading'){
-    body = `<div class="tt-empty">Looking around...</div>`;
-  } else if(am.status==='error'){
-    body = `<div class="tt-empty">${esc(am.errorMsg)}</div>`;
-  } else if(hasResults){
-    const chips = AM_CATEGORIES.map(c => `<button type="button" class="transport-chip ${am.activeFilters[c.k]?'active':''}" onclick="toggleAmFilter('${c.k}')"><span class="chip-box">${am.activeFilters[c.k]?ICONS.check:''}</span>${ICONS[c.icon]} ${AM_LABELS_EN[c.k]}</button>`).join('');
-    const sections = AM_CATEGORIES.filter(c=>am.activeFilters[c.k]).map(c => {
-      const items = (am.categories[c.k]||[]);
-      if(!items.length) return '';
-      return `<div class="am-section"><div class="am-section-title">${ICONS[c.icon]} ${AM_LABELS_EN[c.k]}</div><div class="am-grid">${items.map(amPlaceCard).join('')}</div></div>`;
-    }).join('');
-    body = `
-      <div class="transport-row" style="margin-bottom:14px">${chips}</div>
-      ${sections || `<div class="tt-empty">Nothing found in range for the selected categories -- try widening the categories above, or search a different spot below.</div>`}
-    `;
-  } else {
-    body = `<div class="tt-empty">Tap <strong>Use my location</strong> below, or search a place, to see what's notable nearby.</div>`;
-  }
-  return `
-    <div class="am-locate-row">
-      <button class="btn btn-primary" onclick="runAroundMeHere()">${ICONS.mapPin} Use my location</button>
-      <span class="am-or">or</span>
-      <input id="amSearchInput" class="am-search-input" placeholder="Search a place instead (e.g. Le Marais, Paris)" onkeydown="if(event.key==='Enter') runAroundMeSearch()">
-      <button class="btn" onclick="runAroundMeSearch()">${ICONS.search} Search</button>
-    </div>
-    ${am.label ? `<div class="am-label">${ICONS.mapPin} Near <strong>${esc(am.label)}</strong> &middot; live from OpenStreetMap, refreshed just now</div>` : ''}
-    ${body}
-  `;
-}
-function aroundMeHtml_FR(){
-  const am = ensureAroundMe();
-  const hasResults = am.status==='ready' && am.categories;
-  let body = '';
-  if(am.status==='loading'){
-    body = `<div class="tt-empty">Recherche en cours...</div>`;
-  } else if(am.status==='error'){
-    body = `<div class="tt-empty">${esc(am.errorMsg)}</div>`;
-  } else if(hasResults){
-    const chips = AM_CATEGORIES.map(c => `<button type="button" class="transport-chip ${am.activeFilters[c.k]?'active':''}" onclick="toggleAmFilter('${c.k}')"><span class="chip-box">${am.activeFilters[c.k]?ICONS.check:''}</span>${ICONS[c.icon]} ${AM_LABELS_FR[c.k]}</button>`).join('');
-    const sections = AM_CATEGORIES.filter(c=>am.activeFilters[c.k]).map(c => {
-      const items = (am.categories[c.k]||[]);
-      if(!items.length) return '';
-      return `<div class="am-section"><div class="am-section-title">${ICONS[c.icon]} ${AM_LABELS_FR[c.k]}</div><div class="am-grid">${items.map(amPlaceCard).join('')}</div></div>`;
-    }).join('');
-    body = `
-      <div class="transport-row" style="margin-bottom:14px">${chips}</div>
-      ${sections || `<div class="tt-empty">Rien trouv\u00e9 \u00e0 proximit\u00e9 pour ces cat\u00e9gories -- \u00e9largis les cat\u00e9gories ci-dessus, ou cherche un autre endroit plus bas.</div>`}
-    `;
-  } else {
-    body = `<div class="tt-empty">Touche <strong>Utiliser ma position</strong> ci-dessous, ou cherche un endroit, pour voir ce qu'il y a de notable autour.</div>`;
-  }
-  return `
-    <div class="am-locate-row">
-      <button class="btn btn-primary" onclick="runAroundMeHere()">${ICONS.mapPin} Utiliser ma position</button>
-      <span class="am-or">ou</span>
-      <input id="amSearchInput" class="am-search-input" placeholder="Cherche un endroit \u00e0 la place (ex. Le Marais, Paris)" onkeydown="if(event.key==='Enter') runAroundMeSearch()">
-      <button class="btn" onclick="runAroundMeSearch()">${ICONS.search} Chercher</button>
-    </div>
-    ${am.label ? `<div class="am-label">${ICONS.mapPin} Pr\u00e8s de <strong>${esc(am.label)}</strong> &middot; en direct depuis OpenStreetMap, actualis\u00e9 \u00e0 l'instant</div>` : ''}
-    ${body}
-  `;
-}
-function aroundMeHtml(){ return (LANG==='fr' ? aroundMeHtml_FR : aroundMeHtml_EN).apply(null, arguments); }
-
 function quickResearchHtml_EN(){
   const list = (state.quickResearch||[]).filter(r=>!QR_OTHER_TAB_CATEGORIES.includes(r.category));
   const sorted = [...list].sort((a,b)=>(b.askedAt||'').localeCompare(a.askedAt||''));
@@ -3269,7 +3932,6 @@ function submitQuickResearch_EN(){
   render();
   copyQuickResearchRequest(r.id);
   toast('Request saved below — copied to your clipboard too.');
-  runAiResearch(r.id, 'quickResearch');
 }
 function submitQuickResearch_FR(){
   const loc = (document.getElementById('ttrLocation')||{}).value || '';
@@ -3285,7 +3947,6 @@ function submitQuickResearch_FR(){
   render();
   copyQuickResearchRequest(r.id);
   toast('Demande enregistrée ci-dessous — copiée dans ton presse-papiers aussi.');
-  runAiResearch(r.id, 'quickResearch');
 }
 function activityFinderHtml_EN(){
   const list = (state.quickResearch||[]).filter(r=>r.category==='Activity / Tour');
@@ -3340,7 +4001,6 @@ function submitActivityRequest_EN(){
   render();
   copyQuickResearchRequest(r.id);
   toast('Request saved below — copied to your clipboard too.');
-  runAiResearch(r.id, 'activity');
 }
 function submitActivityRequest_FR(){
   const loc = (document.getElementById('ttrLocation')||{}).value || '';
@@ -3357,7 +4017,6 @@ function submitActivityRequest_FR(){
   render();
   copyQuickResearchRequest(r.id);
   toast('Demande enregistrée ci-dessous — copiée dans ton presse-papiers aussi.');
-  runAiResearch(r.id, 'activity');
 }
 function renderHome_EN(){
   const c = document.getElementById('content');
@@ -3489,52 +4148,11 @@ function renderHome_FR(){
     ${past.length? `<div class="section-title">Voyages passés</div><div class="trip-grid">${past.map(tileHtml).join('')}</div>`:''}
   `;
 }
-function tripHasData(t){
-  if(t.destination) return true;
-  if(t.startDate || t.endDate) return true;
-  if(t.travelers) return true;
-  if((t.transportModes||[]).length) return true;
-  if(t.routeType && t.routeType!=='roundtrip') return true;
-  if(t.cabinClass && t.cabinClass!=='economy') return true;
-  if((t.accommodationPrefs||[]).length) return true;
-  if((t.accessibilityNeeds||[]).length) return true;
-  if(t.petFriendly) return true;
-  if(t.driveMinHours || t.driveMaxHours) return true;
-  if((t.days||[]).some(d=>(d.activities||[]).some(a=>a.time||a.title||a.location||a.notes))) return true;
-  if((t.waypoints||[]).some(w=>w.location||w.notes)) return true;
-  if((t.bookings||[]).some(b=>b.title||b.confirmation)) return true;
-  if(t.notes && t.notes.trim()) return true;
-  return false;
-}
-function isFiltersOpen(t){
-  if(!ui.filtersOpen) ui.filtersOpen = {};
-  if(ui.filtersOpen[t.id]===undefined) ui.filtersOpen[t.id] = !tripHasData(t);
-  return ui.filtersOpen[t.id];
-}
-function toggleTripFilters(tripId){
-  if(!ui.filtersOpen) ui.filtersOpen = {};
-  ui.filtersOpen[tripId] = !ui.filtersOpen[tripId];
-  render();
-}
-function filtersSummaryText(t, petLabel, noneLabel){
-  const parts = [];
-  const tm = (t.transportModes||[]).map(v=>{ const m=TRANSPORT_MODES.find(x=>x.v===v); return m?m.label:''; }).filter(Boolean);
-  if(tm.length) parts.push(tm.join(', '));
-  if(t.cabinClass && t.cabinClass!=='economy'){ const cc=CABIN_CLASSES.find(x=>x.v===t.cabinClass); if(cc) parts.push(cc.label); }
-  const ap = (t.accommodationPrefs||[]).map(v=>{ const a=ACCOMMODATION_TYPES.find(x=>x.v===v); return a?a.label:''; }).filter(Boolean);
-  if(ap.length) parts.push(ap.join(', '));
-  if(t.petFriendly) parts.push(petLabel);
-  const an = (t.accessibilityNeeds||[]).map(v=>{ const a=ACCESSIBILITY_NEEDS.find(x=>x.v===v); return a?a.label:''; }).filter(Boolean);
-  if(an.length) parts.push(an.join(', '));
-  return parts.length ? parts.join(' · ') : noneLabel;
-}
-
 function renderTrip_EN(){
   const t = getTrip(ui.selectedTripId);
   if(!t){ renderHome(); return; }
   const c = document.getElementById('content');
   const st = tripStatus(t);
-  const filtersOpen = isFiltersOpen(t);
 
   c.innerHTML = `
     <div class="trip-header">
@@ -3560,6 +4178,10 @@ function renderTrip_EN(){
       </div>
     </div>
 
+    <div class="trip-filters-toggle" onclick="toggleTripFilters()">
+      ${ui.filtersCollapsed?ICONS.chevronDown:ICONS.chevronUp} Trip details &amp; preferences ${ui.filtersCollapsed?'&mdash; click to expand':'&mdash; click to collapse'}
+    </div>
+    <div class="trip-filters-box ${ui.filtersCollapsed?'collapsed':''}">
     <div class="trip-subrow">
       <div class="field">${ICONS.mapPin}<input placeholder="Destination" value="${esc(t.destination)}" oninput="updateTripField('${t.id}','destination',this.value)"></div>
       ${(t.transportModes||[]).includes('air') ? `
@@ -3578,14 +4200,6 @@ function renderTrip_EN(){
       ${(!t.flexibleDates && (st.label==='Upcoming' || st.label==='Ongoing')) ? `<div class="field" style="color:var(--primary);font-weight:700">${countdownText(t)}</div>`:''}
     </div>
 
-    <div class="filters-bar">
-      <button type="button" class="filters-bar-toggle" onclick="toggleTripFilters('${t.id}')">
-        ${filtersOpen ? ICONS.chevronUp : ICONS.chevronDown}
-        <span>Preferences &amp; filters</span>
-      </button>
-      ${!filtersOpen ? `<span class="filters-bar-summary">${esc(filtersSummaryText(t, 'Pet-friendly', 'No preferences set yet'))}</span>` : ''}
-    </div>
-    ${filtersOpen ? `
     <div class="transport-row">
       <span class="field-label" style="margin:0 2px 0 0">Transportation</span>
       ${TRANSPORT_MODES.map(m => {
@@ -3654,7 +4268,7 @@ function renderTrip_EN(){
         </button>`;
       }).join('')}
     </div>
-    ` : ''}
+    </div>
 
     <div class="tabs">
       <button class="tab-btn ${ui.activeTab==='itinerary'?'active':''}" onclick="setTab('itinerary')">${ICONS.compass} Itinerary</button>
@@ -3673,7 +4287,6 @@ function renderTrip_FR(){
   if(!t){ renderHome(); return; }
   const c = document.getElementById('content');
   const st = tripStatus(t);
-  const filtersOpen = isFiltersOpen(t);
 
   c.innerHTML = `
     <div class="trip-header">
@@ -3699,6 +4312,10 @@ function renderTrip_FR(){
       </div>
     </div>
 
+    <div class="trip-filters-toggle" onclick="toggleTripFilters()">
+      ${ui.filtersCollapsed?ICONS.chevronDown:ICONS.chevronUp} Détails et préférences du voyage ${ui.filtersCollapsed?'&mdash; cliquer pour agrandir':'&mdash; cliquer pour réduire'}
+    </div>
+    <div class="trip-filters-box ${ui.filtersCollapsed?'collapsed':''}">
     <div class="trip-subrow">
       <div class="field">${ICONS.mapPin}<input placeholder="Destination" value="${esc(t.destination)}" oninput="updateTripField('${t.id}','destination',this.value)"></div>
       ${(t.transportModes||[]).includes('air') ? `
@@ -3717,14 +4334,6 @@ function renderTrip_FR(){
       ${(!t.flexibleDates && (st.label==='À venir' || st.label==='En cours')) ? `<div class="field" style="color:var(--primary);font-weight:700">${countdownText(t)}</div>`:''}
     </div>
 
-    <div class="filters-bar">
-      <button type="button" class="filters-bar-toggle" onclick="toggleTripFilters('${t.id}')">
-        ${filtersOpen ? ICONS.chevronUp : ICONS.chevronDown}
-        <span>Préférences et filtres</span>
-      </button>
-      ${!filtersOpen ? `<span class="filters-bar-summary">${esc(filtersSummaryText(t, 'Accepte les animaux', 'Aucune préférence définie'))}</span>` : ''}
-    </div>
-    ${filtersOpen ? `
     <div class="transport-row">
       <span class="field-label" style="margin:0 2px 0 0">Transport</span>
       ${TRANSPORT_MODES.map(m => {
@@ -3793,7 +4402,7 @@ function renderTrip_FR(){
         </button>`;
       }).join('')}
     </div>
-    ` : ''}
+    </div>
 
     <div class="tabs">
       <button class="tab-btn ${ui.activeTab==='itinerary'?'active':''}" onclick="setTab('itinerary')">${ICONS.compass} Itinéraire</button>
