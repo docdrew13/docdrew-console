@@ -51,6 +51,10 @@
   .alldone{ text-align:center; margin:40px 0 0; padding:28px 18px; background:var(--accent-soft); border-radius:14px; font-size:19px; font-weight:600; }
   .alldone small{ display:block; margin-top:4px; color:var(--dim); font-size:15px; font-weight:400; }
   .msg{ text-align:center; color:var(--dim); margin-top:60px; }
+  .add{ display:flex; gap:8px; margin:18px 0 0; }
+  .add input{ flex:1; min-width:0; font:inherit; font-size:18px; padding:13px 14px; border-radius:12px; border:1px solid var(--line); background:var(--card); color:var(--ink); }
+  .add button{ flex:none; font:inherit; font-size:17px; font-weight:600; padding:0 18px; border:0; border-radius:12px; background:var(--accent); color:var(--accent-ink); cursor:pointer; }
+  .add button:disabled{ opacity:.5; }
   [hidden]{ display:none !important; }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
 </style>
@@ -63,6 +67,7 @@
     <div class="bar" id="barwrap" hidden><i id="bar"></i></div>
     <div class="count" id="count"></div>
   </header>
+  <form class="add" id="add" hidden autocomplete="off"><input id="addtxt" type="text" maxlength="120" enterkeyhint="done"><button type="submit" id="addbtn"></button></form>
   <div id="list"></div>
   <div class="alldone" id="alldone" hidden></div>
   <button class="toggle" id="toggle" type="button" hidden></button>
@@ -76,12 +81,14 @@
           show:function(n){ return n === 1 ? "Show 1 checked-off item" : "Show " + n + " checked-off items"; },
           hide:"Hide checked-off items", from:function(n){ return "Shared by " + n; },
           missing:"This list could not be found. Ask for a new link.", failed:"Could not load the list. Check your connection and try again.",
+          addPh:"Add an item…", addBtn:"Add", addedLabel:"Added", addFail:"Could not add that item. Try again.",
           locale:"en-CA" },
     fr: { title:"Liste d’épicerie", left:function(n){ return n === 1 ? "1 article restant" : n + " articles restants"; },
           done:"Tout est fait!", doneSub:"Tout est coché.",
           show:function(n){ return n === 1 ? "Afficher 1 article coché" : "Afficher " + n + " articles cochés"; },
           hide:"Masquer les articles cochés", from:function(n){ return "Partagé par " + n; },
           missing:"Cette liste est introuvable. Demandez un nouveau lien.", failed:"Impossible de charger la liste. Vérifiez votre connexion et réessayez.",
+          addPh:"Ajouter un article…", addBtn:"Ajouter", addedLabel:"Ajouté", addFail:"Impossible d’ajouter cet article. Réessayez.",
           locale:"fr-CA" }
   };
   var $ = function(id){ return document.getElementById(id); };
@@ -94,7 +101,9 @@
   function build(){
     var list = $("list"); list.innerHTML = "";
     var total = 0, left = 0;
-    snap.groups.forEach(function(g, gi){
+    var groups = snap.groups.slice();
+    if(snap.added && snap.added.length){ groups.push({ label:S.addedLabel, items:snap.added }); }
+    groups.forEach(function(g, gi){
       var card = document.createElement("div"); card.className = "card";
       var shown = 0;
       g.items.forEach(function(text, ii){
@@ -134,6 +143,23 @@
   }
   $("toggle").addEventListener("click", function(){ showChecked = !showChecked; build(); });
 
+  $("add").addEventListener("submit", function(e){
+    e.preventDefault();
+    var v = $("addtxt").value.trim(); if(!v) return;
+    $("addbtn").disabled = true;
+    fetch("/api/grocery-share", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify({ id:id, add:v }) })
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(data){ snap = data; $("addtxt").value = ""; build(); })
+      .catch(function(){ alert(S.addFail); })
+      .then(function(){ $("addbtn").disabled = false; });
+  });
+  // pick up items other people added while this page was open in the background
+  document.addEventListener("visibilitychange", function(){
+    if(document.hidden || !snap) return;
+    fetch("/api/grocery-share?id=" + encodeURIComponent(id)).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(data){ if(data){ snap = data; build(); } }).catch(function(){});
+  });
+
   if(!id){ $("msg").textContent = STR.en.missing; return; }
   fetch("/api/grocery-share?id=" + encodeURIComponent(id)).then(function(r){
     if(r.status === 404){ throw "missing"; }
@@ -147,6 +173,7 @@
     var when = ""; try { when = new Date(data.created).toLocaleDateString(S.locale, { weekday:"long", month:"long", day:"numeric" }); } catch(e){}
     $("sub").textContent = [data.from ? S.from(data.from) : "", when].filter(Boolean).join(" · ");
     $("msg").hidden = true;
+    $("addtxt").placeholder = S.addPh; $("addbtn").textContent = S.addBtn; $("add").hidden = false;
     build();
   }).catch(function(e){
     document.documentElement.lang = "en";

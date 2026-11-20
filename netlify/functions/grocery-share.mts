@@ -52,6 +52,27 @@ export default async (req: Request) => {
       return json({ error: "invalid_json" }, 400);
     }
 
+    // Recipient adds a forgotten / last-minute item to an existing shared list.
+    if (body && typeof body.id === "string") {
+      const id = body.id;
+      if (!/^[a-z0-9]{6,20}$/.test(id)) return json({ error: "invalid_id" }, 400);
+      const item = str(body.add, 120);
+      if (!item) return json({ error: "empty_item" }, 400);
+      try {
+        const data: any = await store.get("share:" + id, { type: "json" });
+        if (!data) return json({ error: "not_found" }, 404);
+        const added: string[] = Array.isArray(data.added) ? data.added : [];
+        const total = data.groups.reduce((n: number, g: any) => n + g.items.length, 0) + added.length;
+        if (total >= MAX_ITEMS) return json({ error: "list_full" }, 409);
+        if (!added.some((a) => a.toLowerCase() === item.toLowerCase())) added.push(item);
+        data.added = added;
+        await store.setJSON("share:" + id, data);
+        return json(data);
+      } catch (err) {
+        return json({ error: "write_failed", message: String(err) }, 502);
+      }
+    }
+
     let count = 0;
     const groups = (Array.isArray(body && body.groups) ? body.groups : [])
       .slice(0, MAX_GROUPS)
