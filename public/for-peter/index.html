@@ -739,6 +739,29 @@
   .panel[data-shared]{ outline:2px solid #ff9f1c; outline-offset:-2px; box-shadow:0 0 0 1px rgba(255,159,28,.35), 0 0 12px rgba(255,159,28,.18); }
   .shared-tag{ margin-left:auto; margin-right:8px; flex:0 0 auto; font-style:normal; font-size:11px; font-weight:700; letter-spacing:0.02em; text-transform:none; white-space:nowrap;
     background:#ff9f1c; color:#2a1700; padding:2px 8px; border-radius:10px; }
+  .wx-loc-btn{ display:none; }
+  .globe-toggle{ display:none; align-items:center; justify-content:space-between; width:100%; background:var(--panel); color:var(--text); border:1px solid var(--grid-line); border-radius:8px; padding:10px 12px; font-size:15px; font-weight:700; cursor:pointer; }
+  .globe-toggle i{ font-style:normal; opacity:0.75; transition:transform 0.15s ease; }
+  .globes-stack.globe-open .globe-toggle i{ transform:rotate(180deg); }
+  .wx-loc-box{ padding:8px 10px 10px; border-bottom:1px solid var(--grid-line); }
+  .wx-loc-box[hidden]{ display:none; }
+  .wx-loc-box form{ display:flex; gap:6px; }
+  .wx-loc-box input{ flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:7px 9px; font-size:16px; }
+  .wx-loc-box button[type="submit"]{ flex:0 0 auto; background:var(--cyan); color:var(--cyan-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:14.5px; cursor:pointer; }
+  .wx-loc-results button{ display:block; width:100%; text-align:left; margin-top:5px; background:transparent; color:var(--text); border:1px solid var(--grid-line); border-radius:6px; padding:7px 9px; font-size:14.5px; cursor:pointer; }
+  .wx-loc-results .wx-loc-msg{ margin-top:6px; font-size:13.5px; color:var(--text-dim); }
+  @media (max-width: 760px), (max-height: 500px) and (pointer: coarse){
+    .globe-panel{ display:none; }
+    .globes-stack.globe-open .globe-panel{ display:block; order:3; }
+    .globe-toggle{ display:flex; order:2; }
+    .globes-stack{ order:-1; }
+    .globes-stack .rail-mid{ flex:0 0 auto; order:1; }
+    .rail-mid .rail-spacer{ display:none; }
+    .rail-mid .panel.collapsed .panel-body{ display:block !important; }
+    .rail-mid .panel-chevron{ display:none; }
+    .rail-mid .panel{ flex:1 1 100%; }
+    .wx-loc-btn{ display:inline-block; }
+  }
 </style>
 </head>
 <body>
@@ -780,7 +803,8 @@
         </section>
       </aside>
 
-      <div class="globes-stack">
+      <div class="globes-stack" id="globes-stack">
+        <button class="globe-toggle" id="globe-toggle" type="button" aria-expanded="false"><span>🌍 Weather globe</span><i>▾</i></button>
         <section class="globe-panel" aria-label="Live weather and orbital tracking" data-accent="weather">
           <div class="globe-head">
             <span>Weather Systems</span>
@@ -803,7 +827,11 @@
         <aside class="rail rail-right rail-mid" aria-label="Weather and conditions">
           <div class="rail-spacer" aria-hidden="true"></div>
           <section class="panel round-l" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
-            <div class="panel-head"><span>Weather</span><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°C</button><i class="panel-chevron">▾</i></div>
+            <div class="panel-head"><span>Weather</span><button class="head-btn wx-loc-btn" id="wx-loc-btn" type="button" title="Look up another place">📍</button><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°C</button><i class="panel-chevron">▾</i></div>
+                        <div class="wx-loc-box" id="wx-loc-box" hidden>
+              <form id="wx-loc-form"><input type="text" id="wx-loc-input" placeholder="City or ZIP" autocomplete="off" aria-label="Search for a city or ZIP code"><button type="submit">Find</button></form>
+              <div class="wx-loc-results" id="wx-loc-results"></div>
+            </div>
             <div class="panel-body scroll" id="wx-body">
               <div class="empty-state">Loading weather…</div>
             </div>
@@ -933,6 +961,7 @@
   /* ============================================================
      CONSTANTS
   ============================================================ */
+  var IS_PHONE = !!(window.matchMedia && window.matchMedia("(max-width: 760px), (max-height: 500px) and (pointer: coarse)").matches);
   var REDUCED_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // Declared early (before WORLD_CITIES/homeCity below) since that code reads LS.homeCity
@@ -3871,6 +3900,7 @@
   }
 
   function tick2(){
+    if(weatherGlobeBody.offsetParent === null){ requestAnimationFrame(tick2); return; } // globe hidden (phone view)
     if(G2.autoRotate && !G2.dragging) G2.rotation += REDUCED_MOTION ? 0 : 0.037;
     drawWeatherGlobe();
     requestAnimationFrame(tick2);
@@ -4756,6 +4786,87 @@
   }
   rPrune();
 
+  /* Globe imagery (earth photo, radar, clouds) is heavy: on phones it loads only the first
+     time the globe is opened from its toggle; elsewhere it loads at startup. */
+  var globeImageryStarted = false;
+  function startGlobeImagery(){
+    if(globeImageryStarted) return;
+    globeImageryStarted = true;
+    loadEarthMosaic(); loadRadarMosaic(); loadCloudMosaic();
+    setInterval(loadEarthMosaic, 10800000);
+    setInterval(loadRadarMosaic, 600000);
+    setInterval(loadCloudMosaic, 900000);
+  }
+  $("globe-toggle").addEventListener("click", function(){
+    var stack = $("globes-stack");
+    var open = stack.classList.toggle("globe-open");
+    this.setAttribute("aria-expanded", open ? "true" : "false");
+    if(open){ startGlobeImagery(); resizeCanvas2(); }
+  });
+
+  /* ============================================================
+     PHONE WEATHER LOOKUP — 📍 in the Weather header searches any city or ZIP
+     (Open-Meteo geocoding, no key) and shows its weather in the panel. Only the weather
+     place changes; the header clock and globe home are untouched.
+  ============================================================ */
+  var US_STATES = { AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",CT:"Connecticut",DE:"Delaware",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming",DC:"District of Columbia" };
+  var wxLocBox = $("wx-loc-box"), wxLocInput = $("wx-loc-input"), wxLocResults = $("wx-loc-results");
+  function wxLocMsg(t){ wxLocResults.innerHTML = '<div class="wx-loc-msg">' + escapeHtml(t) + "</div>"; }
+  function wxLocLabel(r){
+    var st = "";
+    if(r.country_code === "US" && r.admin1){
+      st = r.admin1;
+      Object.keys(US_STATES).forEach(function(k){ if(US_STATES[k] === r.admin1) st = k; });
+    } else if(r.admin1){ st = r.admin1; }
+    return r.name + (st ? ", " + st : "") + (r.country_code && r.country_code !== "US" ? ", " + (r.country || r.country_code) : "");
+  }
+  function wxLocSearch(q){
+    q = q.trim();
+    if(q.length < 2){ wxLocMsg("Type a city or ZIP code."); return; }
+    var name = q, hint = "";
+    if(q.indexOf(",") > -1){ name = q.split(",")[0].trim(); hint = q.split(",").slice(1).join(",").trim().toLowerCase(); }
+    else if(/^[A-Za-z .'-]+\s+[A-Za-z]{2}$/.test(q) && US_STATES[q.slice(-2).toUpperCase()]){ name = q.slice(0, -2).trim(); hint = q.slice(-2).toLowerCase(); }
+    wxLocMsg("Searching…");
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(name) + "&count=10&language=en&format=json")
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var res = (d && d.results) || [];
+        if(hint){
+          var f = res.filter(function(r){
+            var a1 = (r.admin1 || "").toLowerCase(), cc = (r.country_code || "").toLowerCase(), c = (r.country || "").toLowerCase();
+            var full = (US_STATES[hint.toUpperCase()] || "").toLowerCase();
+            return a1 === hint || a1.indexOf(hint) === 0 || (full && a1 === full) || cc === hint || c.indexOf(hint) === 0;
+          });
+          if(f.length) res = f;
+        }
+        res = res.slice(0, 6);
+        if(!res.length){ wxLocMsg("No match. Try a city name or ZIP code."); return; }
+        wxLocResults.innerHTML = "";
+        res.forEach(function(r){
+          var b = el("button", "");
+          b.type = "button";
+          b.textContent = wxLocLabel(r) + (r.admin2 ? " (" + r.admin2 + ")" : "");
+          b.addEventListener("click", function(){ wxSetPlace({ name: wxLocLabel(r), lat: r.latitude, lon: r.longitude }); });
+          wxLocResults.appendChild(b);
+        });
+      })
+      .catch(function(){ wxLocMsg("Search is unavailable right now."); });
+  }
+  function wxSetPlace(p){
+    wxPlace = p;
+    writeLS(LS.wxCity, wxPlace);
+    wxViewMode = "home";
+    wxLocBox.hidden = true;
+    wxLocInput.value = ""; wxLocResults.innerHTML = "";
+    loadHomeWeather();
+  }
+  $("wx-loc-btn").addEventListener("click", function(e){
+    e.stopPropagation();
+    wxLocBox.hidden = !wxLocBox.hidden;
+    if(!wxLocBox.hidden){ wxLocInput.focus(); wxLocMsg("Search a city or ZIP, e.g. “Granby”, “Paris” or “02879”."); }
+  });
+  $("wx-loc-form").addEventListener("submit", function(e){ e.preventDefault(); wxLocSearch(wxLocInput.value); });
+
   /* ============================================================
      RIGHT-RAIL ACCORDION — Weather / Podcasts / Markets / Currency
      each collapse or expand independently, remembered per-browser.
@@ -4819,9 +4930,7 @@
     loadStations();
     loadAllNews();
     loadWeatherGrid();
-    loadEarthMosaic();
-    loadRadarMosaic();
-    loadCloudMosaic();
+    if(!IS_PHONE) startGlobeImagery();
     loadPodcasts();
     loadAurora();
     loadBromont();
@@ -4834,9 +4943,6 @@
     setInterval(loadAllNews, 300000);
     setInterval(loadStations, 900000);
     setInterval(loadWeatherGrid, 600000);
-    setInterval(loadEarthMosaic, 10800000);
-    setInterval(loadRadarMosaic, 600000);
-    setInterval(loadCloudMosaic, 900000);
     setInterval(loadPodcasts, 1800000);
     setInterval(loadAurora, 900000);
     setInterval(loadBromont, 900000);

@@ -756,6 +756,14 @@
   .panel[data-shared]{ outline:2px solid #ff9f1c; outline-offset:-2px; box-shadow:0 0 0 1px rgba(255,159,28,.35), 0 0 12px rgba(255,159,28,.18); }
   .shared-tag{ margin-left:auto; margin-right:8px; flex:0 0 auto; font-style:normal; font-size:11px; font-weight:700; letter-spacing:0.02em; text-transform:none; white-space:nowrap;
     background:#ff9f1c; color:#2a1700; padding:2px 8px; border-radius:10px; }
+  @media (max-width: 760px), (max-height: 500px) and (pointer: coarse){
+    .globes-stack{ order:-1; }
+    .globes-stack .rail-mid{ flex:0 0 auto; order:1; }
+    .rail-mid .rail-spacer{ display:none; }
+    .rail-mid .panel.collapsed .panel-body{ display:block !important; }
+    .rail-mid .panel-chevron{ display:none; }
+    .rail-mid .panel{ flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
