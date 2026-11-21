@@ -1,0 +1,3906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Docdrew Console</title>
+<meta name="description" content="A full-screen live console — weather, markets and world news plotted on a rotating globe.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305070C'/%3E%3Cpath d='M32 10 54 46H10Z' fill='none' stroke='%23FFA94D' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='36' r='4.5' fill='%2352D8DE'/%3E%3C/svg%3E">
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --void:#05070C;
+    --panel:#0D1420;
+    --panel-2:#121C2C;
+    --grid-line:#1E2B3D;
+    --grid-soft:#16202E;
+    --text:#DCE7F2;
+    --text-dim:#7A93A8;
+    --amber:#FFA94D;
+    --amber-ink:#3A2408;
+    --amber-dim:#8A5A28;
+    --gold:#FFD166;
+    --gold-ink:#3A2C05;
+    --cyan:#52D8DE;
+    --cyan-ink:#052B2D;
+    --cyan-dim:#2B6E72;
+    --violet:#B98CE8;
+    --violet-ink:#241535;
+    --good:#4FD68C;
+    --bad:#FF6B5E;
+    --teal:#4FD6B0;
+    --teal-ink:#06342A;
+    --frost:#8EC9FF;
+    --frost-ink:#0B2A44;
+    --crimson:#FF6F91;
+    --crimson-ink:#3A0A18;
+    color-scheme: dark;
+  }
+
+  /* Light look — same tokens, warm "reading lamp" values instead of the cool cyan
+     "starship bridge" defaults above. Toggled via the sun/moon button next to the FR/EN
+     switch; the choice is remembered per browser (see LS.theme in the script below). */
+  :root[data-theme="light"]{
+    --void:#DCE6EC;
+    --panel:#FFF7EC;
+    --panel-2:#FCEDD6;
+    --grid-line:#E6D3B4;
+    --grid-soft:#F3E7D2;
+    --text:#2A1C10;
+    --text-dim:#7C6852;
+    --amber:#D98A2B;
+    --amber-ink:#3A2408;
+    --amber-dim:#8A5A28;
+    --gold:#C79A2E;
+    --gold-ink:#3A2C05;
+    --cyan:#C85F35;
+    --cyan-ink:#3A1810;
+    --cyan-dim:#8A4A32;
+    --violet:#B0578C;
+    --violet-ink:#331828;
+    --good:#5A9E3E;
+    --bad:#D14A38;
+    --teal:#A67B35;
+    --teal-ink:#2E2408;
+    --frost:#3F84C9;
+    --frost-ink:#0B2A44;
+    --crimson:#D14A72;
+    --crimson-ink:#3A0A18;
+    color-scheme: light;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{
+    height:100%;
+    margin:0;
+    overflow:hidden;
+    background:var(--void);
+    color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  body{
+    background:
+      radial-gradient(1200px 700px at 18% -10%, rgba(82,216,222,0.06), transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, rgba(185,140,232,0.06), transparent 60%),
+      var(--void);
+  }
+  :root[data-theme="light"] body{
+    background:
+      radial-gradient(1200px 700px at 18% -10%, rgba(255,138,92,0.10), transparent 60%),
+      radial-gradient(900px 600px at 100% 110%, rgba(216,154,194,0.10), transparent 60%),
+      var(--void);
+  }
+  ::selection{ background:var(--amber); color:var(--amber-ink); }
+  a{ color:var(--cyan); }
+  button, select, input, textarea{ font-family:inherit; }
+  :focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+  }
+
+  /* thin sci-fi scrollbars */
+  .scroll{ scrollbar-width:thin; scrollbar-color: var(--cyan-dim) var(--panel-2); }
+  .scroll::-webkit-scrollbar{ width:6px; height:6px; }
+  .scroll::-webkit-scrollbar-track{ background:var(--panel-2); }
+  .scroll::-webkit-scrollbar-thumb{ background:var(--cyan-dim); border-radius:4px; }
+
+  /* ============ SHELL ============ */
+  .console{
+    height:100vh;
+    height:100dvh;
+    width:100vw;
+    padding:10px 12px 8px;
+    display:grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr 100px 30px;
+    gap:8px;
+  }
+
+  /* ============ TOPBAR ============ */
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:0 16px;
+    background:var(--panel);
+    border:1px solid var(--grid-line);
+    border-radius:30px 10px 30px 10px;
+  }
+  .brand-block{ display:flex; flex-direction:column; gap:4px; flex:0 0 auto; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:26px; height:26px; flex:none;
+    background: conic-gradient(from 220deg, var(--amber), var(--gold), var(--amber));
+    clip-path: polygon(50% 6%, 94% 88%, 6% 88%);
+  }
+  .brand-name{
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; letter-spacing:0.08em;
+    text-transform:uppercase; font-size:23px; color:var(--text);
+  }
+  .brand-name .dim{ color:var(--text-dim); font-weight:600; }
+
+  /* Home city picker — lives under the brand text now (was under the clock), so the
+     clock box only ever has to size for the time readout. */
+  .brand-city-select{
+    appearance:none; -webkit-appearance:none; background:transparent; border:none; outline:none;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px; color:var(--text-dim);
+    letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; align-self:flex-start;
+    margin-left:36px; padding:0 14px 0 2px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' stroke='%237a9aa8' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 2px center;
+  }
+  .brand-city-select:hover{ color:var(--text); }
+  .brand-city-select option{ background:var(--panel); color:var(--text); font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+  /* Stardate + date share one two-line column now, instead of the date living under
+     the greeting — frees the greeting to be a single line with more room to breathe. */
+  .stardate-block{
+    flex:0 0 auto; display:flex; flex-direction:column; justify-content:center; gap:2px;
+    border-left:1px solid var(--grid-line); padding-left:16px; line-height:1.2;
+  }
+  .stardate{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:16px; color:var(--cyan); letter-spacing:0.04em;
+  }
+
+  .greeting-block{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; line-height:1.15; }
+  .greeting{
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; font-size:23px;
+    letter-spacing:0.03em; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .greeting .status-dot{
+    display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--good);
+    margin-right:7px; box-shadow:0 0 8px var(--good);
+    animation: blink 2.4s ease-in-out infinite;
+  }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+  .subline{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13.5px; color:var(--text-dim); }
+  .subline-short{ display:none; }
+
+  .clock{
+    flex:0 0 auto; text-align:right; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color:var(--amber); font-size:38px; letter-spacing:0.03em; line-height:1.1;
+  }
+  .greeting-name-edit{
+    display:inline-block; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight:700; font-size:23px; letter-spacing:0.03em; color:var(--text);
+    background:var(--panel-2); border:1px solid var(--grid-line); border-radius:5px; padding:0 6px; width:140px;
+  }
+  .brand-name-edit{
+    display:inline-block; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight:700; font-size:23px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text);
+    background:var(--panel-2); border:1px solid var(--grid-line); border-radius:5px; padding:0 6px; width:170px;
+  }
+
+  .search{ flex:0 0 auto; display:flex; align-items:center; gap:6px; }
+  .search input{
+    background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:20px; padding:7px 12px; font-size:18px; width:200px;
+  }
+  .search input::placeholder{ color:var(--text-dim); }
+  .lang-switch{
+    flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:31px; border-radius:8px; background:var(--panel-2); border:1px solid var(--grid-line);
+    color:var(--text-dim); font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:13px; font-weight:700; letter-spacing:0.04em; text-decoration:none; text-transform:uppercase;
+  }
+  .lang-switch:hover{ color:var(--text); border-color:var(--cyan); }
+  .theme-switch{
+    flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:31px; border-radius:8px; background:var(--panel-2); border:1px solid var(--grid-line);
+    color:var(--text-dim); font-size:16px; cursor:pointer; padding:0;
+  }
+  .theme-switch:hover{ color:var(--text); border-color:var(--cyan); }
+  .search button{
+    background:var(--cyan); color:var(--cyan-ink); border:0; border-radius:20px;
+    padding:7px 14px; font-weight:700; font-size:17.5px; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
+  }
+  .search button:hover{ filter:brightness(1.1); }
+
+  /* ============ PANEL PRIMITIVES ============ */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--grid-line);
+    border-radius:10px 26px 10px 10px;
+    display:flex; flex-direction:column; overflow:hidden; min-height:0;
+  }
+  .panel.round-l{ border-radius:26px 10px 10px 10px; }
+  .panel-head{
+    flex:0 0 auto;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:6px 8px 6px 16px;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.09em; font-size:18px;
+    color:var(--amber-ink);
+    background:var(--amber);
+  }
+  .panel-head .n{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px; opacity:0.75; text-transform:none; letter-spacing:0; }
+  .panel[data-accent="cyan"] .panel-head{ background:var(--cyan); color:var(--cyan-ink); }
+  .panel[data-accent="violet"] .panel-head{ background:var(--violet); color:var(--violet-ink); }
+  .panel[data-accent="gold"] .panel-head{ background:var(--gold); color:var(--gold-ink); }
+  .panel[data-accent="teal"] .panel-head{ background:var(--teal); color:var(--teal-ink); }
+  .panel[data-accent="frost"] .panel-head{ background:var(--frost); color:var(--frost-ink); }
+  .panel[data-accent="crimson"] .panel-head{ background:var(--crimson); color:var(--crimson-ink); }
+
+  .head-btn{
+    appearance:none; border:0; background:rgba(0,0,0,0.18); color:inherit;
+    border-radius:999px; font-size:15px; font-weight:700; letter-spacing:0.04em;
+    padding:4px 9px; cursor:pointer; text-transform:uppercase;
+  }
+  .head-btn:hover{ background:rgba(0,0,0,0.32); }
+  .head-btn-group{ display:flex; align-items:center; gap:6px; }
+  .settings-io-status{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px; text-transform:none;
+    letter-spacing:0; color:inherit; opacity:0.85; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+
+  .panel-body{ flex:1; min-height:0; overflow-y:auto; padding:10px 14px; }
+  .panel-body.no-pad{ padding:0; }
+
+  /* full-width tab bar under the panel-head — a proper row of its own instead of
+     squeezed/right-aligned next to the title, so it reads as an organized, professional
+     category picker instead of a bunched pile of buttons. */
+  .news-tabs-bar{
+    flex:0 0 auto; display:flex; flex-wrap:wrap; gap:6px;
+    padding:9px 16px; background:var(--panel-2); border-bottom:1px solid var(--grid-line);
+  }
+  .tab{
+    appearance:none; border:1px solid var(--grid-line); background:transparent; color:var(--text-dim);
+    border-radius:999px; font-size:14px; font-weight:600; padding:5px 12px; cursor:pointer; letter-spacing:0.02em;
+    white-space:nowrap;
+  }
+  .tab:hover{ border-color:var(--violet); color:var(--text); }
+  .tab.active{ background:var(--violet); border-color:var(--violet); color:var(--violet-ink); font-weight:700; }
+
+  /* ============ DECK (main 3-col area) ============ */
+  .deck{ display:grid; grid-template-columns: minmax(0,1fr) 360px 240px 240px; gap:8px; min-height:0; min-width:0; }
+  .rail{ display:flex; flex-direction:column; gap:8px; min-height:0; }
+  .rail-left .panel:nth-child(1){ flex:1; }
+  .globes-stack{ display:flex; flex-direction:column; gap:8px; min-height:0; }
+  .globes-stack .globe-panel{ flex:1; min-height:0; }
+  .globes-stack .globe-body{ aspect-ratio: 1 / 1; height:100%; width:auto; max-width:100%; margin:0 auto; }
+  /* right rail is an independent accordion — each panel toggles open/closed on its own,
+     and the whole column scrolls as one unit instead of each box fighting a squeezed
+     internal max-height. */
+  .rail-right{ overflow-y:auto; }
+  .rail-right .panel{ flex:0 0 auto; order:1; }
+  .rail-right .panel.collapsed{ order:2; }
+  /* first child of each rail-right column: sits between the expanded group (order:1) and
+     collapsed group (order:2) and eats any leftover vertical space, so the collapsed tabs
+     land flush against the bottom edge instead of just trailing whatever's open above them. */
+  .rail-spacer{ order:2; flex:1 1 0; min-height:0; }
+  .rail-right .panel-head{ cursor:pointer; user-select:none; }
+  .rail-right .panel-body{ overflow-y:visible; max-height:none; }
+  .rail-right .panel.collapsed .panel-body{ display:none; }
+  .panel-chevron{
+    flex:0 0 auto; font-style:normal; font-size:14px; opacity:0.75; line-height:1;
+    transition:transform 0.15s ease;
+  }
+  .panel.collapsed .panel-chevron{ transform:rotate(-90deg); }
+
+  /* ---- sky watch (moon phase + aurora) ---- */
+  .sky-row{ display:flex; align-items:center; gap:10px; }
+  .sky-row + .sky-row{ margin-top:8px; padding-top:8px; border-top:1px solid var(--grid-line); }
+  .moon-icon{ flex:none; border-radius:50%; }
+  .sky-label{ font-size:15px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; }
+  .sky-value{ font-size:17.5px; color:var(--text); }
+  .sky-sub{ font-size:13.5px; color:var(--text-dim); margin-top:1px; }
+  .kp-badge{
+    flex:none; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:16px;
+    border:2px solid var(--teal); color:var(--teal);
+  }
+  .kp-badge.high{ border-color:var(--gold); color:var(--gold); }
+  .kp-badge.storm{ border-color:var(--bad); color:var(--bad); }
+
+  /* ---- bromont ---- */
+  .snow-report-caption{ font-size:12.5px; color:var(--text-dim); opacity:0.75; margin-top:8px; font-style:italic; }
+
+  /* ---- sports ---- */
+  .sport-row{ padding:5px 0; border-bottom:1px solid var(--grid-soft); }
+  .sport-row:last-child{ border-bottom:0; }
+  .sport-team{ font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; }
+  .sport-line{ font-size:15.5px; color:var(--text); margin-top:1px; }
+  .sport-line .w{ color:var(--good); }
+  .sport-line .l{ color:var(--bad); }
+  .sport-live{ color:var(--bad); font-weight:700; font-size:12.5px; letter-spacing:0.04em; animation:sportLivePulse 1.6s ease-in-out infinite; }
+  @keyframes sportLivePulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.45; } }
+  .sport-tennis-head{ font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; margin-top:8px; padding-top:8px; border-top:1px solid var(--grid-line); }
+  .sport-tennis-match{ font-size:15px; color:var(--text); margin-top:3px; }
+  .sport-tennis-match span{ color:var(--text-dim); font-size:13px; }
+  .sport-tennis-match .sets{ color:var(--text-dim); font-size:13px; margin-left:4px; }
+  .sport-tennis-match b{ color:var(--good); font-weight:700; }
+  .sport-team{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .sport-team-x{ cursor:pointer; color:var(--text-dim); font-size:13px; flex:0 0 auto; }
+  .sport-team-x:hover{ color:var(--bad); }
+  .sport-add{ display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; padding-top:9px; border-top:1px solid var(--grid-line); }
+  .sport-add select{
+    flex:1 1 100px; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:6px; padding:5px 6px; font-size:13.5px;
+  }
+  .sport-add button{ flex:0 0 auto; background:var(--crimson); color:var(--crimson-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:14px; cursor:pointer; }
+
+  .podcast-edit-list{ margin-top:10px; padding-top:9px; border-top:1px solid var(--grid-line); }
+  .podcast-edit-row{ display:flex; align-items:center; justify-content:space-between; gap:6px; padding:4px 0; font-size:14px; color:var(--text); }
+  .podcast-edit-x{ cursor:pointer; color:var(--text-dim); font-size:13px; flex:0 0 auto; }
+  .podcast-edit-x:hover{ color:var(--bad); }
+  .podcast-empty{ font-size:14px; color:var(--text-dim); padding:6px 0; }
+  .podcast-add{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .podcast-add input{ flex:1 1 90px; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:14px; }
+  .podcast-add button{ flex:0 0 auto; background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:14px; cursor:pointer; }
+
+  .podcast-search-row{ display:flex; gap:6px; }
+  .podcast-search-row input{ flex:1 1 auto; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:14px; }
+  .podcast-search-row button{ flex:0 0 auto; background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 14px; font-weight:700; font-size:14px; cursor:pointer; }
+  .podcast-search-results{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+  .podcast-result-row{ display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--grid-line); border-radius:6px; padding:6px 8px; cursor:pointer; }
+  .podcast-result-row:hover{ border-color:var(--violet); }
+  .podcast-result-thumb{ width:34px; height:34px; border-radius:50%; object-fit:cover; flex:none; background:var(--panel); }
+  .podcast-result-info{ flex:1 1 auto; min-width:0; }
+  .podcast-result-name{ font-size:14px; color:var(--text); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .podcast-result-sub{ font-size:12.5px; color:var(--text-dim); }
+  .podcast-result-add{ flex:0 0 auto; appearance:none; background:none; border:1px solid var(--grid-line); color:var(--text-dim); border-radius:5px; padding:3px 10px; font-size:12.5px; cursor:pointer; }
+  .podcast-result-add:hover{ color:var(--text); border-color:var(--violet); }
+  .podcast-manual-toggle{ display:inline-block; margin-top:10px; background:none; border:none; color:var(--cyan); font-size:13px; text-decoration:underline; cursor:pointer; padding:0; }
+
+  /* ---- podcasts list — plain rows (name + latest title), no thumbnail "mini window";
+     stacks vertically so any number of channels reads cleanly in a narrow rail, instead
+     of squeezing side-by-side preview tiles down to an unreadable size ---- */
+  .video-tiles{ display:flex; flex-direction:column; gap:6px; }
+  .podcast-row{
+    display:flex; flex-direction:column; gap:2px; cursor:pointer;
+    background:var(--panel-2); border:1px solid var(--grid-line); border-radius:7px; padding:7px 10px;
+  }
+  .podcast-row:hover{ border-color:var(--violet); }
+  .podcast-row-name{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px;
+    letter-spacing:0.04em; text-transform:uppercase; color:var(--cyan);
+  }
+  .podcast-row-video{ font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .podcast-row.unavailable{ cursor:default; }
+  .podcast-row.unavailable:hover{ border-color:var(--grid-line); }
+  .podcast-row.unavailable .podcast-row-video{ color:var(--text-dim); }
+  .video-panel{
+    position:relative; width:min(920px, 92vw); background:#000; border-radius:10px; overflow:hidden;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,0.85);
+  }
+  .video-panel .detail-close{ position:absolute; top:10px; right:10px; z-index:2; background:rgba(0,0,0,0.55); }
+  .video-frame-wrap{ position:relative; width:100%; aspect-ratio:16/9; }
+  .video-frame-wrap iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+  /* ---- stock list ---- */
+  .quote-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:5px 0; border-bottom:1px solid var(--grid-soft);
+  }
+  .quote-row:last-child{ border-bottom:0; }
+  .q-id{ min-width:0; }
+  .q-sym{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:18px; color:var(--text); }
+  .q-name{ font-size:15px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+  .q-nums{ text-align:right; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:17.5px; font-variant-numeric:tabular-nums; }
+  .q-price{ color:var(--text); }
+  .q-chg.up{ color:var(--good); }
+  .q-chg.down{ color:var(--bad); }
+  .edit-row{ margin-top:6px; }
+  .edit-row input{
+    width:100%; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:6px; padding:6px 8px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px;
+  }
+  .edit-hint{ font-size:14.5px; color:var(--text-dim); margin-top:4px; }
+
+  /* ---- currency ---- */
+  .fx-row{ display:flex; align-items:center; gap:5px; margin-bottom:8px; }
+  .fx-row select, .fx-row input{
+    background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:6px; padding:6px 4px; font-size:15.5px; min-width:0;
+  }
+  .fx-row input{ width:56px; flex:0 1 56px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .fx-row select{ flex:1 1 0; }
+  .fx-swap{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--cyan); border-radius:6px; width:26px; height:26px; flex:0 0 auto; cursor:pointer; }
+  .fx-swap:hover{ background:var(--panel-2); }
+  .fx-result{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:32px; color:var(--gold); text-align:center; padding:10px 0 4px; font-variant-numeric:tabular-nums; }
+  .fx-meta{ text-align:center; font-size:15px; color:var(--text-dim); }
+
+  /* ---- flight tracker + ISS ---- */
+  .ft-iss{ background:var(--panel-2); border:1px solid var(--grid-line); border-radius:8px; padding:9px 11px; margin-bottom:10px; }
+  .ft-iss-head{ display:flex; align-items:center; gap:6px; font-size:14px; font-weight:700; color:var(--frost); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .ft-iss-dot{ width:7px; height:7px; border-radius:50%; background:var(--frost); box-shadow:0 0 6px var(--frost); flex:none; animation:blink 2.4s ease-in-out infinite; }
+  .ft-iss-stats{ font-size:15px; color:var(--text-dim); line-height:1.55; }
+  .ft-iss-stats b{ color:var(--text); }
+  .ft-form{ display:flex; flex-direction:column; gap:6px; margin-bottom:9px; }
+  .ft-form select{ background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:15px; min-width:0; }
+  .ft-search-row{ display:flex; gap:6px; }
+  .ft-search-row input{
+    flex:1 1 auto; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text);
+    border-radius:6px; padding:6px 8px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:15px; text-transform:uppercase;
+  }
+  .ft-search-row button{
+    appearance:none; background:var(--frost); color:var(--frost-ink); border:none; border-radius:6px;
+    padding:6px 14px; font-weight:700; font-size:14px; cursor:pointer; flex:none;
+  }
+  .ft-search-row button:hover{ filter:brightness(1.08); }
+  .ft-results{ display:flex; flex-direction:column; gap:6px; }
+  .ft-result-row{ background:var(--panel-2); border:1px solid var(--grid-line); border-radius:6px; padding:7px 10px; cursor:pointer; }
+  .ft-result-row:hover{ border-color:var(--frost); }
+  .ft-result-row .ft-callsign{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:15px; color:var(--text); }
+  .ft-result-row .ft-sub{ font-size:13.5px; color:var(--text-dim); margin-top:2px; }
+  .ft-tracked{ background:var(--panel-2); border:1px solid var(--good); border-radius:8px; padding:10px 12px; margin-top:9px; }
+  .ft-tracked-head{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px; }
+  .ft-tracked-head .ft-callsign{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:16px; color:var(--good); }
+  .ft-tracked-clear{ appearance:none; background:none; border:1px solid var(--grid-line); color:var(--text-dim); border-radius:5px; padding:2px 8px; font-size:12px; cursor:pointer; }
+  .ft-tracked-clear:hover{ color:var(--text); }
+  .ft-tracked-stats{ font-size:14.5px; color:var(--text-dim); line-height:1.55; }
+  .ft-tracked-stats b{ color:var(--text); }
+  .ft-fun{ margin-top:7px; padding-top:7px; border-top:1px dashed var(--grid-line); font-size:13.5px; color:var(--gold); }
+  .ft-path-note{ margin-top:7px; font-size:12.5px; color:var(--text-dim); font-style:italic; line-height:1.4; }
+
+  /* ---- weather compact ---- */
+  .wx-top{ display:flex; align-items:center; gap:10px; }
+  .wx-icon{ width:40px; height:40px; flex:none; }
+  .wx-temp{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:37.5px; color:var(--text); }
+  .wx-place{ font-size:15.5px; color:var(--text-dim); }
+  .wx-place-coord{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; color:var(--text-dim); opacity:0.7; margin-top:1px; }
+  .wx-cond{ font-size:16px; color:var(--cyan); }
+  .wx-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:8px; }
+  .wx-stat{ text-align:center; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px; color:var(--text-dim); }
+  .wx-stat b{ display:block; color:var(--text); font-size:19px; }
+  .wx-city-edit{ display:flex; gap:6px; margin-top:8px; }
+  .wx-city-edit input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:5px 7px; font-size:15.5px; }
+  .wx-more-link{
+    display:inline-flex; align-items:center; gap:4px; background:none; border:none; color:var(--cyan);
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:14px; letter-spacing:0.04em; text-transform:uppercase;
+    cursor:pointer; padding:8px 0 0; text-align:left; width:100%;
+  }
+  .wx-more-link:hover{ color:var(--text); }
+  .snow-report{ margin-top:10px; padding-top:9px; border-top:1px solid var(--grid-line); }
+  .snow-report-collapsed{ margin-top:10px; padding-top:9px; border-top:1px solid var(--grid-line); }
+  .snow-report-collapsed .wx-more-link{ padding-top:0; }
+  .snow-report-head{ font-size:14px; color:var(--frost); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px; }
+  .wx-forecast{ display:flex; justify-content:space-between; gap:4px; margin-top:10px; padding-top:8px; border-top:1px solid var(--grid-line); }
+  .wx-fday{ flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .wx-fday-label{ font-size:13px; color:var(--text-dim); text-transform:uppercase; }
+  .wx-fday svg{ width:20px; height:20px; }
+  .wx-fday-hi{ font-size:15px; color:var(--text); }
+  .wx-fday-lo{ font-size:14px; color:var(--text-dim); }
+  .wx-news-row{ padding:5px 0; border-bottom:1px solid var(--grid-line); font-size:15.5px; color:var(--text); cursor:pointer; line-height:1.2; }
+  .wx-news-row:last-child{ border-bottom:0; }
+  .wx-news-row:hover{ color:var(--cyan); }
+
+  /* ---- news list (rail) ---- */
+  .news-item{
+    display:flex; gap:8px; padding:5px 0; border-bottom:1px solid var(--grid-soft); cursor:pointer;
+  }
+  .news-item:last-child{ border-bottom:0; }
+  .news-item:hover .news-title{ color:var(--cyan); }
+  .news-thumb{ width:56px; height:56px; border-radius:6px; object-fit:cover; flex:none; background:var(--panel-2); }
+  .news-thumb.empty{ display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:23px; }
+  .news-back{
+    display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--cyan);
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15px; letter-spacing:0.05em; text-transform:uppercase;
+    cursor:pointer; padding:12px 14px 4px; text-align:left; width:100%;
+  }
+  .news-back:hover{ color:var(--text); }
+  .news-title{ font-size:17.5px; line-height:1.18; color:var(--text); }
+  .news-meta{ font-size:14px; color:var(--text-dim); margin-top:2px; text-transform:uppercase; letter-spacing:0.04em; }
+
+  /* ---- globe panel ---- */
+  .globe-panel{
+    background:radial-gradient(circle at 50% 38%, #0B1524 0%, var(--void) 72%);
+    border:1px solid var(--grid-line); border-radius:16px; display:flex; flex-direction:column; overflow:hidden; position:relative;
+  }
+  .globe-head{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+    padding:10px 16px; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:18px; color:var(--cyan);
+  }
+  .globe-head .n{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15px; color:var(--text-dim); letter-spacing:0; text-transform:none; }
+  .globe-body{ flex:1; min-height:0; position:relative; }
+  .globe-body canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
+  .globe-body canvas:active{ cursor:grabbing; }
+  .globe-footer{
+    flex:0 0 auto; display:flex; flex-direction:column; gap:6px;
+    padding:10px 16px 12px; border-top:1px solid var(--grid-line);
+  }
+  .globe-legend{
+    display:flex; flex-direction:row; flex-wrap:wrap; row-gap:5px; column-gap:16px; font-size:14px; color:var(--text-dim);
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .globe-legend span{ display:flex; align-items:center; gap:5px; }
+  .legend-dot{ width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
+  .legend-dot.cyan{ background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
+  .legend-dot.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .legend-dot.blue{ background:#5AA7E8; box-shadow:0 0 6px #5AA7E8; }
+  .legend-dot.red{ background:#FF6B5E; box-shadow:0 0 6px #FF6B5E; }
+  .legend-dot.frost{ background:var(--frost); box-shadow:0 0 6px var(--frost); }
+  .legend-dot.gold{ background:var(--gold); box-shadow:0 0 6px var(--gold); }
+  .legend-dot.green{ background:var(--good); box-shadow:0 0 6px var(--good); }
+  .legend-dot.haze{ background:rgba(205,222,230,0.85); }
+  .legend-dot.precip-grad{
+    width:20px; border-radius:4px; flex:0 0 auto;
+    background:linear-gradient(90deg, rgb(110,220,150), rgb(235,214,80), rgb(255,110,90));
+    box-shadow:0 0 5px rgba(235,214,80,0.6);
+  }
+  .globe-hint{
+    font-size:13px; color:var(--text-dim);
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-align:left;
+  }
+  .globe-tooltip{
+    position:absolute; pointer-events:none; transform:translate(-50%,-130%);
+    background:var(--panel-2); border:1px solid var(--cyan-dim); border-radius:6px;
+    padding:5px 9px; font-size:15.5px; color:var(--text); white-space:nowrap; display:none;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:600; letter-spacing:0.02em;
+    box-shadow:0 8px 20px -8px rgba(0,0,0,0.7);
+  }
+
+  /* ============ STRIP (links + tasks + captain's log) ============ */
+  .strip{ display:grid; grid-template-columns: 1fr; gap:8px; min-height:0; }
+  .strip .panel-body{ display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; }
+
+  /* ---- captain's log ---- */
+  .log-row{ display:flex; flex-direction:column; gap:1px; width:100%; padding:4px 0; border-bottom:1px solid var(--grid-soft); }
+  .log-row-top{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+  .log-ts{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12.5px; color:var(--text-dim); white-space:nowrap; }
+  .log-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:16px; flex:0 0 auto; }
+  .log-del:hover{ color:var(--bad); }
+  .log-text{ font-size:15.5px; color:var(--text); line-height:1.25; }
+  .log-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
+  .log-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:15px; min-width:0; }
+  .log-add button{ flex:0 0 auto; background:var(--teal); color:var(--teal-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
+
+  /* ============ FOOTER STRIP (ship status + market ticker) ============ */
+  .footer-strip{ display:flex; align-items:center; gap:14px; padding:0 6px; overflow:hidden; }
+  /* Ship status flavor line rotates every 9s and can run long ("Comm relays synced with
+     Starfleet Command"); rather than truncate with an ellipsis on narrower screens, it
+     scrolls continuously — same duplicated-track/-50% technique as the market ticker
+     right next to it — so the full line always reads, on any viewport width. */
+  .ship-status-wrap{ flex:0 1 340px; min-width:0; overflow:hidden; white-space:nowrap; position:relative; }
+  .ship-status-track{ display:inline-flex; gap:40px; animation:ship-status-scroll 22s linear infinite; }
+  @keyframes ship-status-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  .ship-status{
+    display:inline-block; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:13px; color:var(--text-dim); letter-spacing:0.03em; white-space:nowrap;
+  }
+  .ship-status b{ color:var(--good); font-weight:400; }
+  .ship-status::before{ content:"● "; color:var(--good); }
+  .footer-sep{ flex:0 0 auto; width:1px; align-self:stretch; background:var(--grid-line); }
+  .market-ticker{ flex:1 1 auto; min-width:0; overflow:hidden; white-space:nowrap; position:relative; }
+  .market-ticker-track{ display:inline-flex; gap:26px; animation:ticker-scroll 32s linear infinite; }
+  @keyframes ticker-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  .ticker-item{
+    display:inline-flex; align-items:center; gap:5px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:13px; white-space:nowrap; color:var(--text-dim);
+  }
+  .ticker-item .t-sym{ color:var(--text); }
+  .ticker-item .t-up{ color:var(--good); }
+  .ticker-item .t-down{ color:var(--bad); }
+
+  .tile{
+    display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--grid-line);
+    border-radius:8px; padding:6px 10px; font-size:16px; color:var(--text); text-decoration:none;
+    position:relative;
+  }
+  .tile:hover{ border-color:var(--amber); color:var(--amber); }
+  .tile .tile-x{
+    position:absolute; top:-6px; right:-6px; width:16px; height:16px; border-radius:50%;
+    background:var(--bad); color:#2A0A06; font-size:14.5px; line-height:16px; text-align:center; cursor:pointer; display:none;
+  }
+  .tile:hover .tile-x{ display:block; }
+  .tile-add{ display:flex; gap:6px; width:100%; margin-top:4px; }
+  .tile-add input{ flex:1; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:15.5px; min-width:0; }
+  .tile-add button{ background:var(--amber); color:var(--amber-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
+
+  .todo-row{ display:flex; align-items:center; gap:8px; width:100%; padding:4px 0; border-bottom:1px solid var(--grid-soft); }
+  .todo-row input[type="checkbox"]{ accent-color:var(--violet); width:15px; height:15px; flex:none; }
+  .todo-text{ flex:1; font-size:17.5px; color:var(--text); }
+  .todo-row.done .todo-text{ color:var(--text-dim); text-decoration:line-through; }
+  .todo-del{ background:none; border:0; color:var(--text-dim); cursor:pointer; font-size:19px; }
+  .todo-del:hover{ color:var(--bad); }
+  .todo-add{ display:flex; gap:6px; width:100%; margin-top:6px; }
+  .todo-add input{ flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--grid-line); color:var(--text); border-radius:6px; padding:6px 8px; font-size:16px; }
+  .todo-add button{ flex:0 0 auto; background:var(--violet); color:var(--violet-ink); border:0; border-radius:6px; padding:0 12px; font-weight:700; font-size:15.5px; cursor:pointer; }
+
+  /* ============ TICKER ============ */
+  /* ============ DETAIL OVERLAY ============ */
+  .overlay{
+    position:fixed; inset:0; background:rgba(3,5,9,0.72); backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center; z-index:50; padding:24px;
+  }
+  .overlay[hidden]{ display:none; }
+  .detail-panel{
+    width:min(640px, 100%); max-height:min(600px, 90vh); background:var(--panel-2);
+    border:1px solid var(--cyan-dim); border-radius:10px 30px 10px 10px; overflow:hidden;
+    display:flex; flex-direction:column; box-shadow:0 30px 80px -20px rgba(0,0,0,0.85);
+  }
+  .detail-topbar{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 10px 10px 18px; background:var(--cyan); color:var(--cyan-ink);
+  }
+  .detail-eyebrow{ font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-size:16px; }
+  .detail-close{
+    appearance:none; border:0; background:rgba(0,0,0,0.2); color:inherit; width:26px; height:26px;
+    border-radius:50%; cursor:pointer; font-size:19px; line-height:1;
+  }
+  .detail-close:hover{ background:rgba(0,0,0,0.36); }
+  .detail-body{ flex:1; min-height:0; overflow-y:auto; padding:18px 20px 22px; }
+  .detail-img{ width:100%; max-height:220px; object-fit:cover; border-radius:8px; margin-bottom:14px; background:var(--panel); }
+  .detail-title{ font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight:700; font-size:30px; line-height:1.25; margin:0 0 8px; text-wrap:balance; }
+  .detail-meta{ font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:15.5px; color:var(--text-dim); margin-bottom:12px; }
+  .detail-meta b{ color:var(--cyan); font-weight:400; }
+  .detail-snippet{ font-size:20px; line-height:1.45; color:var(--text); margin:0 0 12px; }
+  .detail-link{
+    display:inline-block; background:var(--amber); color:var(--amber-ink); text-decoration:none;
+    font-weight:700; font-size:18px; letter-spacing:0.03em; padding:9px 16px; border-radius:20px;
+  }
+  .detail-link:hover{ filter:brightness(1.08); }
+  .detail-list-item{
+    padding:7px 0; border-bottom:1px solid var(--grid-line); cursor:pointer;
+  }
+  .detail-list-item:hover .detail-title-sm{ color:var(--cyan); }
+  .detail-title-sm{ font-size:19px; color:var(--text); line-height:1.25; }
+  .detail-src{ font-size:14.5px; color:var(--text-dim); margin-top:2px; text-transform:uppercase; letter-spacing:0.04em; }
+
+  .empty-state, .error-state{ font-size:16px; color:var(--text-dim); padding:10px 0; }
+  .error-state{ color:var(--bad); }
+
+  /* ============ RESPONSIVE FALLBACK ============ */
+  @media (max-width: 980px), (max-height: 620px){
+    html,body{ overflow:auto; }
+    .console{ height:auto; min-height:100vh; min-height:100dvh; }
+    .deck{ grid-template-columns:minmax(0,1fr); }
+    .rail{ flex-direction:row; flex-wrap:wrap; }
+    .rail .panel{ flex:1 1 320px; max-height:none; }
+    .globe-body{ min-height:360px; }
+    .strip{ grid-template-columns:1fr; }
+  }
+
+  /* Tablet band (iPad landscape and similar, ~981-1300px): the desktop 4-column grid's
+     fixed-width globes + two right-rail columns don't leave enough room for news before
+     the full single-column mobile fallback kicks in at 980px — news was down to a sliver
+     or forcing horizontal overflow. Compress the globes and right rails further here so
+     news keeps a workable width, at the globes' expense. */
+  @media (min-width: 981px) and (max-width: 1300px){
+    .deck{ grid-template-columns: minmax(0,1fr) 300px 210px 210px; }
+  }
+
+  /* Topbar is a single-row flex layout of mostly fixed-width elements (brand, stardate,
+     clock, search) plus one flexible greeting block — on tablet-width screens (iPad
+     portrait/landscape) the fixed items alone can exceed the viewport, squeezing the
+     greeting/date text down to nothing via its min-width:0 ellipsis. Shrink everything
+     proportionally first, then drop the least essential piece (stardate) if still tight. */
+  @media (max-width: 1180px){
+    .topbar{ gap:10px; padding:0 10px; }
+    .brand-mark{ width:20px; height:20px; }
+    .brand-name{ font-size:18px; }
+    .brand-name-edit{ font-size:18px; width:130px; }
+    .brand-city-select{ font-size:11.5px; margin-left:30px; }
+    .stardate-block{ padding-left:10px; }
+    .stardate{ font-size:13px; }
+    .greeting{ font-size:17px; }
+    .greeting-name-edit{ font-size:17px; width:110px; }
+    .subline{ font-size:11.5px; }
+    .clock{ font-size:26px; }
+    .search input{ font-size:14px; padding:6px 8px; width:130px; }
+    .search button{ font-size:13px; padding:6px 10px; }
+    .lang-switch{ width:28px; height:26px; font-size:11px; }
+    .theme-switch{ width:28px; height:26px; font-size:14px; }
+  }
+  @media (max-width: 900px){
+    .stardate{ display:none; }
+    .subline{ display:none; }
+    .subline-short{ display:block; font-size:11px; }
+    .topbar{ gap:5px; padding:0 8px; }
+    .brand-mark{ width:16px; height:16px; }
+    .brand-name{ font-size:14px; }
+    .brand-city-select{ font-size:10px; margin-left:22px; }
+    .stardate-block{ padding-left:8px; }
+    .greeting{ font-size:14px; }
+    .clock{ font-size:19px; }
+    .search{ gap:4px; }
+    .search input{ width:76px; padding:5px 6px; }
+    .search button{ padding:5px 7px; font-size:12px; }
+    .lang-switch{ width:22px; height:20px; font-size:9.5px; }
+    .theme-switch{ width:22px; height:20px; font-size:12px; }
+  }
+  /* Below ~1020px, even the shrunk single-row layout has too many rigid pieces (brand+city,
+     stardate+date, greeting, clock, search, language switch) to fit without either forcing
+     a horizontal scrollbar (below ~680px) or truncating the greeting with an ellipsis
+     (the 700-980px gap). Wrap into a stable 3-row layout instead — greeting gets a
+     full-width row of its own, so it never needs to truncate or scroll. */
+  @media (max-width: 1020px){
+    .topbar{ flex-wrap:wrap; row-gap:6px; padding:8px; }
+    .brand-block{ order:1; }
+    .stardate-block{ order:2; }
+    .theme-switch{ order:3; margin-left:auto; }
+    .lang-switch{ order:3; }
+    .greeting-block{ order:4; flex-basis:100%; }
+    .greeting{ font-size:16px; }
+    .clock{ order:5; font-size:22px; }
+    .search{ order:6; flex:1 1 auto; justify-content:flex-end; }
+    .search input{ flex:1 1 auto; min-width:0; width:auto; }
+  }
+</style>
+</head>
+<body>
+  <div class="console" id="console">
+
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name" id="brand-name">CENTRAL COMMAND</span>
+        </div>
+        <select class="brand-city-select" id="home-city-select" aria-label="Home city"></select>
+      </div>
+      <div class="stardate-block">
+        <span class="stardate" id="stardate">STARDATE —</span>
+        <div class="subline" id="date-text">—</div>
+        <div class="subline subline-short" id="date-text-short">—</div>
+      </div>
+      <div class="greeting-block">
+        <div class="greeting"><span class="status-dot" aria-hidden="true"></span><span id="greeting-text">Initializing console…</span></div>
+      </div>
+      <div class="clock" id="clock">
+        --:--:--
+      </div>
+      <form class="search" id="search-form" role="search">
+        <input type="text" id="search-input" placeholder="Search…" autocomplete="off">
+        <button type="submit">Go</button>
+      </form>
+      <button class="theme-switch" id="theme-toggle-btn" type="button" title="Toggle light / dark look">☀</button>
+      <a class="lang-switch" href="/fr/" title="Passer en français">FR</a>
+    </header>
+
+    <main class="deck">
+      <aside class="rail rail-left">
+        <section class="panel round-l" data-accent="violet" aria-label="News feed">
+          <div class="panel-head">
+            <span>Newswire</span>
+          </div>
+          <div class="news-tabs-bar" id="news-tabs"></div>
+          <div class="panel-body no-pad scroll" id="news-body">
+            <div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>
+          </div>
+        </section>
+      </aside>
+
+      <div class="globes-stack">
+        <section class="globe-panel" aria-label="Live weather and orbital tracking" data-accent="weather">
+          <div class="globe-head">
+            <span>Weather Systems</span>
+            <span class="n" id="weather-globe-count">syncing…</span>
+          </div>
+          <div class="globe-body" id="weather-globe-body">
+            <canvas id="weather-globe-canvas"></canvas>
+            <div class="globe-tooltip" id="weather-globe-tooltip"></div>
+          </div>
+          <div class="globe-footer">
+            <div class="globe-legend">
+              <span><i class="legend-dot haze"></i>Cloud cover</span>
+              <span><i class="legend-dot precip-grad"></i>Precip (light→heavy)</span>
+              <span><i class="legend-dot amber"></i>News dateline</span>
+              <span><i class="legend-dot red"></i><span id="weather-globe-home-label">Montreal</span></span>
+              <span><i class="legend-dot frost"></i>ISS</span>
+              <span><i class="legend-dot green"></i>Tracked flight</span>
+            </div>
+            <div class="globe-hint">drag to rotate &amp; tilt · click a marker</div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="rail rail-right" aria-label="Weather and conditions">
+        <div class="rail-spacer" aria-hidden="true"></div>
+        <section class="panel" data-accent="cyan" data-panel-key="weather" aria-label="Weather">
+          <div class="panel-head"><span>Weather</span><button class="head-btn" id="wx-unit-btn" type="button" title="Toggle °C / °F">°F</button><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="wx-body">
+            <div class="empty-state">Loading weather…</div>
+          </div>
+        </section>
+        <section class="panel" data-accent="teal" data-panel-key="skywatch" aria-label="Sky watch">
+          <div class="panel-head"><span>Sky Watch</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="skywatch-body">
+            <div class="empty-state">Loading sky data…</div>
+          </div>
+        </section>
+        <section class="panel" data-accent="frost" data-panel-key="flighttracker" aria-label="Flight tracker">
+          <div class="panel-head"><span>Flight Tracker</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="flighttracker-body">
+            <div class="empty-state">Loading tracker…</div>
+          </div>
+        </section>
+        <section class="panel round-l" data-accent="crimson" data-panel-key="sports" aria-label="Sports scores">
+          <div class="panel-head">
+            <span>Sports</span>
+            <button class="head-btn" id="sports-edit-btn" type="button">Edit</button>
+            <i class="panel-chevron">▾</i>
+          </div>
+          <div class="panel-body scroll" id="sports-body">
+            <div class="empty-state">Loading scores…</div>
+          </div>
+        </section>
+      </aside>
+
+      <aside class="rail rail-right" aria-label="Media and finance">
+        <div class="rail-spacer" aria-hidden="true"></div>
+        <section class="panel" data-accent="violet" data-panel-key="tasks" aria-label="Tasks">
+          <div class="panel-head"><span>Tasks</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="todo-body"></div>
+        </section>
+        <section class="panel" data-accent="teal" data-panel-key="log" aria-label="Captain's log">
+          <div class="panel-head"><span>Captain's Log</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="log-body"></div>
+        </section>
+        <section class="panel" data-accent="violet" data-panel-key="podcasts" aria-label="Podcasts">
+          <div class="panel-head">
+            <span>Podcasts</span>
+            <button class="head-btn" id="podcasts-edit-btn" type="button">Edit</button>
+            <i class="panel-chevron">▾</i>
+          </div>
+          <div class="panel-body" id="podcasts-body">
+            <div class="video-tiles" id="video-tiles">
+              <div class="podcast-empty">Loading…</div>
+            </div>
+          </div>
+        </section>
+        <section class="panel" data-accent="amber" data-panel-key="markets" aria-label="Stock quotes">
+          <div class="panel-head">
+            <span>Markets</span>
+            <button class="head-btn" id="stocks-edit-btn" type="button">Edit</button>
+            <i class="panel-chevron">▾</i>
+          </div>
+          <div class="panel-body scroll" id="stocks-body">
+            <div class="empty-state">Loading quotes…</div>
+          </div>
+        </section>
+        <section class="panel round-l" data-accent="gold" data-panel-key="currency" aria-label="Currency converter">
+          <div class="panel-head"><span>Currency</span><i class="panel-chevron">▾</i></div>
+          <div class="panel-body scroll" id="fx-body"></div>
+        </section>
+      </aside>
+    </main>
+
+    <div class="strip">
+      <section class="panel round-l" data-accent="amber" aria-label="Quick links">
+        <div class="panel-head">
+          <span>Quick Links</span>
+          <div class="head-btn-group">
+            <span class="settings-io-status" id="settings-io-status"></span>
+            <button class="head-btn" id="settings-export-btn" type="button" title="Download all your console settings as one file">Export Settings</button>
+            <button class="head-btn" id="settings-import-btn" type="button" title="Restore settings from a previously exported file">Import Settings</button>
+            <input type="file" id="settings-import-file" accept="application/json" hidden>
+            <button class="head-btn" id="links-edit-btn" type="button">Edit</button>
+          </div>
+        </div>
+        <div class="panel-body scroll" id="links-body"></div>
+      </section>
+    </div>
+
+    <div class="footer-strip">
+      <div class="ship-status-wrap" aria-label="Ship status">
+        <div class="ship-status-track" id="ship-status-track">
+          <span class="ship-status" id="ship-status">Systems nominal</span>
+          <span class="ship-status" id="ship-status-dup" aria-hidden="true">Systems nominal</span>
+        </div>
+      </div>
+      <div class="footer-sep"></div>
+      <div class="market-ticker"><div class="market-ticker-track" id="market-ticker-track"></div></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="detail-overlay" hidden>
+    <div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-eyebrow">
+      <div class="detail-topbar">
+        <span class="detail-eyebrow" id="detail-eyebrow">Record</span>
+        <button class="detail-close" id="detail-close" aria-label="Close">✕</button>
+      </div>
+      <div class="detail-body scroll" id="detail-body"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="video-overlay" hidden>
+    <div class="video-panel" role="dialog" aria-modal="true" aria-label="Video player">
+      <button class="detail-close" id="video-close" aria-label="Close">✕</button>
+      <div class="video-frame-wrap">
+        <iframe id="video-frame" src="" title="Video player" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     CONSTANTS
+  ============================================================ */
+  var REDUCED_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Declared early (before WORLD_CITIES/homeCity below) since that code reads LS.homeCity
+  // at definition time, not just inside a function called later.
+  var LS = {
+    symbols: "dds-symbols",
+    fxFrom: "dds-fx-from",
+    fxTo: "dds-fx-to",
+    fxAmt: "dds-fx-amt",
+    wxCity: "dds-wx-city",
+    links: "dds-links",
+    todos: "dds-todos",
+    railCollapse: "dds-rail-collapse",
+    captainsLog: "dds-captains-log",
+    homeCity: "dds-home-city",
+    userName: "dds-user-name",
+    brandName: "dds-brand-name",
+    snowRegion: "dds-snow-region",
+    sportsTeams: "dds-sports-teams",
+    podcasts: "dds-podcasts",
+    wxUnit: "dds-wx-unit",
+    theme: "dds-theme"
+  };
+
+  // Look toggle — flips between the cool cyan "starship" look and the warm "reading lamp"
+  // look. Applied to <html> as early as possible (right after LS, before any rendering) so
+  // there's no flash of the wrong look on load. See toggleTheme() further down for the
+  // button wiring, and the globe drawing code for how the canvas colors follow along too.
+  var pageTheme = readLS(LS.theme, "dark"); // "dark" | "light"
+  document.documentElement.setAttribute("data-theme", pageTheme);
+
+  // "Top Stories" is pinned first (the default/home tab, catching general news that
+  // doesn't fit any narrower category below); the rest are kept in alphabetical order.
+  var NEWS_SOURCES = [
+    { key: "top-stories", label: "Top Stories" },
+    { key: "ai-tech", label: "AI Tech" },
+    { key: "apple-tech", label: "Apple Tech" },
+    { key: "canada", label: "Canadian News" },
+    { key: "economics", label: "Economics" },
+    { key: "entertainment", label: "Entertainment" },
+    { key: "general-tech-science", label: "General Tech & Science" },
+    { key: "health-medicine", label: "Health & Medicine" },
+    { key: "quebec", label: "Quebec News" },
+    { key: "us-politics", label: "US Politics" },
+    { key: "world-politics", label: "World Politics" }
+  ];
+
+  var STATIONS = [
+    { name: "Toronto", lat: 43.65, lon: -79.38 },
+    { name: "New York", lat: 40.71, lon: -74.01 },
+    { name: "London", lat: 51.51, lon: -0.13 },
+    { name: "Dubai", lat: 25.20, lon: 55.27 },
+    { name: "Tokyo", lat: 35.68, lon: 139.69 },
+    { name: "Sydney", lat: -33.87, lon: 151.21 },
+    { name: "Sao Paulo", lat: -23.55, lon: -46.63 },
+    { name: "Cape Town", lat: -33.92, lon: 18.42 }
+  ];
+
+  // Major world cities with international airport hubs — the pool for the "Home" picker in
+  // the header. Picking one drives the red home marker on both globes, the local weather
+  // panel, and the header clock's timezone all at once, so this console can be handed to
+  // anyone and set up for their own city in a few seconds instead of staying hardcoded here.
+  var WORLD_CITIES = [
+    { name: "Montreal", region: "North America", lat: 45.5017, lon: -73.5673, tz: "America/Toronto" },
+    { name: "Granby, QC", region: "North America", lat: 45.4009, lon: -72.7284, tz: "America/Toronto" },
+    { name: "New York", region: "North America", lat: 40.7128, lon: -74.0060, tz: "America/New_York" },
+    { name: "Providence", region: "North America", lat: 41.8240, lon: -71.4128, tz: "America/New_York" },
+    { name: "Washington, DC", region: "North America", lat: 38.9072, lon: -77.0369, tz: "America/New_York" },
+    { name: "Miami", region: "North America", lat: 25.7617, lon: -80.1918, tz: "America/New_York" },
+    { name: "Atlanta", region: "North America", lat: 33.7490, lon: -84.3880, tz: "America/New_York" },
+    { name: "Chicago", region: "North America", lat: 41.8781, lon: -87.6298, tz: "America/Chicago" },
+    { name: "Dallas", region: "North America", lat: 32.7767, lon: -96.7970, tz: "America/Chicago" },
+    { name: "Denver", region: "North America", lat: 39.7392, lon: -104.9903, tz: "America/Denver" },
+    { name: "Los Angeles", region: "North America", lat: 34.0522, lon: -118.2437, tz: "America/Los_Angeles" },
+    { name: "San Francisco", region: "North America", lat: 37.7749, lon: -122.4194, tz: "America/Los_Angeles" },
+    { name: "Seattle", region: "North America", lat: 47.6062, lon: -122.3321, tz: "America/Los_Angeles" },
+    { name: "Honolulu", region: "North America", lat: 21.3069, lon: -157.8583, tz: "Pacific/Honolulu" },
+    { name: "Toronto", region: "North America", lat: 43.6532, lon: -79.3832, tz: "America/Toronto" },
+    { name: "Vancouver", region: "North America", lat: 49.2827, lon: -123.1207, tz: "America/Vancouver" },
+    { name: "Calgary", region: "North America", lat: 51.0447, lon: -114.0719, tz: "America/Edmonton" },
+    { name: "Mexico City", region: "North America", lat: 19.4326, lon: -99.1332, tz: "America/Mexico_City" },
+    { name: "Sao Paulo", region: "South America", lat: -23.5505, lon: -46.6333, tz: "America/Sao_Paulo" },
+    { name: "Buenos Aires", region: "South America", lat: -34.6037, lon: -58.3816, tz: "America/Argentina/Buenos_Aires" },
+    { name: "London", region: "Europe", lat: 51.5074, lon: -0.1278, tz: "Europe/London" },
+    { name: "Dublin", region: "Europe", lat: 53.3498, lon: -6.2603, tz: "Europe/Dublin" },
+    { name: "Paris", region: "Europe", lat: 48.8566, lon: 2.3522, tz: "Europe/Paris" },
+    { name: "Brussels", region: "Europe", lat: 50.8503, lon: 4.3517, tz: "Europe/Brussels" },
+    { name: "Amsterdam", region: "Europe", lat: 52.3676, lon: 4.9041, tz: "Europe/Amsterdam" },
+    { name: "Berlin", region: "Europe", lat: 52.5200, lon: 13.4050, tz: "Europe/Berlin" },
+    { name: "Zurich", region: "Europe", lat: 47.3769, lon: 8.5417, tz: "Europe/Zurich" },
+    { name: "Vienna", region: "Europe", lat: 48.2082, lon: 16.3738, tz: "Europe/Vienna" },
+    { name: "Madrid", region: "Europe", lat: 40.4168, lon: -3.7038, tz: "Europe/Madrid" },
+    { name: "Lisbon", region: "Europe", lat: 38.7223, lon: -9.1393, tz: "Europe/Lisbon" },
+    { name: "Rome", region: "Europe", lat: 41.9028, lon: 12.4964, tz: "Europe/Rome" },
+    { name: "Copenhagen", region: "Europe", lat: 55.6761, lon: 12.5683, tz: "Europe/Copenhagen" },
+    { name: "Stockholm", region: "Europe", lat: 59.3293, lon: 18.0686, tz: "Europe/Stockholm" },
+    { name: "Oslo", region: "Europe", lat: 59.9139, lon: 10.7522, tz: "Europe/Oslo" },
+    { name: "Helsinki", region: "Europe", lat: 60.1699, lon: 24.9384, tz: "Europe/Helsinki" },
+    { name: "Warsaw", region: "Europe", lat: 52.2297, lon: 21.0122, tz: "Europe/Warsaw" },
+    { name: "Athens", region: "Europe", lat: 37.9838, lon: 23.7275, tz: "Europe/Athens" },
+    { name: "Istanbul", region: "Europe", lat: 41.0082, lon: 28.9784, tz: "Europe/Istanbul" },
+    { name: "Moscow", region: "Europe", lat: 55.7558, lon: 37.6173, tz: "Europe/Moscow" },
+    { name: "Dubai", region: "Middle East & Africa", lat: 25.2048, lon: 55.2708, tz: "Asia/Dubai" },
+    { name: "Doha", region: "Middle East & Africa", lat: 25.2854, lon: 51.5310, tz: "Asia/Qatar" },
+    { name: "Riyadh", region: "Middle East & Africa", lat: 24.7136, lon: 46.6753, tz: "Asia/Riyadh" },
+    { name: "Tel Aviv", region: "Middle East & Africa", lat: 32.0853, lon: 34.7818, tz: "Asia/Jerusalem" },
+    { name: "Cairo", region: "Middle East & Africa", lat: 30.0444, lon: 31.2357, tz: "Africa/Cairo" },
+    { name: "Nairobi", region: "Middle East & Africa", lat: -1.2921, lon: 36.8219, tz: "Africa/Nairobi" },
+    { name: "Johannesburg", region: "Middle East & Africa", lat: -26.2041, lon: 28.0473, tz: "Africa/Johannesburg" },
+    { name: "Mumbai", region: "Asia", lat: 19.0760, lon: 72.8777, tz: "Asia/Kolkata" },
+    { name: "Delhi", region: "Asia", lat: 28.7041, lon: 77.1025, tz: "Asia/Kolkata" },
+    { name: "Bangkok", region: "Asia", lat: 13.7563, lon: 100.5018, tz: "Asia/Bangkok" },
+    { name: "Singapore", region: "Asia", lat: 1.3521, lon: 103.8198, tz: "Asia/Singapore" },
+    { name: "Kuala Lumpur", region: "Asia", lat: 3.1390, lon: 101.6869, tz: "Asia/Kuala_Lumpur" },
+    { name: "Jakarta", region: "Asia", lat: -6.2088, lon: 106.8456, tz: "Asia/Jakarta" },
+    { name: "Manila", region: "Asia", lat: 14.5995, lon: 120.9842, tz: "Asia/Manila" },
+    { name: "Hong Kong", region: "Asia", lat: 22.3193, lon: 114.1694, tz: "Asia/Hong_Kong" },
+    { name: "Shanghai", region: "Asia", lat: 31.2304, lon: 121.4737, tz: "Asia/Shanghai" },
+    { name: "Beijing", region: "Asia", lat: 39.9042, lon: 116.4074, tz: "Asia/Shanghai" },
+    { name: "Taipei", region: "Asia", lat: 25.0330, lon: 121.5654, tz: "Asia/Taipei" },
+    { name: "Seoul", region: "Asia", lat: 37.5665, lon: 126.9780, tz: "Asia/Seoul" },
+    { name: "Tokyo", region: "Asia", lat: 35.6762, lon: 139.6503, tz: "Asia/Tokyo" },
+    { name: "Sydney", region: "Oceania", lat: -33.8688, lon: 151.2093, tz: "Australia/Sydney" },
+    { name: "Melbourne", region: "Oceania", lat: -37.8136, lon: 144.9631, tz: "Australia/Melbourne" },
+    { name: "Auckland", region: "Oceania", lat: -36.8485, lon: 174.7633, tz: "Pacific/Auckland" }
+  ];
+  var DEFAULT_HOME_CITY = WORLD_CITIES[0]; // Montreal — preserves current behavior until changed
+  var homeCity = readLS(LS.homeCity, DEFAULT_HOME_CITY);
+  var HOME = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
+  var HOME_TZ = homeCity.tz;
+  // Generic by default — a fresh visitor (any browser without LS.userName saved) sees a
+  // neutral greeting, not Andrew's name. Editable via the same greeting-text dblclick as before.
+  var userName = readLS(LS.userName, "Commander");
+
+  // [name, lat, lon, extra match keywords...]
+  var PLACES_RAW = [
+    ["New York", 40.71, -74.01, "nyc"],
+    ["Washington", 38.91, -77.04, "washington dc", "white house"],
+    ["Los Angeles", 34.05, -118.24],
+    ["San Francisco", 37.77, -122.42, "silicon valley"],
+    ["Chicago", 41.88, -87.63],
+    ["Miami", 25.76, -80.19],
+    ["Toronto", 43.65, -79.38],
+    ["Ottawa", 45.42, -75.70],
+    ["Vancouver", 49.28, -123.12],
+    ["Quebec", 46.81, -71.21],
+    ["Mexico City", 19.43, -99.13],
+    ["Sao Paulo", -23.55, -46.63],
+    ["Buenos Aires", -34.60, -58.38],
+    ["London", 51.51, -0.13],
+    ["Paris", 48.86, 2.35],
+    ["Berlin", 52.52, 13.40],
+    ["Brussels", 50.85, 4.35, "european union"],
+    ["Rome", 41.90, 12.50],
+    ["Madrid", 40.42, -3.70],
+    ["Amsterdam", 52.37, 4.90],
+    ["Vienna", 48.21, 16.37],
+    ["Warsaw", 52.23, 21.01],
+    ["Stockholm", 59.33, 18.07],
+    ["Oslo", 59.91, 10.75],
+    ["Helsinki", 60.17, 24.94],
+    ["Copenhagen", 55.68, 12.57],
+    ["Athens", 37.98, 23.73],
+    ["Lisbon", 38.72, -9.14],
+    ["Dublin", 53.35, -6.26],
+    ["Moscow", 55.76, 37.62],
+    ["Kyiv", 50.45, 30.52, "kiev"],
+    ["Ukraine", 49.0, 32.0],
+    ["Istanbul", 41.01, 28.98],
+    ["Beijing", 39.90, 116.41],
+    ["Shanghai", 31.23, 121.47],
+    ["Hong Kong", 22.32, 114.17],
+    ["Taiwan", 23.70, 120.96, "taipei"],
+    ["Tokyo", 35.68, 139.69],
+    ["Seoul", 37.57, 126.98],
+    ["North Korea", 39.04, 125.76, "pyongyang"],
+    ["Delhi", 28.61, 77.21, "new delhi"],
+    ["Mumbai", 19.08, 72.88],
+    ["Singapore", 1.35, 103.82],
+    ["Bangkok", 13.76, 100.50],
+    ["Jakarta", -6.21, 106.85],
+    ["Manila", 14.60, 120.98],
+    ["Sydney", -33.87, 151.21],
+    ["Melbourne", -37.81, 144.96],
+    ["New Zealand", -41.29, 174.78, "auckland", "wellington"],
+    ["Dubai", 25.20, 55.27],
+    ["Saudi Arabia", 24.71, 46.68, "riyadh"],
+    ["Tel Aviv", 32.08, 34.78, "israel"],
+    ["Jerusalem", 31.77, 35.21],
+    ["Gaza", 31.50, 34.47],
+    ["Iran", 35.69, 51.39, "tehran"],
+    ["Iraq", 33.31, 44.36, "baghdad"],
+    ["Egypt", 30.04, 31.24, "cairo"],
+    ["Nigeria", 9.08, 8.68, "lagos"],
+    ["Kenya", -1.29, 36.82, "nairobi"],
+    ["Johannesburg", -26.20, 28.05, "south africa"],
+    ["Cape Town", -33.92, 18.42],
+    ["California", 36.78, -119.42],
+    ["Texas", 31.97, -99.90],
+    ["Florida", 27.66, -81.52],
+    ["Canada", 56.13, -106.35],
+    ["China", 35.86, 104.20],
+    ["Japan", 36.20, 138.25],
+    ["India", 20.59, 78.96],
+    ["Australia", -25.27, 133.78],
+    ["Germany", 51.16, 10.45],
+    ["France", 46.60, 2.21],
+    ["Mexico", 23.63, -102.55],
+    ["Brazil", -14.24, -51.93]
+  ];
+
+  var PLACES = PLACES_RAW.map(function(row){
+    return { name: row[0], lat: row[1], lon: row[2], keys: [row[0].toLowerCase()].concat(row.slice(3)) };
+  });
+  // longer / more specific keys first so "hong kong" beats a looser later match
+  PLACES.sort(function(a,b){ return b.keys[0].length - a.keys[0].length; });
+
+  // Kept as the one default Quick Link for new visitors — everything else here is
+  // per-browser (see LS.links), so a fresh visitor never sees anyone else's bookmarks.
+  var DEFAULT_LINKS = [
+    { name: "Foodie Collection", url: "https://docdrewfood.netlify.app/" }
+  ];
+  var DEFAULT_TODOS = [];
+  var DEFAULT_LOG = [
+    { id: "seed-1", text: "Console fully operational. All systems nominal.", ts: new Date().toISOString() }
+  ];
+
+  var SHIP_STATUS_LINES = [
+    "Shields nominal · Warp core stable",
+    "Deflector array calibrated",
+    "Life support: optimal",
+    "Comm relays synced with Starfleet Command",
+    "Sensor sweep: no anomalies detected",
+    "Replicator queue: nominal",
+    "Structural integrity field: 100%",
+    "Impulse engines standing by",
+    "Navigational deflector: green",
+    "Auxiliary power: online",
+    "Long-range sensors: all clear",
+    "Holodeck safety protocols: engaged",
+    "Transporter buffer: stable",
+    "Subspace relay: strong signal",
+    "Bridge systems: fully operational",
+    "Environmental controls: within tolerance",
+    "Astrometric survey: in progress"
+  ];
+
+  /* ============================================================
+     UTILITIES
+  ============================================================ */
+  function $(id){ return document.getElementById(id); }
+  function el(tag, cls){ var e = document.createElement(tag); if(cls) e.className = cls; return e; }
+  function debounce(fn, ms){ var t; return function(){ var a = arguments, ctx = this; clearTimeout(t); t = setTimeout(function(){ fn.apply(ctx, a); }, ms); }; }
+  function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function readLS(key, fallback){
+    try{ var v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); }
+    catch(e){ return fallback; }
+  }
+  function writeLS(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+  function timeAgo(iso){
+    if(!iso) return "";
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return "";
+    var diff = Math.max(0, Date.now() - d.getTime());
+    var m = Math.floor(diff/60000);
+    if(m < 1) return "just now";
+    if(m < 60) return m + "m ago";
+    var h = Math.floor(m/60);
+    if(h < 24) return h + "h ago";
+    return Math.floor(h/24) + "d ago";
+  }
+  function fmtMoney(n, ccy){
+    if(typeof n !== "number" || isNaN(n)) return "—";
+    try{ return new Intl.NumberFormat("en-US", { style: ccy ? "currency" : "decimal", currency: ccy || undefined, maximumFractionDigits: n < 5 ? 4 : 2 }).format(n); }
+    catch(e){ return n.toFixed(2); }
+  }
+
+  async function getJSON(url){
+    var res = await fetch(url);
+    var data = await res.json().catch(function(){ return {}; });
+    if(!res.ok || data.error) throw new Error((data && data.message) || "request failed");
+    return data;
+  }
+
+  /* ============================================================
+     CLOCK / GREETING / STARDATE
+  ============================================================ */
+  function updateClock(){
+    var now = new Date();
+    var timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    $("clock").childNodes[0].nodeValue = timeFmt.format(now) + " ";
+
+    var dateFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    $("date-text").textContent = dateFmt.format(now);
+    // shorter rendering swapped in via CSS on narrow screens — the full date is too
+    // wide to share the topbar with everything else once it's on its own line
+    var dateFmtShort = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, weekday: "short", month: "short", day: "numeric" });
+    $("date-text-short").textContent = dateFmtShort.format(now);
+
+    var hourFmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, hour: "numeric", hour12: false });
+    var hour = parseInt(hourFmt.format(now), 10);
+    var part = hour < 5 ? "night watch" : hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+    var greetWord = hour < 5 ? "Systems nominal," : "Good " + part + ",";
+    if(!nameEditing) $("greeting-text").textContent = greetWord + " " + userName;
+
+    // simple pseudo-stardate: YYYY.DDD.tenths-of-day
+    var start = new Date(Date.UTC(now.getUTCFullYear(), 0, 0));
+    var doy = Math.floor((now - start) / 86400000);
+    var frac = Math.floor(((now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds())/86400) * 10);
+    $("stardate").textContent = "STARDATE " + now.getUTCFullYear() + "." + String(doy).padStart(3,"0") + "." + frac;
+  }
+  var nameEditing = false;
+  function renderNameEditor(){
+    var greetEl = $("greeting-text");
+    var input = document.createElement("input");
+    input.type = "text";
+    input.className = "greeting-name-edit";
+    input.value = userName;
+    input.maxLength = 24;
+    greetEl.textContent = "";
+    greetEl.appendChild(input);
+    input.focus();
+    input.select();
+    var closed = false;
+    function commit(){
+      if(closed) return;
+      closed = true;
+      var typed = input.value.trim();
+      userName = typed || "Commander";
+      writeLS(LS.userName, userName);
+      nameEditing = false;
+      updateClock();
+    }
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter") input.blur();
+      else if(e.key === "Escape"){ closed = true; nameEditing = false; updateClock(); }
+    });
+    input.addEventListener("blur", commit);
+  }
+  $("greeting-text").title = "Double-click to edit your name";
+  $("greeting-text").addEventListener("dblclick", function(){
+    nameEditing = true;
+    renderNameEditor();
+  });
+
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  /* ============================================================
+     BRAND NAME (editable, top-left "CENTRAL COMMAND")
+  ============================================================ */
+  var brandName = readLS(LS.brandName, "CENTRAL COMMAND");
+  var brandEditing = false;
+  function renderBrandName(){
+    if(brandEditing) return;
+    var el2 = $("brand-name");
+    var dotIdx = brandName.lastIndexOf(".");
+    if(dotIdx > 0 && dotIdx < brandName.length - 1){
+      el2.innerHTML = escapeHtml(brandName.slice(0, dotIdx)) + '<span class="dim">' + escapeHtml(brandName.slice(dotIdx)) + "</span>";
+    } else {
+      el2.textContent = brandName;
+    }
+  }
+  function renderBrandEditor(){
+    var el2 = $("brand-name");
+    var input = document.createElement("input");
+    input.type = "text";
+    input.className = "brand-name-edit";
+    input.value = brandName;
+    input.maxLength = 28;
+    el2.textContent = "";
+    el2.appendChild(input);
+    input.focus();
+    input.select();
+    var closed = false;
+    function commit(){
+      if(closed) return;
+      closed = true;
+      var typed = input.value.trim();
+      brandName = typed || "CENTRAL COMMAND";
+      writeLS(LS.brandName, brandName);
+      brandEditing = false;
+      renderBrandName();
+    }
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter") input.blur();
+      else if(e.key === "Escape"){ closed = true; brandEditing = false; renderBrandName(); }
+    });
+    input.addEventListener("blur", commit);
+  }
+  renderBrandName();
+  $("brand-name").title = "Double-click to edit";
+  $("brand-name").addEventListener("dblclick", function(){
+    brandEditing = true;
+    renderBrandEditor();
+  });
+
+  /* ============================================================
+     HOME CITY SELECTOR
+  ============================================================ */
+  function syncHomeLabels(){
+    var a = $("weather-globe-home-label"), b = $("globe-home-label");
+    if(a) a.textContent = HOME.name;
+    if(b) b.textContent = HOME.name;
+  }
+
+  function initHomeCitySelect(){
+    var sel = $("home-city-select");
+    if(!sel) return;
+    var regions = [];
+    var byRegion = {};
+    WORLD_CITIES.forEach(function(c){
+      if(!byRegion[c.region]){ byRegion[c.region] = []; regions.push(c.region); }
+      byRegion[c.region].push(c);
+    });
+    var html = "";
+    regions.forEach(function(region){
+      html += '<optgroup label="' + escapeHtml(region) + '">';
+      byRegion[region].forEach(function(c){
+        html += '<option value="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + "</option>";
+      });
+      html += "</optgroup>";
+    });
+    sel.innerHTML = html;
+    sel.value = homeCity.name;
+    sel.title = "Set your home city — moves the globe marker, local weather, and clock";
+    syncHomeLabels();
+    sel.addEventListener("change", function(){
+      var picked = WORLD_CITIES.find(function(c){ return c.name === sel.value; });
+      if(!picked) return;
+      homeCity = picked;
+      HOME = { name: picked.name, lat: picked.lat, lon: picked.lon };
+      HOME_TZ = picked.tz;
+      writeLS(LS.homeCity, homeCity);
+      updateClock();
+      syncHomeLabels();
+
+      wxPlace = { name: picked.name, lat: picked.lat, lon: picked.lon };
+      writeLS(LS.wxCity, wxPlace);
+      if(wxViewMode === "home") loadHomeWeather();
+    });
+  }
+
+  /* ============================================================
+     LOOK TOGGLE — light / dark (see pageTheme near the top of the script,
+     and the globe-drawing code below for how the canvas colors follow along)
+  ============================================================ */
+  function renderThemeToggleBtn(){
+    var btn = $("theme-toggle-btn");
+    if(btn) btn.textContent = pageTheme === "light" ? "☾" : "☀";
+  }
+  function toggleTheme(){
+    pageTheme = pageTheme === "light" ? "dark" : "light";
+    writeLS(LS.theme, pageTheme);
+    document.documentElement.setAttribute("data-theme", pageTheme);
+    renderThemeToggleBtn();
+  }
+  renderThemeToggleBtn();
+  var themeToggleBtn = $("theme-toggle-btn");
+  if(themeToggleBtn) themeToggleBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    toggleTheme();
+  });
+
+  /* ============================================================
+     SEARCH
+  ============================================================ */
+  $("search-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    var q = $("search-input").value.trim();
+    if(!q) return;
+    window.location.href = "https://www.google.com/search?q=" + encodeURIComponent(q);
+  });
+
+  /* ============================================================
+     SHIP STATUS STRIP — decorative rotating flavor text
+  ============================================================ */
+  var shipStatusEl = $("ship-status");
+  var shipStatusDupEl = $("ship-status-dup");
+  var shipStatusIdx = Math.floor(Math.random() * SHIP_STATUS_LINES.length);
+  function setShipStatusText(text){
+    if(shipStatusEl) shipStatusEl.textContent = text;
+    if(shipStatusDupEl) shipStatusDupEl.textContent = text;
+  }
+  function rotateShipStatus(){
+    if(!shipStatusEl) return;
+    shipStatusEl.style.opacity = "0";
+    if(shipStatusDupEl) shipStatusDupEl.style.opacity = "0";
+    setTimeout(function(){
+      shipStatusIdx = (shipStatusIdx + 1) % SHIP_STATUS_LINES.length;
+      setShipStatusText(SHIP_STATUS_LINES[shipStatusIdx]);
+      shipStatusEl.style.opacity = "1";
+      if(shipStatusDupEl) shipStatusDupEl.style.opacity = "1";
+    }, 400);
+  }
+  if(shipStatusEl){
+    shipStatusEl.style.transition = "opacity 0.4s ease";
+    if(shipStatusDupEl) shipStatusDupEl.style.transition = "opacity 0.4s ease";
+    setShipStatusText(SHIP_STATUS_LINES[shipStatusIdx]);
+  }
+
+  /* ============================================================
+     MARKET TICKER — thin scrolling strip fed by the same quotes
+     data as the Markets panel.
+  ============================================================ */
+  function buildMarketTicker(quotes){
+    var track = $("market-ticker-track");
+    if(!track) return;
+    var valid = (quotes || []).filter(function(q){ return !q.error && !isNaN(q.price); });
+    if(!valid.length){ track.innerHTML = ""; return; }
+    var itemsHtml = valid.map(function(q){
+      var dir = q.change >= 0 ? "t-up" : "t-down";
+      var arrow = q.change >= 0 ? "▲" : "▼";
+      return '<span class="ticker-item"><span class="t-sym">' + escapeHtml(q.symbol) + "</span>" +
+        fmtMoney(q.price) + ' <span class="' + dir + '">' + arrow + " " + Math.abs(q.changePercent||0).toFixed(2) + "%</span></span>";
+    }).join("");
+    // duplicated once for a seamless -50% translateX loop
+    track.innerHTML = itemsHtml + itemsHtml;
+  }
+
+  /* ============================================================
+     DETAIL OVERLAY
+  ============================================================ */
+  var overlay = $("detail-overlay");
+  var detailBody = $("detail-body");
+  var detailEyebrow = $("detail-eyebrow");
+
+  function openStoryDetail(item, contextLabel){
+    detailEyebrow.textContent = contextLabel || (item.sourceLabel || "Record");
+    var html = "";
+    if(item.image) html += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
+    html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
+    html += '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
+    if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
+    html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open Full Story ↗</a>';
+    detailBody.innerHTML = html;
+    overlay.hidden = false;
+  }
+
+  function openPlaceDetail(place, items, station, wx){
+    detailEyebrow.textContent = "Dateline — " + place;
+    var html = '<h2 class="detail-title">' + escapeHtml(place) + "</h2>";
+    if(station && wx){
+      html += '<div class="detail-meta"><b>Local conditions</b> · ' + fmtTemp(wx.current.temperature_2m) + tempUnit() + " · " + wxLabel(wx.current.weather_code) + "</div>";
+    }
+    if(items && items.length){
+      html += '<div class="detail-meta" style="margin-top:10px;">' + items.length + " stor" + (items.length===1?"y":"ies") + " tagged to this location</div>";
+      items.forEach(function(it, idx){
+        html += '<div class="detail-list-item" data-idx="' + idx + '"><div class="detail-title-sm">' + escapeHtml(it.title) + '</div><div class="detail-src">' + escapeHtml(it.sourceLabel) + " · " + escapeHtml(timeAgo(it.pubDate)) + "</div></div>";
+      });
+    } else {
+      html += '<p class="detail-snippet">No active headlines tagged to ' + escapeHtml(place) + " right now — this marker is a live weather station.</p>";
+    }
+    detailBody.innerHTML = html;
+    overlay.hidden = false;
+    if(items && items.length){
+      Array.prototype.forEach.call(detailBody.querySelectorAll(".detail-list-item"), function(row){
+        row.addEventListener("click", function(){
+          var idx = parseInt(row.getAttribute("data-idx"), 10);
+          openStoryDetail(items[idx], "Dateline — " + place);
+        });
+      });
+    }
+  }
+
+  function closeDetail(){ overlay.hidden = true; }
+  $("detail-close").addEventListener("click", closeDetail);
+  overlay.addEventListener("click", function(e){ if(e.target === overlay) closeDetail(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !overlay.hidden) closeDetail(); });
+
+  /* ============================================================
+     VIDEO OVERLAY — full-screen inline YouTube player, never
+     leaves the page or opens a new tab.
+  ============================================================ */
+  var videoOverlay = $("video-overlay");
+  var videoFrame = $("video-frame");
+
+  function openVideo(videoId){
+    videoFrame.src = "https://www.youtube.com/embed/" + encodeURIComponent(videoId) + "?autoplay=1&rel=0";
+    videoOverlay.hidden = false;
+  }
+  function closeVideo(){
+    videoOverlay.hidden = true;
+    videoFrame.src = ""; // stop playback
+  }
+  $("video-close").addEventListener("click", closeVideo);
+  videoOverlay.addEventListener("click", function(e){ if(e.target === videoOverlay) closeVideo(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !videoOverlay.hidden) closeVideo(); });
+
+  /* ============================================================
+     PODCASTS — most recent upload from each channel, as small
+     clickable thumbnail tiles. User-configurable (LS.podcasts):
+     accepts a channel URL, an @handle, or a raw channel ID —
+     youtube.mts resolves whichever one to a channel ID server-side.
+  ============================================================ */
+  // Generic by default — empty, not Andrew's own subscriptions, so a fresh visitor gets
+  // a blank slate (the panel already has an empty-state prompting "hit Edit to add one").
+  var DEFAULT_PODCASTS = [];
+  var podcasts = readLS(LS.podcasts, DEFAULT_PODCASTS);
+  var podcastsEditing = false;
+  var podcastSearchResults = []; // last channel-search results, kept across re-renders so
+                                  // adding one doesn't wipe the list before adding another
+  var podcastSearchQuery = "";
+  var podcastManualOpen = false; // the old URL/@handle/ID field, tucked behind a disclosure now that search is the main path
+
+  async function loadPodcasts(){
+    var container = $("video-tiles");
+    if(!podcasts.length){
+      container.innerHTML = '<div class="podcast-empty">No channels added — hit Edit to add one.</div>';
+      return;
+    }
+    var results = await Promise.allSettled(podcasts.map(function(p){
+      return getJSON("/api/youtube?channel=" + encodeURIComponent(p.channelId)).then(function(data){ return { meta: p, data: data }; });
+    }));
+    container.innerHTML = "";
+    results.forEach(function(r, idx){
+      var row = el("div", "podcast-row");
+      if(r.status === "fulfilled" && r.value.data && r.value.data.videoId){
+        var p = r.value.meta, d = r.value.data;
+        row.innerHTML =
+          '<div class="podcast-row-name">' + escapeHtml(p.label) + "</div>" +
+          '<div class="podcast-row-video">' + escapeHtml(d.title) + "</div>";
+        row.addEventListener("click", function(){ openVideo(d.videoId); });
+      } else {
+        row.className = "podcast-row unavailable";
+        row.innerHTML =
+          '<div class="podcast-row-name">' + escapeHtml(podcasts[idx].label) + "</div>" +
+          '<div class="podcast-row-video">Unavailable right now</div>';
+      }
+      container.appendChild(row);
+    });
+  }
+
+  async function searchPodcastChannels(query){
+    var resultsEl = $("podcast-search-results");
+    if(!resultsEl) return;
+    resultsEl.innerHTML = '<div class="podcast-empty">Searching…</div>';
+    try{
+      var data = await getJSON("/api/youtube-search?q=" + encodeURIComponent(query));
+      podcastSearchResults = data.results || [];
+      renderPodcastSearchResults();
+    }catch(err){
+      podcastSearchResults = [];
+      resultsEl.innerHTML = '<div class="podcast-empty">Search unavailable right now — try adding by URL or @handle below.</div>';
+    }
+  }
+
+  function renderPodcastSearchResults(){
+    var resultsEl = $("podcast-search-results");
+    if(!resultsEl) return;
+    if(!podcastSearchResults.length){
+      resultsEl.innerHTML = "";
+      return;
+    }
+    resultsEl.innerHTML = podcastSearchResults.map(function(r, idx){
+      var thumb = r.thumbnail
+        ? '<img class="podcast-result-thumb" src="' + escapeHtml(r.thumbnail) + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'
+        : '<span class="podcast-result-thumb"></span>';
+      return '<div class="podcast-result-row" data-idx="' + idx + '">' +
+        thumb +
+        '<div class="podcast-result-info">' +
+          '<div class="podcast-result-name">' + escapeHtml(r.name) + "</div>" +
+          (r.subscribers ? '<div class="podcast-result-sub">' + escapeHtml(r.subscribers) + "</div>" : "") +
+        "</div>" +
+        '<button type="button" class="podcast-result-add">Add</button>' +
+      "</div>";
+    }).join("");
+    Array.prototype.forEach.call(resultsEl.querySelectorAll(".podcast-result-row"), function(row){
+      row.addEventListener("click", function(){
+        var idx = parseInt(row.getAttribute("data-idx"), 10);
+        var r = podcastSearchResults[idx];
+        if(!r) return;
+        podcasts.push({ label: r.name, channelId: r.channelId });
+        writeLS(LS.podcasts, podcasts);
+        renderPodcastEditor();
+        loadPodcasts();
+      });
+    });
+  }
+
+  function renderPodcastEditor(){
+    var body = $("podcasts-body");
+    if(!body) return;
+    var existing = body.querySelector(".podcast-edit-list");
+    if(existing) existing.remove();
+    if(!podcastsEditing) return;
+
+    var wrap = el("div", "podcast-edit-list");
+    var rowsHtml = podcasts.map(function(p, idx){
+      return '<div class="podcast-edit-row"><span>' + escapeHtml(p.label) + '</span><span class="podcast-edit-x" data-idx="' + idx + '">✕</span></div>';
+    }).join("");
+    wrap.innerHTML =
+      '<div class="podcast-search">' +
+        '<div class="podcast-search-row">' +
+          '<input type="text" id="podcast-search-input" placeholder="Search for a channel or podcast" value="' + escapeHtml(podcastSearchQuery) + '">' +
+          '<button type="button" id="podcast-search-btn">Search</button>' +
+        "</div>" +
+        '<div class="podcast-search-results" id="podcast-search-results"></div>' +
+      "</div>" +
+      rowsHtml +
+      '<button type="button" class="podcast-manual-toggle" id="podcast-manual-toggle">' + (podcastManualOpen ? "Hide manual add" : "Add by URL or @handle instead") + "</button>" +
+      '<div class="podcast-add" id="podcast-manual-add"' + (podcastManualOpen ? "" : ' style="display:none;"') + '>' +
+        '<input type="text" id="podcast-name-input" placeholder="Name">' +
+        '<input type="text" id="podcast-channel-input" placeholder="Channel URL, @handle, or ID">' +
+        '<button type="button" id="podcast-add-btn">Add</button>' +
+      "</div>";
+    body.appendChild(wrap);
+    renderPodcastSearchResults();
+
+    $("podcast-search-btn").addEventListener("click", function(){
+      var q = $("podcast-search-input").value.trim();
+      if(!q) return;
+      podcastSearchQuery = q;
+      searchPodcastChannels(q);
+    });
+    $("podcast-search-input").addEventListener("keydown", function(e){
+      if(e.key !== "Enter") return;
+      e.preventDefault();
+      var q = $("podcast-search-input").value.trim();
+      if(!q) return;
+      podcastSearchQuery = q;
+      searchPodcastChannels(q);
+    });
+    $("podcast-manual-toggle").addEventListener("click", function(){
+      podcastManualOpen = !podcastManualOpen;
+      renderPodcastEditor();
+    });
+
+    Array.prototype.forEach.call(wrap.querySelectorAll(".podcast-edit-x"), function(x){
+      x.addEventListener("click", function(){
+        podcasts.splice(parseInt(x.getAttribute("data-idx"), 10), 1);
+        writeLS(LS.podcasts, podcasts);
+        renderPodcastEditor();
+        loadPodcasts();
+      });
+    });
+    $("podcast-add-btn").addEventListener("click", function(){
+      var name = $("podcast-name-input").value.trim();
+      var chan = $("podcast-channel-input").value.trim();
+      if(!name || !chan) return;
+      podcasts.push({ label: name, channelId: chan });
+      writeLS(LS.podcasts, podcasts);
+      renderPodcastEditor();
+      loadPodcasts();
+    });
+  }
+  var podcastsEditBtn = $("podcasts-edit-btn");
+  if(podcastsEditBtn) podcastsEditBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    podcastsEditing = !podcastsEditing;
+    renderPodcastEditor();
+  });
+
+  /* ============================================================
+     MARKETS (stocks)
+  ============================================================ */
+  var stocksBody = $("stocks-body");
+  // Neutral, widely-recognized default for a fresh visitor — anyone's actual portfolio
+  // lives only in their own browser's localStorage (LS.symbols) once they hit Edit.
+  var currentSymbols = readLS(LS.symbols, ["AAPL","MSFT","NVDA","BTC-USD","ETH-USD"]);
+  var stocksEditing = false;
+
+  function renderQuotes(quotes){
+    stocksBody.innerHTML = "";
+    quotes.forEach(function(q){
+      var row = el("div", "quote-row");
+      var id = el("div", "q-id");
+      id.innerHTML = '<div class="q-sym">' + escapeHtml(q.symbol) + '</div><div class="q-name">' + escapeHtml(q.error ? "unavailable" : (q.name || q.symbol)) + "</div>";
+      var nums = el("div", "q-nums");
+      if(q.error || isNaN(q.price)){
+        nums.innerHTML = '<div class="q-price">—</div>';
+      } else {
+        var dir = q.change >= 0 ? "up" : "down";
+        var arrow = q.change >= 0 ? "▲" : "▼";
+        nums.innerHTML = '<div class="q-price">' + fmtMoney(q.price) + '</div><div class="q-chg ' + dir + '">' + arrow + " " + Math.abs(q.changePercent||0).toFixed(2) + "%</div>";
+      }
+      row.appendChild(id); row.appendChild(nums);
+      stocksBody.appendChild(row);
+    });
+    if(stocksEditing) renderStocksEditor();
+    buildMarketTicker(quotes);
+  }
+
+  function renderStocksEditor(){
+    var wrap = el("div", "edit-row");
+    wrap.innerHTML = '<input type="text" id="symbols-input" value="' + escapeHtml(currentSymbols.join(",")) + '"><div class="edit-hint">Comma-separated tickers · Enter to save</div>';
+    stocksBody.appendChild(wrap);
+    var input = $("symbols-input");
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        var list = input.value.split(",").map(function(s){ return s.trim().toUpperCase(); }).filter(Boolean).slice(0,12);
+        if(list.length){ currentSymbols = list; writeLS(LS.symbols, currentSymbols); stocksEditing = false; loadQuotes(); }
+      }
+    });
+  }
+
+  $("stocks-edit-btn").addEventListener("click", function(){
+    stocksEditing = !stocksEditing;
+    if(stocksEditing) renderStocksEditor(); else loadQuotes();
+  });
+
+  async function loadQuotes(){
+    try{
+      var data = await getJSON("/api/quotes?symbols=" + encodeURIComponent(currentSymbols.join(",")));
+      renderQuotes(data.quotes || []);
+    }catch(err){
+      stocksBody.innerHTML = '<div class="error-state">Market feed unavailable — try again shortly.</div>';
+    }
+  }
+
+  /* ============================================================
+     CURRENCY
+  ============================================================ */
+  var CURRENCIES = ["USD","CAD","EUR","GBP","JPY","AUD","CHF","CNY","INR","MXN"];
+  var fxBody = $("fx-body");
+  var fxState = {
+    from: readLS(LS.fxFrom, "USD"),
+    to: readLS(LS.fxTo, "CAD"),
+    amount: readLS(LS.fxAmt, 1)
+  };
+
+  function renderFx(){
+    var opts = function(sel){ return CURRENCIES.map(function(c){ return '<option value="' + c + '"' + (c===sel?" selected":"") + ">" + c + "</option>"; }).join(""); };
+    fxBody.innerHTML =
+      '<div class="fx-row">' +
+        '<input type="number" id="fx-amount" min="0" value="' + fxState.amount + '">' +
+        '<select id="fx-from">' + opts(fxState.from) + "</select>" +
+        '<button type="button" class="fx-swap" id="fx-swap" aria-label="Swap currencies">⇄</button>' +
+        '<select id="fx-to">' + opts(fxState.to) + "</select>" +
+      "</div>" +
+      '<div class="fx-result" id="fx-result">—</div>' +
+      '<div class="fx-meta" id="fx-meta">Loading rate…</div>';
+
+    $("fx-amount").addEventListener("input", debounce(function(){ fxState.amount = parseFloat($("fx-amount").value) || 0; writeLS(LS.fxAmt, fxState.amount); loadFx(); }, 350));
+    $("fx-from").addEventListener("change", function(){ fxState.from = $("fx-from").value; writeLS(LS.fxFrom, fxState.from); loadFx(); });
+    $("fx-to").addEventListener("change", function(){ fxState.to = $("fx-to").value; writeLS(LS.fxTo, fxState.to); loadFx(); });
+    $("fx-swap").addEventListener("click", function(){
+      var t = fxState.from; fxState.from = fxState.to; fxState.to = t;
+      writeLS(LS.fxFrom, fxState.from); writeLS(LS.fxTo, fxState.to);
+      renderFx(); loadFx();
+    });
+  }
+
+  async function loadFx(){
+    var resultEl = $("fx-result"), metaEl = $("fx-meta");
+    if(!resultEl) return;
+    try{
+      var data = await getJSON("/api/currency?from=" + fxState.from + "&to=" + fxState.to + "&amount=" + fxState.amount);
+      var rate = data.rates && data.rates[fxState.to];
+      resultEl.textContent = typeof rate === "number" ? fmtMoney(rate) + " " + fxState.to : "—";
+      metaEl.textContent = fxState.amount + " " + fxState.from + " · updated " + timeAgo(data.updated);
+    }catch(err){
+      resultEl.textContent = "—";
+      metaEl.textContent = "Rate feed unavailable";
+    }
+  }
+
+  /* ============================================================
+     FLIGHT TRACKER + ISS — live positions via OpenSky Network
+     (aircraft) and wheretheiss.at (ISS). OpenSky's anonymous access
+     is capped at 400 credits/day and each lookup here fetches the
+     full worldwide state-vector snapshot server-side, so flight
+     searches are ONLY ever triggered by explicit user action (a
+     search submit, or the manual Refresh button on a tracked
+     flight) — never on an automatic interval. The ISS feed has no
+     such daily cap, just a gentle ~1 req/sec courtesy limit, so it
+     polls on its own independent interval below. Both markers are
+     drawn on the Weather Systems globe via the shared
+     renderedMarkers2/project2() pipeline defined further down.
+  ============================================================ */
+  var AIRLINE_CATALOG = [
+    { code: "ACA", name: "Air Canada" },
+    { code: "WJA", name: "WestJet" },
+    { code: "AAL", name: "American Airlines" },
+    { code: "DAL", name: "Delta Air Lines" },
+    { code: "UAL", name: "United Airlines" },
+    { code: "SWA", name: "Southwest Airlines" },
+    { code: "JBU", name: "JetBlue" },
+    { code: "BAW", name: "British Airways" },
+    { code: "AFR", name: "Air France" },
+    { code: "DLH", name: "Lufthansa" },
+    { code: "KLM", name: "KLM" },
+    { code: "UAE", name: "Emirates" },
+    { code: "QTR", name: "Qatar Airways" },
+    { code: "ANA", name: "All Nippon Airways" },
+    { code: "JAL", name: "Japan Airlines" },
+    { code: "QFA", name: "Qantas" },
+    { code: "RYR", name: "Ryanair" },
+    { code: "EZY", name: "easyJet" }
+  ];
+
+  var issData = null;           // latest ISS reading — drawn on the globe whenever loaded
+  var trackedFlight = null;     // currently selected search result — drawn on the globe
+  var trackedFlightPath = [];   // that flight's actual recent flown history (last ~30 min via
+                                 // OpenSky's free /tracks endpoint) — NOT a scheduled dep/arr
+                                 // route, which needs a paid tier this console doesn't use.
+
+  function renderFlightTracker(){
+    var body = $("flighttracker-body");
+    if(!body) return;
+    var opts = '<option value="">Any airline…</option>' + AIRLINE_CATALOG.map(function(a){
+      return '<option value="' + a.code + '">' + escapeHtml(a.name) + "</option>";
+    }).join("");
+    body.innerHTML =
+      '<div class="ft-iss" id="ft-iss">' +
+        '<div class="ft-iss-head"><span class="ft-iss-dot" aria-hidden="true"></span>ISS — International Space Station</div>' +
+        '<div class="ft-iss-stats" id="ft-iss-stats">Loading orbital data…</div>' +
+      "</div>" +
+      '<form class="ft-form" id="ft-form">' +
+        '<select id="ft-airline" aria-label="Airline">' + opts + "</select>" +
+        '<div class="ft-search-row">' +
+          '<input type="text" id="ft-query" placeholder="Flight callsign, e.g. DAL123" autocomplete="off">' +
+          '<button type="submit">Track</button>' +
+        "</div>" +
+      "</form>" +
+      '<div class="ft-results" id="ft-results"></div>' +
+      '<div class="ft-tracked" id="ft-tracked" hidden></div>';
+
+    $("ft-airline").addEventListener("change", function(){
+      var code = $("ft-airline").value;
+      if(code) $("ft-query").value = code;
+      $("ft-query").focus();
+    });
+    $("ft-form").addEventListener("submit", function(e){
+      e.preventDefault();
+      var q = $("ft-query").value.trim().toUpperCase();
+      if(!q) return;
+      var airlineCode = $("ft-airline").value;
+      var mode = (airlineCode && q === airlineCode) ? "airline" : "flight";
+      searchFlights(q, mode);
+    });
+
+    renderTrackedFlight();
+  }
+
+  async function searchFlights(query, mode){
+    var resultsEl = $("ft-results");
+    if(!resultsEl) return;
+    resultsEl.innerHTML = '<div class="empty-state" style="padding:6px 0;">Searching live positions…</div>';
+    try{
+      var data = await getJSON("/api/flights?mode=" + mode + "&query=" + encodeURIComponent(query));
+      renderFlightResults(data.results || [], query);
+    }catch(err){
+      resultsEl.innerHTML = '<div class="error-state" style="padding:6px 0;">Flight lookup unavailable right now.</div>';
+    }
+  }
+
+  function renderFlightResults(results, query){
+    var resultsEl = $("ft-results");
+    if(!resultsEl) return;
+    if(!results.length){
+      resultsEl.innerHTML = '<div class="empty-state" style="padding:6px 0;">No aircraft currently reporting for &ldquo;' + escapeHtml(query) + '&rdquo; — this only sees planes in the air right now, not schedules.</div>';
+      return;
+    }
+    resultsEl.innerHTML = results.map(function(f, idx){
+      var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("en-US") + " m" : "—";
+      var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("en-US") + " km/h" : "—";
+      return '<div class="ft-result-row" data-idx="' + idx + '">' +
+        '<div class="ft-callsign">' + escapeHtml(f.callsign || f.icao24) + "</div>" +
+        '<div class="ft-sub">' + escapeHtml(f.originCountry || "") + " · " + alt + " · " + spd + (f.onGround ? " · on ground" : "") + "</div>" +
+      "</div>";
+    }).join("");
+    Array.prototype.forEach.call(resultsEl.querySelectorAll(".ft-result-row"), function(row){
+      row.addEventListener("click", function(){
+        var idx = parseInt(row.getAttribute("data-idx"), 10);
+        trackedFlight = results[idx];
+        trackedFlightPath = [];
+        renderTrackedFlight();
+        updateGlobeMarkerCount();
+        loadFlightTrack(trackedFlight.icao24);
+      });
+    });
+  }
+
+  async function loadFlightTrack(icao24){
+    if(!icao24) return;
+    try{
+      var data = await getJSON("/api/flight-track?icao24=" + encodeURIComponent(icao24));
+      // a slower response can land after the user tracked something else, or cleared — ignore it then
+      if(!trackedFlight || trackedFlight.icao24 !== icao24) return;
+      trackedFlightPath = data.path || [];
+      renderTrackedFlight(); // refresh the "recent path" note now that we know whether one exists
+    }catch(err){
+      if(trackedFlight && trackedFlight.icao24 === icao24) trackedFlightPath = [];
+    }
+  }
+
+  function renderTrackedFlight(){
+    var wrap = $("ft-tracked");
+    if(!wrap) return;
+    if(!trackedFlight){ wrap.hidden = true; wrap.innerHTML = ""; return; }
+    var f = trackedFlight;
+    wrap.hidden = false;
+    var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("en-US") + " m" : "—";
+    var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("en-US") + " km/h" : "—";
+    var hdg = f.headingDeg != null ? Math.round(f.headingDeg) + "°" : "—";
+    var vr = f.verticalRateMs != null ? (f.verticalRateMs > 0.5 ? "climbing" : f.verticalRateMs < -0.5 ? "descending" : "level") : "—";
+    var html = '<div class="ft-tracked-head"><span class="ft-callsign">' + escapeHtml(f.callsign || f.icao24) + '</span><button type="button" class="ft-tracked-clear" id="ft-tracked-clear">Clear</button></div>' +
+      '<div class="ft-tracked-stats"><b>' + escapeHtml(f.originCountry || "Unknown origin") + "</b><br>" +
+        "Altitude " + alt + " · " + spd + " · heading " + hdg + " · " + vr +
+      "</div>";
+    if(issData && f.lat != null && f.lon != null){
+      var distKm = Math.round(haversineKm(f.lat, f.lon, issData.lat, issData.lon));
+      var fun = "✦ " + distKm.toLocaleString("en-US") + " km from the ISS overhead right now";
+      if(f.altitudeM && f.altitudeM > 0){
+        var multiple = Math.round((issData.altitudeKm * 1000) / f.altitudeM);
+        fun += " — the station is " + multiple.toLocaleString("en-US") + "× higher than this flight (" +
+          Math.round(issData.altitudeKm).toLocaleString("en-US") + " km vs " + Math.round(f.altitudeM / 1000).toLocaleString("en-US") + " km).";
+      } else {
+        fun += ".";
+      }
+      html += '<div class="ft-fun">' + fun + "</div>";
+    }
+    if(trackedFlightPath && trackedFlightPath.length > 1){
+      html += '<div class="ft-path-note">Dotted trail on the globe shows where it\'s actually flown the last ~30 min — not the full route (free feeds don\'t include schedules).</div>';
+    }
+    wrap.innerHTML = html;
+    $("ft-tracked-clear").addEventListener("click", function(){
+      trackedFlight = null;
+      trackedFlightPath = [];
+      renderTrackedFlight();
+      updateGlobeMarkerCount();
+    });
+  }
+
+  function renderIssStats(){
+    var statsEl = $("ft-iss-stats");
+    if(!statsEl) return;
+    if(!issData){ statsEl.textContent = "ISS feed unavailable right now."; return; }
+    var vis = issData.visibility === "daylight" ? "in daylight" : issData.visibility === "eclipsed" ? "in Earth's shadow" : (issData.visibility || "");
+    statsEl.innerHTML = "<b>" + issData.lat.toFixed(1) + "°, " + issData.lon.toFixed(1) + "°</b> · " +
+      Math.round(issData.altitudeKm).toLocaleString("en-US") + " km up · " +
+      Math.round(issData.velocityKmh).toLocaleString("en-US") + " km/h" + (vis ? " · " + vis : "");
+  }
+
+  async function loadIss(){
+    try{
+      var data = await getJSON("/api/iss");
+      issData = data;
+      renderIssStats();
+      if(trackedFlight) renderTrackedFlight(); // refresh the ISS-distance fun stat too
+      updateGlobeMarkerCount();
+    }catch(err){
+      if(!issData){
+        var statsEl = $("ft-iss-stats");
+        if(statsEl) statsEl.textContent = "ISS feed unavailable right now.";
+      }
+    }
+  }
+
+  function openIssDetail(data){
+    detailEyebrow.textContent = "Live Position";
+    var vis = data.visibility === "daylight" ? "In daylight" : data.visibility === "eclipsed" ? "In Earth's shadow" : (data.visibility || "Unknown visibility");
+    var html = '<h2 class="detail-title">International Space Station</h2>' +
+      '<div class="detail-meta"><b>' + data.lat.toFixed(2) + "°, " + data.lon.toFixed(2) + "°</b> · " + Math.round(data.altitudeKm).toLocaleString("en-US") + " km altitude</div>" +
+      '<p class="detail-snippet">Traveling at ' + Math.round(data.velocityKmh).toLocaleString("en-US") + " km/h — " + vis + ". Orbits the Earth roughly every 93 minutes.</p>";
+    detailBody.innerHTML = html;
+    overlay.hidden = false;
+  }
+
+  function openFlightDetail(f){
+    detailEyebrow.textContent = "Live Position";
+    var alt = f.altitudeM != null ? Math.round(f.altitudeM).toLocaleString("en-US") + " m" : "—";
+    var spd = f.velocityMs != null ? Math.round(f.velocityMs * 3.6).toLocaleString("en-US") + " km/h" : "—";
+    var hdg = f.headingDeg != null ? Math.round(f.headingDeg) + "°" : "—";
+    var html = '<h2 class="detail-title">' + escapeHtml(f.callsign || f.icao24) + "</h2>" +
+      '<div class="detail-meta"><b>' + escapeHtml(f.originCountry || "Unknown origin") + "</b> · " + alt + " · " + spd + "</div>" +
+      '<p class="detail-snippet">Heading ' + hdg + (f.onGround ? " · currently on the ground" : "") + ". Live position via OpenSky Network — no schedule or gate data available from this feed.</p>";
+    detailBody.innerHTML = html;
+    overlay.hidden = false;
+  }
+
+  function updateGlobeMarkerCount(){
+    var countEl = $("globe-count");
+    if(!countEl) return;
+    var n = (typeof newsMarkers !== "undefined" ? newsMarkers.length : 0) + 1 + (issData ? 1 : 0) + (trackedFlight ? 1 : 0);
+    countEl.textContent = n + " markers tracked";
+  }
+
+  /* ============================================================
+     WEATHER (home panel)
+  ============================================================ */
+  var wxBody = $("wx-body");
+  var DEFAULT_WX_PLACE = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
+  var wxPlace = readLS(LS.wxCity, DEFAULT_WX_PLACE);
+  var wxEditing = false;
+  var wxViewMode = "home"; // "home" | "location"
+  var lastHomeWxData = null;
+
+  var WX_ICONS = {
+    clear: '<circle cx="20" cy="20" r="9" fill="var(--gold)"/>',
+    cloudy: '<circle cx="16" cy="18" r="7" fill="var(--text-dim)"/><rect x="10" y="22" width="20" height="8" rx="4" fill="var(--text-dim)"/>',
+    fog: '<rect x="6" y="14" width="28" height="3" rx="1.5" fill="var(--text-dim)"/><rect x="6" y="20" width="28" height="3" rx="1.5" fill="var(--text-dim)"/><rect x="6" y="26" width="28" height="3" rx="1.5" fill="var(--text-dim)"/>',
+    drizzle: '<rect x="10" y="10" width="20" height="10" rx="5" fill="var(--text-dim)"/><line x1="14" y1="24" x2="12" y2="32" stroke="var(--cyan)" stroke-width="2"/><line x1="22" y1="24" x2="20" y2="32" stroke="var(--cyan)" stroke-width="2"/>',
+    rain: '<rect x="8" y="8" width="24" height="12" rx="6" fill="var(--text-dim)"/><line x1="13" y1="24" x2="10" y2="34" stroke="var(--cyan)" stroke-width="2.4"/><line x1="21" y1="24" x2="18" y2="34" stroke="var(--cyan)" stroke-width="2.4"/><line x1="29" y1="24" x2="26" y2="34" stroke="var(--cyan)" stroke-width="2.4"/>',
+    snow: '<rect x="8" y="8" width="24" height="12" rx="6" fill="var(--text-dim)"/><circle cx="12" cy="30" r="2" fill="var(--text)"/><circle cx="20" cy="32" r="2" fill="var(--text)"/><circle cx="28" cy="30" r="2" fill="var(--text)"/>',
+    storm: '<rect x="8" y="6" width="24" height="12" rx="6" fill="var(--text-dim)"/><polygon points="20,20 14,32 19,32 16,40 26,26 20,26" fill="var(--gold)"/>'
+  };
+  function wxCategory(code){
+    if(code === 0) return "clear";
+    if(code >= 1 && code <= 3) return "cloudy";
+    if(code === 45 || code === 48) return "fog";
+    if(code >= 51 && code <= 57) return "drizzle";
+    if((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
+    if((code >= 71 && code <= 77) || code === 85 || code === 86) return "snow";
+    if(code >= 95) return "storm";
+    return "cloudy";
+  }
+  function wxLabel(code){
+    var map = { clear:"Clear", cloudy:"Cloudy", fog:"Fog", drizzle:"Drizzle", rain:"Rain", snow:"Snow", storm:"Storm" };
+    return map[wxCategory(code)];
+  }
+  function wxIconSvg(code, size){
+    size = size || 40;
+    return '<svg viewBox="0 0 40 40" width="' + size + '" height="' + size + '">' + (WX_ICONS[wxCategory(code)] || WX_ICONS.cloudy) + "</svg>";
+  }
+
+  // Units toggle — the backend always returns metric (°C, km/h, cm); everything imperial
+  // happens client-side so every page/browser can flip independently. °C/km/h/cm stays the
+  // default everywhere; a click on the Weather panel's unit button switches this browser to
+  // °F/mph/in and remembers the choice.
+  var wxUnit = readLS(LS.wxUnit, "metric"); // "metric" | "imperial"
+  var lastLocationDetail = null; // {name,data,items,lat,lon} — so a unit toggle can redraw whichever view is open
+  function fmtTemp(c){
+    if(typeof c !== "number" || isNaN(c)) return "—";
+    return Math.round(wxUnit === "imperial" ? (c * 9 / 5 + 32) : c);
+  }
+  function tempUnit(){ return wxUnit === "imperial" ? "°F" : "°C"; }
+  function fmtWind(kmh){
+    if(typeof kmh !== "number" || isNaN(kmh)) kmh = 0;
+    return Math.round(wxUnit === "imperial" ? (kmh * 0.621371) : kmh);
+  }
+  function windUnit(){ return wxUnit === "imperial" ? "mph" : "km/h"; }
+  function fmtSnow(cm){
+    if(typeof cm !== "number" || isNaN(cm)) cm = 0;
+    return (wxUnit === "imperial" ? (cm / 2.54) : cm).toFixed(1);
+  }
+  function snowUnit(){ return wxUnit === "imperial" ? "in" : "cm"; }
+  function renderWxUnitBtn(){
+    var btn = $("wx-unit-btn");
+    if(btn) btn.textContent = wxUnit === "imperial" ? "°C" : "°F";
+  }
+  function redrawWxPanel(){
+    if(wxViewMode === "location" && lastLocationDetail){
+      renderLocationDetail(lastLocationDetail.name, lastLocationDetail.data, lastLocationDetail.items, lastLocationDetail.lat, lastLocationDetail.lon);
+    } else if(lastHomeWxData){
+      renderWx(lastHomeWxData);
+    }
+  }
+  function toggleWxUnit(){
+    wxUnit = wxUnit === "imperial" ? "metric" : "imperial";
+    writeLS(LS.wxUnit, wxUnit);
+    renderWxUnitBtn();
+    redrawWxPanel();
+  }
+  renderWxUnitBtn();
+  var wxUnitBtn = $("wx-unit-btn");
+  if(wxUnitBtn) wxUnitBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    toggleWxUnit();
+  });
+
+  function renderWx(data){
+    wxViewMode = "home";
+    if(!data || !data.current){ wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>'; return; }
+    var c = data.current;
+    var html = '<div class="wx-top">' +
+      '<div class="wx-icon">' + wxIconSvg(c.weather_code, 40) + "</div>" +
+      '<div><div class="wx-temp">' + fmtTemp(c.temperature_2m) + tempUnit() + "</div>" +
+      '<div class="wx-place">' + escapeHtml(data.place.name) + (data.place.country ? ", " + escapeHtml(data.place.country) : "") + "</div>" +
+      '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
+      '<div class="wx-grid">' +
+        '<div class="wx-stat"><b>' + fmtTemp(c.apparent_temperature) + "°</b>Feels</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidity</div>" +
+        '<div class="wx-stat"><b>' + fmtWind(c.wind_speed_10m) + "</b>" + windUnit() + " wind</div>" +
+      "</div>";
+    if(data.today && typeof data.today.max === "number"){
+      html += '<div class="wx-grid" style="margin-top:2px;"><div class="wx-stat"><b>' + fmtTemp(data.today.max) + "°</b>High</div><div class=\"wx-stat\"><b>" + fmtTemp(data.today.min) + "°</b>Low</div><div class=\"wx-stat\"><b>" + timeAgo(data.updated) + "</b>Synced</div></div>";
+    }
+    html += buildSnowReportHtml(lastBromontData, snowExpanded);
+    html += '<button type="button" class="wx-more-link" id="wx-more-btn">Full forecast →</button>';
+    wxBody.innerHTML = html;
+    if(wxEditing) renderWxEditor();
+    if(snowEditing) renderSnowEditor();
+    var moreBtn = $("wx-more-btn");
+    if(moreBtn) moreBtn.addEventListener("click", function(){
+      if(data.place && typeof data.place.latitude === "number"){
+        openLocationDetail(data.place.latitude, data.place.longitude, { name: data.place.name });
+      }
+    });
+    var snowToggleBtn = $("snow-toggle-btn");
+    if(snowToggleBtn) snowToggleBtn.addEventListener("click", function(){
+      snowExpanded = !snowExpanded;
+      if(snowExpanded && !lastBromontData) loadBromont();
+      renderWx(lastHomeWxData);
+    });
+  }
+
+  /* ------------------------------------------------------------
+     LOCATION DETAIL — click anywhere on either globe, or "full
+     forecast" from the home box, to get a richer report + any
+     nearby headlines, all rendered inline in this same panel.
+  ------------------------------------------------------------ */
+  function wxBackButton(onClick){
+    var back = el("button", "news-back");
+    back.type = "button";
+    back.textContent = "← Back";
+    back.addEventListener("click", onClick);
+    return back;
+  }
+
+  function goHomeWx(){
+    wxViewMode = "home";
+    renderWx(lastHomeWxData);
+  }
+
+  function coordLabel(lat, lon){
+    return Math.abs(lat).toFixed(1) + "°" + (lat >= 0 ? "N" : "S") + ", " + Math.abs(lon).toFixed(1) + "°" + (lon >= 0 ? "E" : "W");
+  }
+
+  function ensureWeatherPanelVisible(){
+    var wxSection = wxBody.closest(".panel");
+    if(!wxSection) return;
+    if(typeof railCollapse !== "undefined" && railCollapse.weather){
+      railCollapse.weather = false;
+      writeLS(LS.railCollapse, railCollapse);
+    }
+    wxSection.classList.remove("collapsed");
+    wxSection.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+
+  function openLocationDetail(lat, lon, opts){
+    opts = opts || {};
+    wxViewMode = "location";
+    ensureWeatherPanelVisible();
+    var near = nearestPlace(lat, lon);
+    var displayName = opts.name || null;
+    var items = opts.items || null;
+
+    if(!displayName){
+      // always resolve to the nearest known city so there's a human label, not just raw coordinates —
+      // "Near X" makes clear it's the closest reference point, not necessarily exact.
+      displayName = near
+        ? (near.distKm < 40 ? near.place.name : ("Near " + near.place.name))
+        : coordLabel(lat, lon);
+    }
+    if(!items){
+      items = (near && near.distKm < 900)
+        ? newsMarkers.filter(function(nm){ return nm.place === near.place.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, [])
+        : [];
+    }
+
+    renderLocationLoading(displayName);
+    getJSON("/api/weather?lat=" + lat + "&lon=" + lon + "&city=" + encodeURIComponent(displayName)).then(function(data){
+      renderLocationDetail(displayName, data, items, lat, lon);
+    }).catch(function(){
+      renderLocationError(displayName);
+    });
+  }
+
+  function renderLocationLoading(name){
+    var wrap = el("div");
+    wrap.appendChild(wxBackButton(goHomeWx));
+    var msg = el("div");
+    msg.style.padding = "6px 2px";
+    msg.innerHTML = '<div class="detail-meta">Loading forecast for ' + escapeHtml(name) + "…</div>";
+    wrap.appendChild(msg);
+    wxBody.innerHTML = "";
+    wxBody.appendChild(wrap);
+  }
+
+  function renderLocationError(name){
+    var wrap = el("div");
+    wrap.appendChild(wxBackButton(goHomeWx));
+    var msg = el("div");
+    msg.style.padding = "6px 2px";
+    msg.innerHTML = '<div class="error-state">Couldn\'t load weather for ' + escapeHtml(name) + ".</div>";
+    wrap.appendChild(msg);
+    wxBody.innerHTML = "";
+    wxBody.appendChild(wrap);
+  }
+
+  function renderLocationDetail(name, data, items, lat, lon){
+    wxViewMode = "location";
+    lastLocationDetail = { name: name, data: data, items: items, lat: lat, lon: lon };
+    var wrap = el("div");
+    wrap.appendChild(wxBackButton(goHomeWx));
+
+    var content = el("div");
+    content.style.padding = "2px 2px 4px";
+
+    if(!data || !data.current){
+      content.innerHTML = '<div class="error-state">No weather data for ' + escapeHtml(name) + ".</div>";
+      wrap.appendChild(content);
+      wxBody.innerHTML = "";
+      wxBody.appendChild(wrap);
+      return;
+    }
+
+    var coordSub = (typeof lat === "number" && typeof lon === "number")
+      ? '<div class="wx-place-coord">' + coordLabel(lat, lon) + "</div>"
+      : "";
+
+    var c = data.current;
+    var html = '<div class="wx-top">' +
+      '<div class="wx-icon">' + wxIconSvg(c.weather_code, 36) + "</div>" +
+      '<div><div class="wx-temp">' + fmtTemp(c.temperature_2m) + tempUnit() + "</div>" +
+      '<div class="wx-place">' + escapeHtml(name) + "</div>" + coordSub +
+      '<div class="wx-cond">' + wxLabel(c.weather_code) + "</div></div></div>" +
+      '<div class="wx-grid">' +
+        '<div class="wx-stat"><b>' + fmtTemp(c.apparent_temperature) + "°</b>Feels</div>" +
+        '<div class="wx-stat"><b>' + Math.round(c.relative_humidity_2m) + "%</b>Humidity</div>" +
+        '<div class="wx-stat"><b>' + fmtWind(c.wind_speed_10m) + "</b>" + windUnit() + " wind</div>" +
+      "</div>";
+
+    html += '<div class="wx-grid" style="margin-top:2px;">';
+    html += '<div class="wx-stat"><b>' + fmtWind(c.wind_gusts_10m || 0) + "</b>Gusts</div>";
+    html += '<div class="wx-stat"><b>' + Math.round(c.pressure_msl || 0) + "</b>hPa</div>";
+    html += '<div class="wx-stat"><b>' + Math.round(c.cloud_cover || 0) + "%</b>Cloud</div>";
+    html += "</div>";
+
+    if(data.daily && data.daily.length){
+      html += '<div class="wx-forecast">';
+      data.daily.forEach(function(d, idx){
+        var dayLabel = idx === 0 ? "Today" : (d.date ? new Date(d.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" }) : "");
+        html += '<div class="wx-fday">' +
+          '<div class="wx-fday-label">' + escapeHtml(dayLabel) + "</div>" +
+          wxIconSvg(d.code, 20) +
+          '<div class="wx-fday-hi">' + fmtTemp(d.max) + "°</div>" +
+          '<div class="wx-fday-lo">' + fmtTemp(d.min) + "°</div>" +
+        "</div>";
+      });
+      html += "</div>";
+    }
+
+    if(data.daily && data.daily[0] && data.daily[0].sunrise){
+      var sr = new Date(data.daily[0].sunrise), ss = new Date(data.daily[0].sunset);
+      html += '<div class="wx-grid" style="margin-top:8px;">' +
+        '<div class="wx-stat"><b>' + sr.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Sunrise</div>" +
+        '<div class="wx-stat"><b>' + ss.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + "</b>Sunset</div>";
+      html += '<div class="wx-stat"><b>' + Math.round(data.daily[0].uvMax || 0) + "</b>UV index</div>";
+      html += "</div>";
+    }
+
+    content.innerHTML = html;
+    wrap.appendChild(content);
+
+    wxBody.innerHTML = "";
+    wxBody.appendChild(wrap);
+    wxBody.scrollTop = 0;
+  }
+
+  function renderWxEditor(){
+    var wrap = el("div", "wx-city-edit");
+    wrap.innerHTML = '<input type="text" id="wx-city-input" value="' + escapeHtml(wxPlace.name) + '" placeholder="City name">';
+    wxBody.appendChild(wrap);
+    $("wx-city-input").addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        var typed = e.target.value.trim();
+        // a manually-typed city has no known lat/lon yet — let the function geocode it
+        wxPlace = typed ? { name: typed, lat: null, lon: null } : DEFAULT_WX_PLACE;
+        writeLS(LS.wxCity, wxPlace);
+        wxEditing = false;
+        loadHomeWeather();
+      }
+    });
+  }
+  wxBody.addEventListener("dblclick", function(e){
+    if(wxViewMode !== "home") return;
+    if(e.target.closest && e.target.closest("#snow-report-head")){
+      snowEditing = true; renderSnowEditor();
+      return;
+    }
+    wxEditing = true; renderWxEditor();
+  });
+
+  async function loadHomeWeather(){
+    try{
+      var url = (typeof wxPlace.lat === "number" && typeof wxPlace.lon === "number")
+        ? "/api/weather?lat=" + wxPlace.lat + "&lon=" + wxPlace.lon + "&city=" + encodeURIComponent(wxPlace.name)
+        : "/api/weather?city=" + encodeURIComponent(wxPlace.name);
+      var data = await getJSON(url);
+      lastHomeWxData = data;
+      if(wxViewMode === "home") renderWx(data);
+    }catch(err){
+      if(wxViewMode === "home") wxBody.innerHTML = '<div class="error-state">Weather feed unavailable.</div>';
+    }
+  }
+
+  /* ============================================================
+     SKY WATCH — moon phase (pure client-side astronomy, no API)
+     + NOAA aurora Kp-index
+  ============================================================ */
+  var MOON_SYNODIC_DAYS = 29.53058867;
+  var MOON_KNOWN_NEW = Date.UTC(2000, 0, 6, 18, 14, 0); // a well-known reference new moon
+
+  function moonPhaseFraction(date){
+    var diffDays = (date.getTime() - MOON_KNOWN_NEW) / 86400000;
+    var phase = (diffDays % MOON_SYNODIC_DAYS) / MOON_SYNODIC_DAYS;
+    if(phase < 0) phase += 1;
+    return phase; // 0 = new, 0.5 = full
+  }
+
+  function moonPhaseName(phase){
+    var names = ["New Moon","Waxing Crescent","First Quarter","Waxing Gibbous","Full Moon","Waning Gibbous","Last Quarter","Waning Crescent"];
+    var idx = Math.round(phase * 8) % 8;
+    return names[idx];
+  }
+
+  function drawMoonIcon(canvasEl, phase){
+    var size = canvasEl.width;
+    var ctx = canvasEl.getContext("2d");
+    var r = size / 2 - 1.5;
+    var cx = size / 2, cy = size / 2;
+    var dark = "#0B1220", lit = "#E8ECF2";
+    var waxing = phase < 0.5;
+    var theta = phase * 2 * Math.PI;
+    var termRx = Math.abs(r * Math.cos(theta));
+    var isCrescent = phase < 0.25 || phase > 0.75;
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fillStyle = dark; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+
+    ctx.beginPath();
+    if(waxing) ctx.rect(cx, cy - r, r, r * 2);
+    else ctx.rect(cx - r, cy - r, r, r * 2);
+    ctx.fillStyle = lit;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, termRx, r, 0, 0, Math.PI*2);
+    ctx.fillStyle = isCrescent ? dark : lit;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = "rgba(232,236,242,0.35)"; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  function renderSkyWatch(auroraData){
+    var body = $("skywatch-body");
+    if(!body) return;
+    var phase = moonPhaseFraction(new Date());
+    var illum = Math.round((1 - Math.cos(phase * 2 * Math.PI)) / 2 * 100);
+
+    var html = '<div class="sky-row">' +
+      '<canvas class="moon-icon" id="moon-canvas" width="36" height="36"></canvas>' +
+      '<div><div class="sky-value">' + moonPhaseName(phase) + '</div><div class="sky-sub">' + illum + '% illuminated</div></div>' +
+    '</div>';
+
+    html += '<div class="sky-row">';
+    if(auroraData && typeof auroraData.kp === "number"){
+      var kpClass = auroraData.kp >= 7 ? "storm" : (auroraData.kp >= 5 ? "high" : "");
+      html += '<div class="kp-badge ' + kpClass + '">' + auroraData.kp.toFixed(1) + '</div>' +
+        '<div><div class="sky-value">Aurora · Kp ' + auroraData.kp.toFixed(1) + '</div><div class="sky-sub">' + escapeHtml(auroraData.hint || "") + '</div></div>';
+    } else {
+      html += '<div class="kp-badge">—</div><div><div class="sky-value">Aurora forecast</div><div class="sky-sub">Feed unavailable</div></div>';
+    }
+    html += '</div>';
+
+    body.innerHTML = html;
+    var moonCanvas = $("moon-canvas");
+    if(moonCanvas) drawMoonIcon(moonCanvas, phase);
+  }
+
+  var lastAuroraData = null;
+  async function loadAurora(){
+    try{
+      var data = await getJSON("/api/aurora");
+      lastAuroraData = data;
+    }catch(err){
+      lastAuroraData = null;
+    }
+    renderSkyWatch(lastAuroraData);
+  }
+
+  /* ============================================================
+     SNOW REPORT — Bromont ski hill conditions, nested inside the
+     Weather panel rather than its own tab. Via the same weather
+     backend (there's no reliable public trail-status feed, so
+     this is honestly a weather/snowfall proxy, not an official
+     piste report — said plainly in the caption below).
+  ============================================================ */
+  // Generic by default — mirrors the home city (same pattern as DEFAULT_WX_PLACE below)
+  // rather than Andrew's personal ski spot, so a fresh visitor isn't handed his region.
+  // The region is a per-browser setting (LS.snowRegion) — double-click the snow report
+  // header to point it at any ski region/city.
+  var DEFAULT_SNOW_REGION = { name: homeCity.name, lat: homeCity.lat, lon: homeCity.lon };
+  var snowRegion = readLS(LS.snowRegion, DEFAULT_SNOW_REGION);
+  var lastBromontData = null;
+  var snowEditing = false;
+  // Collapsed by default — a snow report is dead weight (and a little depressing) most of
+  // the year, so it's tucked behind a "Full forecast"-style link instead of always showing.
+  var snowExpanded = false;
+
+  function buildSnowReportHtml(data, expanded){
+    var head = '<div class="snow-report-head" id="snow-report-head" title="Double-click to change region">❄ Snow Report — ' + escapeHtml(snowRegion.name) + "</div>";
+    if(!expanded){
+      return '<div class="snow-report-collapsed"><button type="button" class="wx-more-link" id="snow-toggle-btn">❄ Snow Report — ' + escapeHtml(snowRegion.name) + " →</button></div>";
+    }
+    if(!data || !data.current){
+      return '<div class="snow-report">' + head + '<div class="error-state">Conditions unavailable.</div>' +
+        '<button type="button" class="wx-more-link" id="snow-toggle-btn">▲ Hide</button></div>';
+    }
+    var c = data.current;
+    var snow = typeof c.snowfall === "number" ? c.snowfall : 0;
+    var html = '<div class="snow-report">';
+    html += head;
+    html += '<div class="wx-grid">' +
+      '<div class="wx-stat"><b>' + fmtTemp(c.temperature_2m) + "°</b>Temp</div>" +
+      '<div class="wx-stat"><b>' + fmtWind(c.wind_speed_10m || 0) + "</b>" + windUnit() + " wind</div>" +
+      '<div class="wx-stat"><b>' + fmtSnow(snow) + "</b>" + snowUnit() + " snow</div>" +
+    "</div>";
+    html += '<div class="snow-report-caption">Weather-based proxy — not an official trail report.</div>';
+    html += '<button type="button" class="wx-more-link" id="snow-toggle-btn">▲ Hide</button>';
+    html += "</div>";
+    return html;
+  }
+
+  function renderSnowEditor(){
+    var head = $("snow-report-head");
+    if(!head) return;
+    var wrap = el("div", "wx-city-edit");
+    wrap.innerHTML = '<input type="text" id="snow-region-input" placeholder="Ski region / city name">';
+    head.insertAdjacentElement("afterend", wrap);
+    var input = $("snow-region-input");
+    input.value = snowRegion.name;
+    input.focus();
+    input.select();
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        var typed = e.target.value.trim();
+        snowRegion = typed ? { name: typed, lat: null, lon: null } : DEFAULT_SNOW_REGION;
+        writeLS(LS.snowRegion, snowRegion);
+        snowEditing = false;
+        loadBromont();
+      } else if(e.key === "Escape"){
+        snowEditing = false;
+        if(wxViewMode === "home" && lastHomeWxData) renderWx(lastHomeWxData);
+      }
+    });
+  }
+
+  async function loadBromont(){
+    try{
+      var url = (typeof snowRegion.lat === "number" && typeof snowRegion.lon === "number")
+        ? "/api/weather?lat=" + snowRegion.lat + "&lon=" + snowRegion.lon + "&city=" + encodeURIComponent(snowRegion.name)
+        : "/api/weather?city=" + encodeURIComponent(snowRegion.name);
+      lastBromontData = await getJSON(url);
+    }catch(err){
+      lastBromontData = null;
+    }
+    // refresh the Weather panel in place if we're showing the home view already
+    if(wxViewMode === "home" && lastHomeWxData) renderWx(lastHomeWxData);
+  }
+
+  /* ============================================================
+     SPORTS — user-configurable team list (LS.sportsTeams), plus ATP/WTA tennis
+     which stays neutral/global for everyone. Team catalog, schedules, and tennis
+     scores are all fetched directly from ESPN's public site.api from the browser
+     (not proxied through a Netlify function) — ESPN's edge appears to block
+     requests coming from Netlify's own servers, but this same hidden API is what
+     ESPN's own site calls client-side, so a real browser fetching it directly
+     works fine and isn't subject to that block.
+  ============================================================ */
+  var LEAGUE_CATALOG = [
+    { key: "nfl", label: "NFL", sport: "football", espnPath: "football/nfl" },
+    { key: "college-football", label: "College Football", sport: "football", espnPath: "football/college-football" },
+    { key: "nba", label: "NBA", sport: "basketball", espnPath: "basketball/nba" },
+    { key: "mens-college-basketball", label: "Men's College Basketball", sport: "basketball", espnPath: "basketball/mens-college-basketball" },
+    { key: "womens-college-basketball", label: "Women's College Basketball", sport: "basketball", espnPath: "basketball/womens-college-basketball" },
+    { key: "mlb", label: "MLB", sport: "baseball", espnPath: "baseball/mlb" },
+    { key: "nhl", label: "NHL", sport: "hockey", espnPath: "hockey/nhl" }
+  ];
+  // Generic by default — empty, not Andrew's own team picks, so a fresh visitor gets a
+  // blank slate (the panel already has an empty-state prompting "hit Edit to pick some").
+  // Fully editable per-browser via LS.sportsTeams from here on.
+  var DEFAULT_SPORTS_TEAMS = [];
+  var sportsTeams = readLS(LS.sportsTeams, DEFAULT_SPORTS_TEAMS);
+  var sportsEditing = false;
+  var teamCatalogCache = {}; // league -> [{id,name}], fetched on demand for the Add-team picker
+  var lastSportsData = null;
+
+  function sportLine(team){
+    if(!team) return "No data";
+    if(team.liveGame){
+      var lg = team.liveGame;
+      var liveScore = (lg.teamScore != null && lg.oppScore != null) ? (lg.teamScore + "-" + lg.oppScore) : "";
+      return '<span class="sport-live">● LIVE</span> ' + liveScore + " vs " + escapeHtml(lg.opponent) + (lg.statusText ? " · " + escapeHtml(lg.statusText) : "");
+    }
+    if(team.lastResult){
+      var g = team.lastResult;
+      var wl = g.win === true ? '<span class="w">W</span>' : (g.win === false ? '<span class="l">L</span>' : "");
+      return wl + " " + (g.teamScore != null ? g.teamScore + "-" + g.oppScore : "") + " vs " + escapeHtml(g.opponent);
+    }
+    if(team.nextGame){
+      var n = team.nextGame;
+      return "Next: vs " + escapeHtml(n.opponent) + " · " + escapeHtml(n.statusText || "");
+    }
+    return team.note || "Off-season";
+  }
+
+  function wireSportAddRow(){
+    var leagueSel = $("sport-league-select");
+    var teamSel = $("sport-team-select");
+    if(!leagueSel || !teamSel) return;
+    leagueSel.innerHTML = LEAGUE_CATALOG.map(function(l){ return '<option value="' + l.key + '">' + escapeHtml(l.label) + "</option>"; }).join("");
+
+    function fillTeamOptions(teams){
+      if(!teams.length){ teamSel.innerHTML = '<option value="">No teams found</option>'; return; }
+      teamSel.innerHTML = teams.map(function(t){ return '<option value="' + escapeHtml(t.id) + '">' + escapeHtml(t.name) + "</option>"; }).join("");
+    }
+    function loadTeamOptions(){
+      var league = leagueSel.value;
+      var meta = LEAGUE_CATALOG.find(function(l){ return l.key === league; });
+      teamSel.innerHTML = '<option value="">Loading teams…</option>';
+      if(teamCatalogCache[league]){ fillTeamOptions(teamCatalogCache[league]); return; }
+      if(!meta){ teamSel.innerHTML = '<option value="">Unavailable</option>'; return; }
+      // ESPN's dedicated "teams" listing endpoint has no CORS header at all, but its
+      // "standings" endpoint does (it's what powers public standings widgets) and it
+      // still carries every team's id + name, nested under children (conferences,
+      // and sometimes divisions within those) — so pull the roster from there instead.
+      fetch("https://site.api.espn.com/apis/v2/sports/" + meta.espnPath + "/standings")
+        .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
+        .then(function(data){
+          var out = [];
+          (function walk(node){
+            if(!node) return;
+            if(node.standings && node.standings.entries){
+              node.standings.entries.forEach(function(e){
+                var t = e.team;
+                if(t) out.push({ id: String(t.id), name: t.displayName || t.name || t.shortDisplayName || "" });
+              });
+            }
+            if(node.children) node.children.forEach(walk);
+          })(data);
+          var seen = {};
+          var teams = out.filter(function(t){
+            if(!t.id || !t.name || seen[t.id]) return false;
+            seen[t.id] = true;
+            return true;
+          }).sort(function(a, b){ return a.name.localeCompare(b.name); });
+          teamCatalogCache[league] = teams;
+          fillTeamOptions(teams);
+        })
+        .catch(function(){
+          teamSel.innerHTML = '<option value="">Unavailable</option>';
+        });
+    }
+    leagueSel.addEventListener("change", loadTeamOptions);
+    loadTeamOptions();
+
+    $("sport-team-add-btn").addEventListener("click", function(){
+      var league = leagueSel.value;
+      var meta = LEAGUE_CATALOG.find(function(l){ return l.key === league; });
+      var teamId = teamSel.value;
+      var opt = teamSel.options[teamSel.selectedIndex];
+      var teamName = opt ? opt.textContent : "";
+      if(!meta || !teamId || !teamName) return;
+      sportsTeams.push({ sport: meta.sport, league: league, teamId: teamId, label: teamName });
+      writeLS(LS.sportsTeams, sportsTeams);
+      renderSports(lastSportsData);
+      loadSports();
+    });
+  }
+
+  function renderSports(data){
+    var body = $("sports-body");
+    if(!body) return;
+    lastSportsData = data;
+    var results = (data && data.teams) ? Object.keys(data.teams).map(function(k){ return data.teams[k]; }) : [];
+    var html = "";
+
+    if(!sportsTeams.length){
+      html += '<div class="empty-state">No teams added — hit Edit to pick some.</div>';
+    } else {
+      sportsTeams.forEach(function(t, idx){
+        html += '<div class="sport-row"><div class="sport-team">' + escapeHtml(t.label) +
+          (sportsEditing ? '<span class="sport-team-x" data-idx="' + idx + '">✕</span>' : "") +
+          '</div><div class="sport-line">' + (data ? sportLine(results[idx]) : "Sports feed unavailable.") + "</div></div>";
+      });
+    }
+
+    ["atp","wta"].forEach(function(tour){
+      var t = data && data.tennis && data.tennis[tour];
+      html += '<div class="sport-tennis-head">' + tour.toUpperCase() + " Tennis</div>";
+      if(t && t.tournaments && t.tournaments.length){
+        var top = t.tournaments[0];
+        html += '<div class="sport-tennis-match">' + escapeHtml(top.name) + "</div>";
+        (top.matches || []).slice(0, 2).forEach(function(m){
+          var sets = "";
+          if(m.sets1 && m.sets1.length){
+            sets = m.sets1.map(function(v, i){ return v + "-" + (m.sets2[i] != null ? m.sets2[i] : "?"); }).join(", ");
+          }
+          var badge = m.state === "in" ? '<span class="sport-live">● LIVE</span> ' : "";
+          // Bold whichever player actually won — only known once the match is final.
+          var p1 = m.winner1 === true ? "<b>" + escapeHtml(m.player1) + "</b>" : escapeHtml(m.player1);
+          var p2 = m.winner2 === true ? "<b>" + escapeHtml(m.player2) + "</b>" : escapeHtml(m.player2);
+          html += '<div class="sport-tennis-match">' + badge + p1 + " vs " + p2 +
+            (sets ? ' <span class="sets">' + escapeHtml(sets) + "</span>" : "") +
+            ' <span>' + escapeHtml(m.status || "") + "</span></div>";
+        });
+      } else {
+        html += '<div class="sport-tennis-match">No tournament in progress</div>';
+      }
+    });
+
+    if(sportsEditing){
+      html += '<div class="sport-add" id="sport-add-row">' +
+        '<select id="sport-league-select"></select>' +
+        '<select id="sport-team-select"><option value="">Loading teams…</option></select>' +
+        '<button type="button" id="sport-team-add-btn">Add</button>' +
+        "</div>";
+    }
+
+    body.innerHTML = html;
+
+    if(sportsEditing){
+      Array.prototype.forEach.call(body.querySelectorAll(".sport-team-x"), function(x){
+        x.addEventListener("click", function(){
+          sportsTeams.splice(parseInt(x.getAttribute("data-idx"), 10), 1);
+          writeLS(LS.sportsTeams, sportsTeams);
+          renderSports(lastSportsData);
+          loadSports();
+        });
+      });
+      wireSportAddRow();
+    }
+  }
+
+  var sportsEditBtn = $("sports-edit-btn");
+  if(sportsEditBtn) sportsEditBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    sportsEditing = !sportsEditing;
+    renderSports(lastSportsData);
+  });
+
+  function espnScore(scoreField){
+    if(!scoreField) return null;
+    if(typeof scoreField === "object") return scoreField.displayValue != null ? scoreField.displayValue : scoreField.value;
+    return scoreField;
+  }
+
+  function espnTeamSchedule(spec){
+    return fetch("https://site.api.espn.com/apis/site/v2/sports/" + spec.sport + "/" + spec.league + "/teams/" + spec.teamId + "/schedule")
+      .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
+      .then(function(data){
+        // Skip preseason/exhibition games — they don't count for the team's actual
+        // record and aren't worth a LIVE badge or "last result" line.
+        var events = ((data && data.events) || []).filter(function(ev){
+          var st = ev.seasonType || {};
+          return String(st.id) !== "1" && !/preseason|exhibition/i.test(st.name || "");
+        });
+        var games = events.map(function(ev){
+          var comp = ev.competitions && ev.competitions[0];
+          var type = (comp && comp.status && comp.status.type) || {};
+          var competitors = (comp && comp.competitors) || [];
+          var self = competitors.find(function(c){ return String(c.team && c.team.id) === String(spec.teamId); });
+          var opp = competitors.find(function(c){ return String(c.team && c.team.id) !== String(spec.teamId); });
+          return {
+            date: ev.date,
+            state: type.state || "pre", // "pre" | "in" | "post"
+            statusText: type.shortDetail || type.description || "",
+            opponent: (opp && opp.team && opp.team.displayName) || "TBD",
+            teamScore: espnScore(self && self.score),
+            oppScore: espnScore(opp && opp.score),
+            win: typeof (self && self.winner) === "boolean" ? self.winner : null
+          };
+        });
+        var now = Date.now();
+        var live = games.find(function(g){ return g.state === "in"; });
+        var past = games.filter(function(g){ return g.state === "post"; });
+        var upcoming = games.filter(function(g){ return g.state === "pre" && new Date(g.date).getTime() >= now - 86400000; });
+        return {
+          label: spec.label,
+          liveGame: live || null,
+          lastResult: past.length ? past[past.length - 1] : null,
+          nextGame: upcoming.length ? upcoming[0] : null,
+          note: games.length ? undefined : "No scheduled games found (likely off-season)."
+        };
+      })
+      .catch(function(){
+        return { label: spec.label, liveGame: null, lastResult: null, nextGame: null, note: "Unavailable" };
+      });
+  }
+
+  // ESPN's own atp/wta scoreboard endpoints sometimes mislabel a joint tournament (e.g. the
+  // Cincinnati Open, held as one combined ATP+WTA event) — both the "atp" and "wta" queries
+  // can come back tagged with a "Men's Singles" grouping, which used to make the WTA panel
+  // just show a duplicate of the men's draw under the women's header. Each grouping carries
+  // its own slug ("mens-singles" / "womens-singles" / "-doubles" variants), independent of
+  // which tour endpoint we asked, so cross-checking that slug against the tour we requested
+  // catches the mismatch: a wrong-gender grouping is dropped instead of trusted, and a
+  // tournament left with zero matches after that is dropped entirely — an honest "no
+  // tournament in progress" instead of silently showing the wrong players.
+  var TENNIS_GENDER_PREFIX = { atp: "mens-", wta: "womens-" };
+  // Without an explicit date, ESPN's scoreboard endpoint doesn't reliably resolve to
+  // whatever tournament is actually current — it can keep serving an older/smaller event
+  // (e.g. Cincinnati) even once a Grand Slam like the US Open is already underway. Passing
+  // today's date pins the request to "the tournament active right now" instead.
+  function tennisDateParam(){
+    var d = new Date();
+    var mo = String(d.getMonth() + 1); if(mo.length < 2) mo = "0" + mo;
+    var da = String(d.getDate()); if(da.length < 2) da = "0" + da;
+    return d.getFullYear() + mo + da;
+  }
+  function espnTennis(tour){
+    var wantPrefix = TENNIS_GENDER_PREFIX[tour];
+    return fetch("https://site.api.espn.com/apis/site/v2/sports/tennis/" + tour + "/scoreboard?dates=" + tennisDateParam())
+      .then(function(r){ if(!r.ok) throw new Error("status " + r.status); return r.json(); })
+      .then(function(data){
+        var events = (data && data.events) || [];
+        var tournaments = events.slice(0, 3).map(function(ev){
+          var matches = [];
+          (ev.groupings || []).forEach(function(g){
+            var slug = (g.grouping && g.grouping.slug) || "";
+            if(slug && wantPrefix && slug.indexOf(wantPrefix) !== 0) return; // wrong-gender grouping — skip
+            (g.competitions || []).forEach(function(c){
+              var a = c.competitors && c.competitors[0];
+              var b = c.competitors && c.competitors[1];
+              var type = (c.status && c.status.type) || {};
+              matches.push({
+                state: type.state || "pre",
+                status: type.description || type.shortDetail || "",
+                player1: (a && a.athlete && a.athlete.displayName) || "TBD",
+                player2: (b && b.athlete && b.athlete.displayName) || "TBD",
+                sets1: (a && a.linescores) ? a.linescores.map(function(l){ return l.value; }) : [],
+                sets2: (b && b.linescores) ? b.linescores.map(function(l){ return l.value; }) : [],
+                winner1: typeof (a && a.winner) === "boolean" ? a.winner : null,
+                winner2: typeof (b && b.winner) === "boolean" ? b.winner : null
+              });
+            });
+          });
+          // Surface any live match first so it's never buried under finished ones.
+          matches.sort(function(m1, m2){ return (m1.state === "in" ? 0 : 1) - (m2.state === "in" ? 0 : 1); });
+          return { name: ev.name, matches: matches.slice(0, 4) };
+        }).filter(function(t){ return t.matches.length > 0; });
+        var anyLive = tournaments.some(function(t){ return t.matches.some(function(m){ return m.state === "in"; }); });
+        return { tour: tour.toUpperCase(), tournaments: tournaments, anyLive: anyLive };
+      })
+      .catch(function(){
+        return { tour: tour.toUpperCase(), tournaments: [], anyLive: false };
+      });
+  }
+
+  var sportsPollTimer = null;
+  function scheduleSportsPoll(delayMs){
+    if(sportsPollTimer) clearTimeout(sportsPollTimer);
+    sportsPollTimer = setTimeout(function(){ loadSports(); }, delayMs);
+  }
+
+  async function loadSports(){
+    try{
+      var teamPromises = sportsTeams.map(function(t){
+        return espnTeamSchedule({ sport: t.sport, league: t.league, teamId: t.teamId, label: t.label });
+      });
+      var results = await Promise.all(teamPromises.concat([espnTennis("atp"), espnTennis("wta")]));
+      var teamResults = results.slice(0, sportsTeams.length);
+      var atp = results[sportsTeams.length];
+      var wta = results[sportsTeams.length + 1];
+      var teams = {};
+      sportsTeams.forEach(function(t, i){ teams[t.league + ":" + t.teamId + ":" + i] = teamResults[i]; });
+      renderSports({ teams: teams, tennis: { atp: atp, wta: wta } });
+      // While any tracked team or tennis match is live, refresh often (~20s) so
+      // scores stay close to real-time; otherwise fall back to a slow cadence.
+      var anyTeamLive = teamResults.some(function(t){ return t && t.liveGame; });
+      var anyTennisLive = (atp && atp.anyLive) || (wta && wta.anyLive);
+      scheduleSportsPoll((anyTeamLive || anyTennisLive) ? 20000 : 600000);
+    }catch(err){
+      renderSports(null);
+      scheduleSportsPoll(600000);
+    }
+  }
+
+  /* ============================================================
+     CAPTAIN'S LOG — freeform journal, localStorage-backed
+  ============================================================ */
+  var logBody = $("log-body");
+  var captainsLog = readLS(LS.captainsLog, DEFAULT_LOG);
+
+  function fmtLogTs(iso){
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  }
+
+  function renderLog(){
+    if(!logBody) return;
+    logBody.innerHTML = "";
+    captainsLog.slice().reverse().forEach(function(entry){
+      var row = el("div", "log-row");
+      row.innerHTML = '<div class="log-row-top"><span class="log-ts">' + escapeHtml(fmtLogTs(entry.ts)) + '</span><button type="button" class="log-del">✕</button></div>' +
+        '<div class="log-text">' + escapeHtml(entry.text) + "</div>";
+      row.querySelector(".log-del").addEventListener("click", function(){
+        captainsLog = captainsLog.filter(function(x){ return x.id !== entry.id; });
+        writeLS(LS.captainsLog, captainsLog);
+        renderLog();
+      });
+      logBody.appendChild(row);
+    });
+    var addRow = el("div", "log-add");
+    addRow.innerHTML = '<input type="text" id="log-input" placeholder="Log entry…"><button type="button" id="log-add-btn">Add</button>';
+    logBody.appendChild(addRow);
+    function addEntry(){
+      var input = $("log-input");
+      var text = input.value.trim();
+      if(!text) return;
+      captainsLog.push({ id: "log" + Date.now(), text: text, ts: new Date().toISOString() });
+      writeLS(LS.captainsLog, captainsLog);
+      renderLog();
+    }
+    $("log-add-btn").addEventListener("click", addEntry);
+    $("log-input").addEventListener("keydown", function(e){ if(e.key === "Enter") addEntry(); });
+  }
+
+  /* ============================================================
+     NEWS — fetch all sources, feed the rail list & globe
+  ============================================================ */
+  var newsCache = {};      // key -> items[]
+  var allItemsFlat = [];   // merged, deduped, for globe matching
+  var activeTab = "top-stories";
+
+  function buildTabs(){
+    var tabsEl = $("news-tabs");
+    tabsEl.innerHTML = "";
+    NEWS_SOURCES.forEach(function(src){
+      var b = el("button", "tab" + (src.key === activeTab ? " active" : ""));
+      b.type = "button";
+      b.textContent = src.label;
+      b.addEventListener("click", function(){
+        activeTab = src.key;
+        Array.prototype.forEach.call(tabsEl.querySelectorAll(".tab"), function(t){ t.classList.remove("active"); });
+        b.classList.add("active");
+        renderNewsList();
+      });
+      tabsEl.appendChild(b);
+    });
+  }
+
+  function renderNewsList(){
+    var body = $("news-body");
+    var items = newsCache[activeTab];
+    if(!items){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">Loading headlines…</div>'; return; }
+    if(!items.length){ body.innerHTML = '<div class="empty-state" style="padding:12px 14px;">No headlines available.</div>'; return; }
+    var wrap = el("div");
+    wrap.style.padding = "6px 14px";
+    items.slice(0, 14).forEach(function(item){
+      var row = el("div", "news-item");
+      if(item.image){
+        row.innerHTML = '<img class="news-thumb" src="' + escapeHtml(item.image) + '" alt="" onerror="this.outerHTML=\'<div class=&quot;news-thumb empty&quot;>▮</div>\'">';
+      } else {
+        row.innerHTML = '<div class="news-thumb empty">▮</div>';
+      }
+      var meta = el("div");
+      meta.style.minWidth = "0";
+      meta.innerHTML = '<div class="news-title">' + escapeHtml(item.title) + '</div><div class="news-meta">' + escapeHtml(item.sourceLabel) + " · " + escapeHtml(timeAgo(item.pubDate)) + "</div>";
+      row.appendChild(meta);
+      row.addEventListener("click", function(){ renderNewsDetail(item); });
+      wrap.appendChild(row);
+    });
+    body.innerHTML = "";
+    body.appendChild(wrap);
+  }
+
+  function renderNewsDetail(item){
+    var body = $("news-body");
+    var wrap = el("div");
+
+    var back = el("button", "news-back");
+    back.type = "button";
+    back.textContent = "← Back to headlines";
+    back.addEventListener("click", function(){ renderNewsList(); });
+    wrap.appendChild(back);
+
+    var content = el("div");
+    content.style.padding = "6px 14px 20px";
+    wrap.appendChild(content);
+
+    function metaLine(){
+      return '<div class="detail-meta"><b>' + escapeHtml(item.sourceLabel || "") + "</b> · " + escapeHtml(timeAgo(item.pubDate)) + (item.place ? " · near " + escapeHtml(item.place) : "") + "</div>";
+    }
+
+    var loadingHtml = "";
+    if(item.image) loadingHtml += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
+    loadingHtml += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
+    loadingHtml += metaLine();
+    loadingHtml += '<p class="detail-snippet">Loading full story…</p>';
+    content.innerHTML = loadingHtml;
+
+    body.innerHTML = "";
+    body.appendChild(wrap);
+    body.scrollTop = 0;
+
+    getJSON("/api/article?url=" + encodeURIComponent(item.link)).then(function(data){
+      var html = "";
+      var img = data.image || item.image;
+      if(img) html += '<img class="detail-img" src="' + escapeHtml(img) + '" alt="" onerror="this.remove()">';
+      html += '<h2 class="detail-title">' + escapeHtml(data.title || item.title) + "</h2>";
+      html += metaLine();
+      var paras = data.paragraphs || [];
+      if(paras.length){
+        paras.forEach(function(p){ html += '<p class="detail-snippet">' + escapeHtml(p) + "</p>"; });
+      } else if(item.snippet){
+        html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
+      }
+      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">View original source ↗</a>';
+      content.innerHTML = html;
+    }).catch(function(){
+      var html = "";
+      if(item.image) html += '<img class="detail-img" src="' + escapeHtml(item.image) + '" alt="" onerror="this.remove()">';
+      html += '<h2 class="detail-title">' + escapeHtml(item.title) + "</h2>";
+      html += metaLine();
+      if(item.snippet) html += '<p class="detail-snippet">' + escapeHtml(item.snippet) + "</p>";
+      html += '<p class="detail-meta">Couldn\'t load the full article from the source site.</p>';
+      html += '<a class="detail-link" href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer">Open on original site ↗</a>';
+      content.innerHTML = html;
+    });
+  }
+
+  function findPlace(text){
+    var lower = (" " + text + " ").toLowerCase();
+    for(var i=0; i<PLACES.length; i++){
+      var p = PLACES[i];
+      for(var j=0; j<p.keys.length; j++){
+        var k = p.keys[j];
+        var re = new RegExp("[^a-z]" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[^a-z]", "i");
+        if(re.test(lower)) return p;
+      }
+    }
+    return null;
+  }
+
+  async function loadAllNews(){
+    buildTabs();
+    var results = await Promise.allSettled(NEWS_SOURCES.map(function(src){
+      return getJSON("/api/news?source=" + src.key).then(function(data){
+        var items = (data.items || []).map(function(it){
+          it.sourceKey = src.key;
+          it.sourceLabel = it.sourceLabel || data.name || src.label;
+          return it;
+        });
+        newsCache[src.key] = items;
+        return items;
+      }).catch(function(){ newsCache[src.key] = []; return []; });
+    }));
+
+    allItemsFlat = [];
+    var seen = {};
+    results.forEach(function(r){
+      if(r.status === "fulfilled"){
+        r.value.forEach(function(it){ if(!seen[it.link]){ seen[it.link] = true; allItemsFlat.push(it); } });
+      }
+    });
+
+    renderNewsList();
+    populateNewsMarkers();
+  }
+
+  /* ============================================================
+     GLOBE DATA — shared continent/marker data feeding the weather globe
+     (the second "Live Global Feed" globe that used to own this data has
+     been retired; its markers now render on the weather globe below)
+  ============================================================ */
+  var stationMarkers = [];  // {name,lat,lon,wx}
+  var newsMarkers = [];     // {place,lat,lon,items:[]}
+
+  // Rough, simplified continent silhouettes — [lon,lat] rings, good enough at globe scale
+  // to read as recognizable landmasses, not a survey-accurate coastline.
+  var CONTINENTS = [
+    // North America (+ Central America)
+    [[-165,68],[-155,71],[-125,70],[-95,68],[-80,62],[-65,60],[-52,47],[-65,45],[-70,41],
+     [-75,35],[-80,26],[-81,25],[-97,26],[-105,20],[-92,15],[-83,9],[-83,8],[-88,13],
+     [-105,20],[-115,30],[-124,40],[-125,49],[-135,58],[-155,60],[-165,68]],
+    // Greenland
+    [[-45,60],[-20,65],[-20,75],[-40,83],[-60,82],[-70,75],[-60,65],[-45,60]],
+    // South America
+    [[-80,10],[-77,4],[-80,-5],[-70,-18],[-71,-30],[-73,-42],[-68,-55],[-65,-53],
+     [-58,-38],[-48,-25],[-35,-8],[-50,2],[-60,8],[-72,10],[-80,10]],
+    // Europe
+    [[-10,36],[-9,43],[-5,48],[2,51],[5,53],[10,55],[20,60],[30,60],[30,46],
+     [20,42],[15,38],[10,44],[3,43],[-10,36]],
+    // Asia
+    [[60,77],[100,77],[140,73],[180,68],[160,55],[140,45],[130,35],[122,25],
+     [105,10],[100,5],[95,15],[80,8],[70,20],[60,25],[48,30],[35,35],[30,45],
+     [45,50],[60,55],[60,77]],
+    // Indian subcontinent
+    [[68,24],[70,20],[73,15],[77,8],[80,13],[83,17],[88,22],[92,26],[88,27],[80,30],[75,32],[68,24]],
+    // Africa
+    [[-17,15],[-10,6],[9,4],[9,-1],[12,-6],[18,-18],[18,-34],[32,-29],[40,-15],
+     [43,-2],[51,12],[43,12],[38,15],[33,31],[10,37],[-6,35],[-17,21],[-17,15]],
+    // Australia
+    [[113,-22],[122,-18],[129,-15],[136,-12],[142,-11],[148,-20],[153,-28],
+     [150,-37],[140,-38],[131,-32],[114,-30],[113,-22]]
+  ];
+
+  function pointInPolygon(lon, lat, ring){
+    var inside = false;
+    for(var i = 0, j = ring.length - 1; i < ring.length; j = i++){
+      var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      var intersect = ((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+      if(intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  function isLand(lon, lat){
+    for(var i = 0; i < CONTINENTS.length; i++){
+      if(pointInPolygon(lon, lat, CONTINENTS[i])) return true;
+    }
+    return false;
+  }
+
+  var landPoints = (function buildLandPoints(){
+    var pts = [];
+    for(var lat = -84; lat <= 84; lat += 1.4){
+      for(var lon = -180; lon < 180; lon += 1.4){
+        if(isLand(lon, lat)) pts.push({ lat: lat, lon: lon, jx: (Math.random()-0.5)*1.1, jy: (Math.random()-0.5)*1.1, tint: Math.random() });
+      }
+    }
+    return pts;
+  })();
+
+  // land dot color — greens/tans by terrain, fading to snow/tundra near the poles
+  function terrainColor(lat, tint){
+    var polar = Math.max(0, (Math.abs(lat) - 55) / 30); // 0 below 55°, 1 by 85°
+    var rr = Math.round(150 + tint * 60);
+    var gg = Math.round(196 - tint * 40);
+    var bb = Math.round(120 - tint * 50);
+    rr = Math.round(rr + (235 - rr) * polar);
+    gg = Math.round(gg + (240 - gg) * polar);
+    bb = Math.round(bb + (245 - bb) * polar);
+    return rr + "," + gg + "," + bb;
+  }
+
+  // fixed background starfield (deep-space ambience behind the sphere)
+  var STARS = (function buildStars(){
+    var s = [];
+    for(var i = 0; i < 140; i++){
+      s.push({ x: Math.random(), y: Math.random(), r: 0.4 + Math.random()*1.3, phase: Math.random()*Math.PI*2, speed: 0.6 + Math.random()*1.1 });
+    }
+    return s;
+  })();
+
+  // inverse of the orthographic projection above — screen point -> lat/lon on the sphere's
+  // near face. Returns null if the point falls outside the rendered circle (clicked empty space).
+  function invertProject(mx, my, cx, cy, radius, rotationDeg, tiltDeg){
+    if(radius < 1) return null;
+    var dx = (mx - cx) / radius;   // = x3 (post-yaw, post-tilt frame)
+    var dy = (cy - my) / radius;   // = y3' (post-yaw, post-tilt frame)
+    var distSq = dx*dx + dy*dy;
+    if(distSq > 1) return null;
+    var z3p = Math.sqrt(Math.max(0, 1 - distSq)); // z3' (post-yaw, post-tilt frame)
+
+    // undo the tilt (pitch) rotation to get back to the post-yaw, pre-tilt frame
+    var y3 = dy, z3 = z3p;
+    if(tiltDeg){
+      var tRad = tiltDeg * Math.PI / 180;
+      var ct = Math.cos(tRad), st = Math.sin(tRad);
+      y3 = dy * ct + z3p * st;
+      z3 = -dy * st + z3p * ct;
+    }
+
+    var lat = Math.asin(Math.max(-1, Math.min(1, y3))) * 180 / Math.PI;
+    var lonRad = Math.atan2(dx, z3);
+    var lon = lonRad * 180 / Math.PI - rotationDeg;
+    lon = ((lon + 180) % 360 + 360) % 360 - 180;
+    return { lat: lat, lon: lon };
+  }
+
+  function haversineKm(lat1, lon1, lat2, lon2){
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function nearestPlace(lat, lon){
+    var best = null, bestDist = Infinity;
+    PLACES.forEach(function(p){
+      var d = haversineKm(lat, lon, p.lat, p.lon);
+      if(d < bestDist){ bestDist = d; best = p; }
+    });
+    return best ? { place: best, distKm: bestDist } : null;
+  }
+
+  // Globe sphere/atmosphere/wireframe colors — these are canvas literals, not CSS
+  // variables, so they can't just inherit from the page's :root theme. Keyed by pageTheme
+  // instead; since drawWeatherGlobe() redraws every animation frame, flipping pageTheme
+  // (see toggleTheme() above) recolors the globe on the very next frame with no extra work.
+  // Markers/legend dots (home, ISS, flights, news) stay theme-independent on purpose — those
+  // are semantic data colors, not part of the "look".
+  var GLOBE_PALETTES = {
+    dark: { sphereStops:["120,196,214,0.42","48,120,150,0.4","14,46,64,0.55","3,8,14,0.75"], glowStroke:"120,220,235,0.35", glowShadow:"82,216,222,0.9", rim:"82,216,222,0.5", wire:"82,216,222,0.09", equator:"82,216,222,0.16" },
+    light: { sphereStops:["224,150,90,0.42","120,72,40,0.4","48,28,16,0.55","10,6,4,0.75"], glowStroke:"255,168,130,0.35", glowShadow:"255,138,92,0.9", rim:"255,138,92,0.5", wire:"255,138,92,0.09", equator:"255,138,92,0.16" }
+  };
+  function gp(){ return GLOBE_PALETTES[pageTheme] || GLOBE_PALETTES.dark; }
+
+  function handleMarkerClick(hit){
+    if(hit.type === "news"){
+      // a news dateline marker is a place already tied to real headlines — jump straight into
+      // the top story inline in the Newswire box, same as clicking a headline in the list.
+      var topItem = hit.ref.items && hit.ref.items[0];
+      if(topItem) renderNewsDetail(topItem);
+      return;
+    }
+    if(hit.type === "iss"){
+      openIssDetail(hit.ref);
+      return;
+    }
+    if(hit.type === "flight"){
+      openFlightDetail(hit.ref);
+      return;
+    }
+    if(hit.type === "station"){
+      var st = hit.ref;
+      var relatedItems = newsMarkers.filter(function(nm){ return nm.place === st.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
+      openLocationDetail(st.lat, st.lon, { name: st.name, items: relatedItems });
+    } else if(hit.type === "home"){
+      var relatedHome = newsMarkers.filter(function(nm){ return nm.place === hit.ref.name; }).reduce(function(acc, nm){ return acc.concat(nm.items); }, []);
+      openLocationDetail(hit.ref.lat, hit.ref.lon, { name: hit.ref.name, items: relatedHome });
+    }
+  }
+
+  function populateNewsMarkers(){
+    var grouped = {};
+    allItemsFlat.forEach(function(item){
+      var text = item.title + " " + (item.snippet || "");
+      var place = findPlace(text);
+      if(!place) return;
+      item.place = place.name;
+      var key = place.name;
+      if(!grouped[key]) grouped[key] = { place: place.name, lat: place.lat, lon: place.lon, items: [] };
+      if(grouped[key].items.length < 6) grouped[key].items.push(item);
+    });
+    newsMarkers = Object.keys(grouped).slice(0, 30).map(function(k){ return grouped[k]; });
+    updateGlobeMarkerCount();
+  }
+
+  async function loadStations(){
+    var results = await Promise.allSettled(STATIONS.map(function(st){
+      return getJSON("/api/weather?lat=" + st.lat + "&lon=" + st.lon + "&city=" + encodeURIComponent(st.name)).then(function(data){
+        return { name: st.name, lat: st.lat, lon: st.lon, wx: data.current };
+      });
+    }));
+    stationMarkers = results.filter(function(r){ return r.status === "fulfilled"; }).map(function(r){ return r.value; });
+    updateGlobeMarkerCount();
+  }
+
+  /* ============================================================
+     WEATHER GLOBE — second sphere, live cloud cover + precipitation
+     painted across a coarse world grid instead of news markers.
+  ============================================================ */
+  var canvas2 = $("weather-globe-canvas");
+  var ctx2 = canvas2.getContext("2d");
+  var weatherGlobeBody = $("weather-globe-body");
+  var tooltip2 = $("weather-globe-tooltip");
+
+  var G2 = { w: 0, h: 0, cx: 0, cy: 0, radius: 0, rotation: 200, tilt: -12, dragging: false, dragDist: 0, lastX: 0, lastY: 0, autoRotate: !REDUCED_MOTION, idleTimer: null };
+  var weatherGridPoints = []; // {lat,lon,cloud,precip,temp,wind} — ~990 real data cells from Open-Meteo (8° lattice)
+  var renderedMarkers2 = [];
+
+  // radar-style precipitation coloring (green = light, yellow = moderate, red = heavy) — an
+  // instantly-recognizable convention that reads as clearly distinct from the pale cloud haze,
+  // instead of both layers competing as similar-looking whitish/bluish dots.
+  var PRECIP_COLOR_STOPS = [
+    { t: 0,   c: [110, 220, 150] },
+    { t: 1.2, c: [235, 214, 80] },
+    { t: 3.5, c: [255, 110, 90] }
+  ];
+  function precipColor(mm){
+    var v = Math.max(0, mm);
+    if(v <= PRECIP_COLOR_STOPS[0].t) return PRECIP_COLOR_STOPS[0].c;
+    for(var i = 1; i < PRECIP_COLOR_STOPS.length; i++){
+      if(v <= PRECIP_COLOR_STOPS[i].t){
+        var a = PRECIP_COLOR_STOPS[i-1], b = PRECIP_COLOR_STOPS[i];
+        var f = (v - a.t) / (b.t - a.t);
+        return [
+          Math.round(a.c[0] + (b.c[0]-a.c[0]) * f),
+          Math.round(a.c[1] + (b.c[1]-a.c[1]) * f),
+          Math.round(a.c[2] + (b.c[2]-a.c[2]) * f)
+        ];
+      }
+    }
+    return PRECIP_COLOR_STOPS[PRECIP_COLOR_STOPS.length - 1].c;
+  }
+
+  // cheap layered/warped sine turbulence — no gradient tables, just cross-modulated waves.
+  // Good enough to read as organic swirling cloud contours instead of round blobs, and safe to reason about.
+  function fbmNoise(x, y, t){
+    var warpX = Math.sin(y * 1.3 - t * 0.06) * 1.4;
+    var warpY = Math.cos(x * 0.9 + t * 0.05) * 1.4;
+    var v = 0;
+    v += Math.sin((x + warpX) * 1.6 + t * 0.12) * 0.5;
+    v += Math.sin((y + warpY) * 2.1 - t * 0.09) * 0.32;
+    v += Math.sin((x + y) * 0.9 + warpX * 0.5 + t * 0.07) * 0.18;
+    // higher-frequency detail layer — breaks up smooth blob edges into more fractal-looking wisps
+    v += Math.sin((x - warpY) * 4.4 + t * 0.2) * 0.12;
+    v += Math.sin((y + warpX) * 3.7 - t * 0.17) * 0.09;
+    return v / 1.21; // back to roughly -1..1
+  }
+
+  // a fine, JITTERED (not grid-aligned) sample scatter across the whole sphere — a regular
+  // lattice reads as a mechanical dot-grid once most points get pruned by the noise threshold,
+  // so points are scattered in lat/lon space itself, not just nudged a pixel or two on screen.
+  var cloudSamplePoints = (function buildCloudSamplePoints(){
+    var pts = [];
+    for(var lat = -84; lat <= 84; lat += 3){
+      for(var lon = -180; lon < 180; lon += 3){
+        var jlat = Math.max(-89, Math.min(89, lat + (Math.random()-0.5)*2.8));
+        var jlon = lon + (Math.random()-0.5)*2.8;
+        pts.push({ lat: jlat, lon: jlon, coverage: 0 });
+      }
+    }
+    return pts;
+  })();
+
+  // inverse-distance-weighted blend of the 60 real grid cells onto the fine lattice — run once
+  // whenever fresh data lands (every 10 min), never per animation frame.
+  function recomputeCloudCoverage(){
+    if(!weatherGridPoints.length) return;
+    for(var i = 0; i < cloudSamplePoints.length; i++){
+      var cp = cloudSamplePoints[i];
+      var wSum = 0, cSum = 0;
+      var precipMax = 0;
+      for(var j = 0; j < weatherGridPoints.length; j++){
+        var gp = weatherGridPoints[j];
+        var dLat = cp.lat - gp.lat, dLon = cp.lon - gp.lon;
+        var d2 = dLat*dLat + dLon*dLon;
+        if(typeof gp.cloud === "number"){
+          var w = 1 / (d2 + 6);
+          wSum += w; cSum += w * gp.cloud;
+        }
+        // precipitation is far patchier than cloud cover — a wide blended average (like the
+        // cloud IDW above) would dilute a real rain cell almost to zero once averaged against
+        // dozens of dry neighbors. Instead take the strongest nearby cell's value with a tight
+        // falloff, so a rainy point "splats" a visible patch around itself instead of vanishing
+        // into a global average — this is the fix for precip reading as basically invisible.
+        // The falloff (/6) is tighter than the original (/10) now that the real data grid is
+        // ~6x denser (8° spacing instead of 20°) — a tighter kernel over denser real samples
+        // reads as distinct storm cells instead of every rain point smearing into one big blob.
+        if(typeof gp.precip === "number" && gp.precip > 0){
+          var splat = gp.precip / (1 + d2 / 6);
+          if(splat > precipMax) precipMax = splat;
+        }
+      }
+      cp.coverage = wSum > 0 ? Math.max(0, Math.min(1, (cSum / wSum) / 100)) : 0;
+      cp.precipMm = precipMax;
+    }
+  }
+
+  function resizeCanvas2(){
+    var rect = weatherGlobeBody.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas2.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas2.height = Math.max(1, Math.floor(rect.height * dpr));
+    ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+    G2.w = rect.width; G2.h = rect.height;
+    G2.cx = rect.width / 2; G2.cy = rect.height / 2;
+    G2.radius = Math.max(40, Math.min(rect.width, rect.height) * 0.42);
+  }
+
+  function project2(lat, lon, rotationDeg, tiltDeg){
+    var latRad = lat * Math.PI / 180;
+    var lonRad = (lon + rotationDeg) * Math.PI / 180;
+    var x3 = Math.cos(latRad) * Math.sin(lonRad);
+    var y3 = Math.sin(latRad);
+    var z3 = Math.cos(latRad) * Math.cos(lonRad);
+    if(tiltDeg){
+      var tRad = tiltDeg * Math.PI / 180;
+      var ct = Math.cos(tRad), st = Math.sin(tRad);
+      var y3t = y3 * ct - z3 * st;
+      var z3t = y3 * st + z3 * ct;
+      y3 = y3t; z3 = z3t;
+    }
+    if(z3 < -0.06) return null;
+    return { x: G2.cx + x3 * G2.radius, y: G2.cy - y3 * G2.radius, z: z3 };
+  }
+
+  function drawWeatherGlobe(){
+    ctx2.clearRect(0, 0, G2.w, G2.h);
+    if(G2.radius < 10) return;
+
+    var t = Date.now() / 1000;
+    for(var si = 0; si < STARS.length; si++){
+      var st3 = STARS[si];
+      var sx = st3.x * G2.w, sy = st3.y * G2.h;
+      var dxs = sx - G2.cx, dys = sy - G2.cy;
+      if(dxs*dxs + dys*dys < G2.radius*G2.radius*1.06) continue;
+      var tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * st3.speed + st3.phase + 1.7));
+      ctx2.beginPath();
+      ctx2.arc(sx, sy, st3.r, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(210,230,240," + (tw*0.85) + ")";
+      ctx2.fill();
+    }
+
+    var grad2 = ctx2.createRadialGradient(G2.cx - G2.radius*0.4, G2.cy - G2.radius*0.45, G2.radius*0.05, G2.cx, G2.cy, G2.radius*1.04);
+    grad2.addColorStop(0, "rgba(" + gp().sphereStops[0] + ")");
+    grad2.addColorStop(0.35, "rgba(" + gp().sphereStops[1] + ")");
+    grad2.addColorStop(0.72, "rgba(" + gp().sphereStops[2] + ")");
+    grad2.addColorStop(1, "rgba(" + gp().sphereStops[3] + ")");
+    ctx2.beginPath();
+    ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
+    ctx2.fillStyle = grad2;
+    ctx2.fill();
+
+    ctx2.save();
+    ctx2.beginPath();
+    ctx2.arc(G2.cx, G2.cy, G2.radius + 1.5, 0, Math.PI*2);
+    ctx2.lineWidth = 3;
+    ctx2.strokeStyle = "rgba(" + gp().glowStroke + ")";
+    ctx2.shadowColor = "rgba(" + gp().glowShadow + ")";
+    ctx2.shadowBlur = 14;
+    ctx2.stroke();
+    ctx2.restore();
+
+    ctx2.lineWidth = 1;
+    ctx2.strokeStyle = "rgba(" + gp().rim + ")";
+    ctx2.beginPath();
+    ctx2.arc(G2.cx, G2.cy, G2.radius, 0, Math.PI*2);
+    ctx2.stroke();
+
+    ctx2.strokeStyle = "rgba(" + gp().wire + ")";
+    ctx2.lineWidth = 1;
+    for(var lon = 0; lon < 360; lon += 30){
+      ctx2.beginPath();
+      var started = false;
+      for(var lat = -90; lat <= 90; lat += 4){
+        var p = project2(lat, lon, G2.rotation, G2.tilt);
+        if(!p){ started = false; continue; }
+        if(!started){ ctx2.moveTo(p.x, p.y); started = true; } else { ctx2.lineTo(p.x, p.y); }
+      }
+      ctx2.stroke();
+    }
+    for(var lat2 = -60; lat2 <= 60; lat2 += 30){
+      ctx2.beginPath();
+      var started2 = false;
+      for(var lon2 = 0; lon2 <= 360; lon2 += 4){
+        var p2 = project2(lat2, lon2, G2.rotation, G2.tilt);
+        if(!p2){ started2 = false; continue; }
+        if(!started2){ ctx2.moveTo(p2.x, p2.y); started2 = true; } else { ctx2.lineTo(p2.x, p2.y); }
+      }
+      ctx2.stroke();
+    }
+    ctx2.strokeStyle = "rgba(" + gp().equator + ")";
+    ctx2.beginPath();
+    var started3 = false;
+    for(var lon3 = 0; lon3 <= 360; lon3 += 3){
+      var p3 = project2(0, lon3, G2.rotation, G2.tilt);
+      if(!p3){ started3 = false; continue; }
+      if(!started3){ ctx2.moveTo(p3.x, p3.y); started3 = true; } else { ctx2.lineTo(p3.x, p3.y); }
+    }
+    ctx2.stroke();
+
+    // landmasses for geographic context — same dense coastline dots, dimmer than the news globe
+    for(var li = 0; li < landPoints.length; li++){
+      var lp = landPoints[li];
+      var lpp = project2(lp.lat, lp.lon, G2.rotation, G2.tilt);
+      if(!lpp) continue;
+      var lpScale = 0.5 + lpp.z * 0.5;
+      var r0 = (0.6 + lp.tint * 0.38) * lpScale;
+      ctx2.beginPath();
+      ctx2.arc(lpp.x + lp.jx, lpp.y + lp.jy, r0, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(" + terrainColor(lp.lat, lp.tint) + "," + (0.5 * lpScale + 0.08) + ")";
+      ctx2.fill();
+    }
+
+    renderedMarkers2 = [];
+
+    // live weather layer — a fine lattice sampled through cheap turbulence noise, gated by the
+    // real regional cloud% blended onto it. Reads as continuous swirling bands rather than
+    // blobs pinned to the 60 raw data points, while overall coverage still tracks live data.
+    var tNoise = Date.now() / 1000;
+    for(var ci = 0; ci < cloudSamplePoints.length; ci++){
+      var cp = cloudSamplePoints[ci];
+      var coverage = cp.coverage;
+      var precipMm = cp.precipMm || 0;
+      // precip rendering must NOT be gated behind the cloud-coverage/noise checks below —
+      // that was the actual bug making rain read as nearly invisible even after interpolation,
+      // since a rainy point would still get skipped whenever cloud cover there happened to be
+      // low or the noise field didn't happen to clear the cloud-patchiness threshold.
+      if(coverage < 0.12 && precipMm <= 0.03) continue;
+      var cpp = project2(cp.lat, cp.lon, G2.rotation, G2.tilt);
+      if(!cpp) continue;
+      var cScale = 0.55 + cpp.z * 0.45;
+
+      if(coverage >= 0.12){
+        var n = fbmNoise(cp.lon * 0.05, cp.lat * 0.07, tNoise);
+        n = (n + 1) / 2; // remap roughly to 0..1
+        // curved response: only genuinely cloudy regions clear enough of the noise field to show —
+        // clear/low-cover areas stay essentially empty instead of a uniform haze over everything.
+        var covCurve = Math.pow(coverage, 1.8);
+        var threshold = 1 - covCurve * 0.6;
+        if(n >= threshold){
+          var edge = Math.min(1, (n - threshold) / 0.3);
+          var rC = (0.9 + edge * 1.5) * cScale;
+          ctx2.beginPath();
+          ctx2.arc(cpp.x, cpp.y, rC, 0, Math.PI*2);
+          // softened & slightly cooler than before, and capped lower — leaves more visual
+          // headroom for the glowing, radar-colored precipitation layer to read as distinct
+          ctx2.fillStyle = "rgba(205,222,230," + (0.08 + edge * 0.4 * (0.3 + covCurve * 0.7)) + ")";
+          ctx2.fill();
+        }
+      }
+
+      // precipitation, interpolated onto this same fine lattice (see recomputeCloudCoverage) —
+      // rendering it only at the ~990 raw data cells made it read as nearly invisible, since
+      // real rain is patchy enough that most exact sample points miss it entirely. Painting the
+      // interpolated "splat" instead means any nearby rain cell shows up as a visible patch.
+      if(precipMm > 0.03){
+        var col = precipColor(precipMm);
+        var colStr = col[0] + "," + col[1] + "," + col[2];
+        var pr = (1.6 + Math.min(3.2, precipMm * 1.6)) * cScale;
+        var pAlpha = Math.min(0.9, 0.4 + precipMm * 0.3);
+        ctx2.save();
+        ctx2.shadowColor = "rgba(" + colStr + ",0.9)";
+        ctx2.shadowBlur = 7 * cScale;
+        ctx2.beginPath();
+        ctx2.arc(cpp.x, cpp.y, pr, 0, Math.PI*2);
+        ctx2.fillStyle = "rgba(" + colStr + "," + (pAlpha * cScale) + ")";
+        ctx2.fill();
+        ctx2.restore();
+      }
+    }
+
+    // register the raw data cells for hit-testing / tooltips (precise numbers on hover),
+    // even though the visible precip coloring above now comes from the interpolated lattice
+    weatherGridPoints.forEach(function(gp){
+      var p = project2(gp.lat, gp.lon, G2.rotation, G2.tilt);
+      if(!p) return;
+      var scale = 0.55 + p.z * 0.45;
+      renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, G2.radius*0.09*scale + 6), type: "cell", ref: gp });
+    });
+
+    // shared pulse phase for the news/home/ISS/flight markers below — this globe used to
+    // draw only weather cells and the home marker; news, ISS and the tracked flight moved
+    // over from the retired "Live Global Feed" globe, along with a single shared pulse
+    // value (that globe animated each marker type off its own local pulse var).
+    var pulse = 0.5 + 0.5 * Math.sin(Date.now() / 500);
+
+    // news star markers — moved here from the retired globe
+    newsMarkers.forEach(function(nm){
+      var p = project2(nm.lat, nm.lon, G2.rotation, G2.tilt);
+      if(!p) return;
+      var scale = 0.6 + p.z * 0.4;
+      var baseR = 3.4 * scale;
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, baseR + pulse*3.2*scale, 0, Math.PI*2);
+      ctx2.strokeStyle = "rgba(255,169,77," + (0.55*scale) + ")";
+      ctx2.lineWidth = 1.3;
+      ctx2.stroke();
+
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, baseR, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(255,169,77," + (0.95*scale) + ")";
+      ctx2.fill();
+
+      renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "news", ref: nm });
+    });
+
+    // home marker — Montreal
+    (function(){
+      var p = project2(HOME.lat, HOME.lon, G2.rotation, G2.tilt);
+      if(!p) return;
+      var scale = 0.6 + p.z * 0.4;
+      var baseR = 3.8 * scale;
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, baseR + pulse*2.6*scale, 0, Math.PI*2);
+      ctx2.strokeStyle = "rgba(255,107,94," + (0.6*scale) + ")";
+      ctx2.lineWidth = 1.4;
+      ctx2.stroke();
+
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, baseR, 0, Math.PI*2);
+      ctx2.fillStyle = "rgba(255,107,94," + (0.95*scale) + ")";
+      ctx2.fill();
+
+      renderedMarkers2.push({ x: p.x, y: p.y, r: Math.max(10, baseR + 7), type: "home", ref: HOME });
+    })();
+
+    // ISS marker — current live position, when loaded — moved here from the retired globe
+    if(issData && issData.lat != null && issData.lon != null){
+      var pIss = project2(issData.lat, issData.lon, G2.rotation, G2.tilt);
+      if(pIss){
+        var scaleIss = 0.6 + pIss.z * 0.4;
+        var baseRIss = 4 * scaleIss;
+        ctx2.beginPath();
+        ctx2.arc(pIss.x, pIss.y, baseRIss + pulse*3*scaleIss, 0, Math.PI*2);
+        ctx2.strokeStyle = "rgba(142,201,255," + (0.6*scaleIss) + ")";
+        ctx2.lineWidth = 1.4;
+        ctx2.stroke();
+
+        ctx2.beginPath();
+        ctx2.arc(pIss.x, pIss.y, baseRIss, 0, Math.PI*2);
+        ctx2.fillStyle = "rgba(142,201,255," + (0.95*scaleIss) + ")";
+        ctx2.fill();
+
+        renderedMarkers2.push({ x: pIss.x, y: pIss.y, r: Math.max(10, baseRIss + 7), type: "iss", ref: issData });
+      }
+    }
+
+    // tracked flight's recent flown path — real history from OpenSky's free /tracks
+    // feed (typically the last ~30 min), NOT a scheduled dep/arr route — moved here
+    // from the retired globe
+    if(trackedFlightPath && trackedFlightPath.length > 1){
+      ctx2.save();
+      ctx2.setLineDash([2, 4]);
+      ctx2.strokeStyle = "rgba(79,214,140,0.55)";
+      ctx2.lineWidth = 1.5;
+      ctx2.beginPath();
+      var pathStarted = false;
+      for(var tpi = 0; tpi < trackedFlightPath.length; tpi++){
+        var tp = trackedFlightPath[tpi];
+        var ptp = project2(tp.lat, tp.lon, G2.rotation, G2.tilt);
+        if(!ptp){ pathStarted = false; continue; }
+        if(!pathStarted){ ctx2.moveTo(ptp.x, ptp.y); pathStarted = true; } else { ctx2.lineTo(ptp.x, ptp.y); }
+      }
+      ctx2.stroke();
+      ctx2.restore();
+    }
+
+    // tracked flight marker — the aircraft currently selected from a search result —
+    // moved here from the retired globe
+    if(trackedFlight && trackedFlight.lat != null && trackedFlight.lon != null){
+      var pFl = project2(trackedFlight.lat, trackedFlight.lon, G2.rotation, G2.tilt);
+      if(pFl){
+        var scaleFl = 0.6 + pFl.z * 0.4;
+        var baseRFl = 3.6 * scaleFl;
+        ctx2.beginPath();
+        ctx2.arc(pFl.x, pFl.y, baseRFl + pulse*2.6*scaleFl, 0, Math.PI*2);
+        ctx2.strokeStyle = "rgba(79,214,140," + (0.6*scaleFl) + ")";
+        ctx2.lineWidth = 1.3;
+        ctx2.stroke();
+
+        ctx2.beginPath();
+        ctx2.arc(pFl.x, pFl.y, baseRFl, 0, Math.PI*2);
+        ctx2.fillStyle = "rgba(79,214,140,0.95)";
+        ctx2.fill();
+
+        renderedMarkers2.push({ x: pFl.x, y: pFl.y, r: Math.max(10, baseRFl + 7), type: "flight", ref: trackedFlight });
+      }
+    }
+  }
+
+  function tick2(){
+    if(G2.autoRotate && !G2.dragging) G2.rotation += REDUCED_MOTION ? 0 : 0.037;
+    drawWeatherGlobe();
+    requestAnimationFrame(tick2);
+  }
+
+  function hitTest2(x, y){
+    var best = null, bestDist = Infinity;
+    renderedMarkers2.forEach(function(m){
+      var dx = m.x - x, dy = m.y - y, d = Math.sqrt(dx*dx + dy*dy);
+      if(d <= m.r && d < bestDist){ best = m; bestDist = d; }
+    });
+    return best;
+  }
+
+  canvas2.addEventListener("pointerdown", function(e){
+    G2.dragging = true; G2.dragDist = 0; G2.lastX = e.clientX; G2.lastY = e.clientY;
+    G2.autoRotate = false;
+    try{ canvas2.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  canvas2.addEventListener("pointermove", function(e){
+    var rect = canvas2.getBoundingClientRect();
+    var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    var hit = hitTest2(mx, my);
+    if(hit && !G2.dragging){
+      canvas2.style.cursor = "pointer";
+      tooltip2.style.display = "block";
+      tooltip2.style.left = hit.x + "px";
+      tooltip2.style.top = hit.y + "px";
+      if(hit.type === "home"){
+        tooltip2.textContent = hit.ref.name;
+      } else if(hit.type === "news"){
+        tooltip2.textContent = hit.ref.place;
+      } else if(hit.type === "iss"){
+        tooltip2.textContent = "ISS — International Space Station";
+      } else if(hit.type === "flight"){
+        tooltip2.textContent = hit.ref.callsign || hit.ref.icao24 || "Tracked flight";
+      } else {
+        var gp = hit.ref;
+        var parts = [];
+        if(typeof gp.cloud === "number") parts.push(Math.round(gp.cloud) + "% cloud");
+        if(typeof gp.temp === "number") parts.push(fmtTemp(gp.temp) + tempUnit());
+        if(typeof gp.precip === "number" && gp.precip > 0.05) parts.push(gp.precip.toFixed(1) + "mm precip");
+        tooltip2.textContent = parts.join(" · ") || "no data";
+      }
+    } else {
+      if(!G2.dragging) canvas2.style.cursor = "grab";
+      tooltip2.style.display = "none";
+    }
+    if(G2.dragging){
+      var dx = e.clientX - G2.lastX; G2.lastX = e.clientX;
+      var dy = e.clientY - G2.lastY; G2.lastY = e.clientY;
+      G2.dragDist += Math.abs(dx) + Math.abs(dy);
+      G2.rotation += dx * 0.4;
+      G2.tilt -= dy * 0.4;
+    }
+  });
+  function endDrag2(){
+    if(!G2.dragging) return;
+    G2.dragging = false;
+    clearTimeout(G2.idleTimer);
+    G2.idleTimer = setTimeout(function(){ G2.autoRotate = true; }, 5000);
+  }
+  canvas2.addEventListener("pointerup", function(e){
+    var wasClick = G2.dragDist < 6;
+    endDrag2();
+    if(wasClick){
+      var rect = canvas2.getBoundingClientRect();
+      var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      var hit = hitTest2(mx, my);
+      if(hit && hit.type === "cell"){
+        openLocationDetail(hit.ref.lat, hit.ref.lon, {});
+      } else if(hit){
+        handleMarkerClick(hit);
+      } else {
+        var geo = invertProject(mx, my, G2.cx, G2.cy, G2.radius, G2.rotation, G2.tilt);
+        if(geo) openLocationDetail(geo.lat, geo.lon, {});
+      }
+    }
+  });
+  canvas2.addEventListener("pointercancel", endDrag2);
+  canvas2.addEventListener("pointerleave", function(){ tooltip2.style.display = "none"; });
+
+  async function loadWeatherGrid(){
+    try{
+      var data = await getJSON("/api/weather-grid");
+      weatherGridPoints = data.points || [];
+      recomputeCloudCoverage();
+      $("weather-globe-count").textContent = weatherGridPoints.length + " cells · updated " + timeAgo(data.updated);
+    }catch(err){
+      $("weather-globe-count").textContent = "weather layer unavailable";
+    }
+  }
+
+  /* ============================================================
+     QUICK LINKS
+  ============================================================ */
+  var linksBody = $("links-body");
+  var links = readLS(LS.links, DEFAULT_LINKS);
+  var linksEditing = false;
+
+  function renderLinks(){
+    linksBody.innerHTML = "";
+    links.forEach(function(l, idx){
+      var a = el("a", "tile");
+      a.href = l.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.innerHTML = escapeHtml(l.name) + (linksEditing ? '<span class="tile-x" data-idx="' + idx + '">✕</span>' : "");
+      linksBody.appendChild(a);
+    });
+    if(linksEditing){
+      var addRow = el("div", "tile-add");
+      addRow.innerHTML = '<input type="text" id="link-name" placeholder="Name"><input type="text" id="link-url" placeholder="https://…"><button type="button" id="link-add">Add</button>';
+      linksBody.appendChild(addRow);
+      $("link-add").addEventListener("click", function(){
+        var name = $("link-name").value.trim();
+        var url = $("link-url").value.trim();
+        if(!name || !url) return;
+        if(!/^https?:\/\//i.test(url)) url = "https://" + url;
+        links.push({ name: name, url: url });
+        writeLS(LS.links, links);
+        renderLinks();
+      });
+      Array.prototype.forEach.call(linksBody.querySelectorAll(".tile-x"), function(x){
+        x.addEventListener("click", function(e){
+          e.preventDefault(); e.stopPropagation();
+          links.splice(parseInt(x.getAttribute("data-idx"),10), 1);
+          writeLS(LS.links, links);
+          renderLinks();
+        });
+      });
+    }
+  }
+  $("links-edit-btn").addEventListener("click", function(){ linksEditing = !linksEditing; renderLinks(); });
+
+  /* ============================================================
+     SETTINGS EXPORT / IMPORT — everything here lives only in this
+     one browser's localStorage (see LS above), which is what keeps
+     one visitor's data invisible to the next. That also means a
+     cache/site-data wipe, or opening the console on another device,
+     starts from scratch. This lets someone save a single JSON file
+     with all their settings and restore it later or elsewhere.
+  ============================================================ */
+  function settingsIoStatus(msg, isError){
+    var el2 = $("settings-io-status");
+    if(!el2) return;
+    el2.textContent = msg;
+    el2.style.color = isError ? "var(--bad)" : "";
+  }
+
+  function exportSettings(){
+    var data = {};
+    Object.keys(LS).forEach(function(semKey){
+      var storageKey = LS[semKey];
+      var v = localStorage.getItem(storageKey);
+      if(v !== null) data[storageKey] = v;
+    });
+    var payload = { app: "docdrew-console", version: 1, exportedAt: new Date().toISOString(), settings: data };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "docdrew-console-settings-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    settingsIoStatus("Exported " + Object.keys(data).length + " settings.", false);
+  }
+
+  function importSettingsFile(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      var applied = 0;
+      try{
+        var payload = JSON.parse(String(reader.result));
+        var settings = payload && payload.settings;
+        if(!settings || typeof settings !== "object") throw new Error("bad_format");
+        var known = {};
+        Object.keys(LS).forEach(function(k){ known[LS[k]] = true; });
+        Object.keys(settings).forEach(function(k){
+          if(known[k] && typeof settings[k] === "string"){
+            localStorage.setItem(k, settings[k]);
+            applied++;
+          }
+        });
+        if(!applied) throw new Error("nothing_recognized");
+      }catch(err){
+        settingsIoStatus("Couldn't read that file — not a docdrew console export.", true);
+        return;
+      }
+      settingsIoStatus("Imported " + applied + " settings — reloading…", false);
+      setTimeout(function(){ location.reload(); }, 700);
+    };
+    reader.onerror = function(){ settingsIoStatus("Couldn't read that file.", true); };
+    reader.readAsText(file);
+  }
+
+  $("settings-export-btn").addEventListener("click", exportSettings);
+  $("settings-import-btn").addEventListener("click", function(){ $("settings-import-file").click(); });
+  $("settings-import-file").addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    if(file) importSettingsFile(file);
+    e.target.value = "";
+  });
+
+  /* ============================================================
+     TASKS
+  ============================================================ */
+  var todoBody = $("todo-body");
+  var todos = readLS(LS.todos, DEFAULT_TODOS);
+
+  function renderTodos(){
+    todoBody.innerHTML = "";
+    todos.forEach(function(t){
+      var row = el("div", "todo-row" + (t.done ? " done" : ""));
+      row.innerHTML = '<input type="checkbox" ' + (t.done ? "checked" : "") + '><span class="todo-text">' + escapeHtml(t.text) + '</span><button type="button" class="todo-del">✕</button>';
+      row.querySelector("input").addEventListener("change", function(){
+        t.done = !t.done; writeLS(LS.todos, todos); renderTodos();
+      });
+      row.querySelector(".todo-del").addEventListener("click", function(){
+        todos = todos.filter(function(x){ return x.id !== t.id; });
+        writeLS(LS.todos, todos); renderTodos();
+      });
+      todoBody.appendChild(row);
+    });
+    var addRow = el("div", "todo-add");
+    addRow.innerHTML = '<input type="text" id="todo-input" placeholder="Add a task…"><button type="button" id="todo-add-btn">Add</button>';
+    todoBody.appendChild(addRow);
+    function addTodo(){
+      var input = $("todo-input");
+      var text = input.value.trim();
+      if(!text) return;
+      todos.push({ id: "t" + Date.now(), text: text, done: false });
+      writeLS(LS.todos, todos);
+      renderTodos();
+    }
+    $("todo-add-btn").addEventListener("click", addTodo);
+    $("todo-input").addEventListener("keydown", function(e){ if(e.key === "Enter") addTodo(); });
+  }
+
+  /* ============================================================
+     RIGHT-RAIL ACCORDION — Weather / Podcasts / Markets / Currency
+     each collapse or expand independently, remembered per-browser.
+  ============================================================ */
+  var railCollapse = readLS(LS.railCollapse, {});
+  // new widgets default to collapsed regardless of prior stored state — keeps the console
+  // compact by default per the "must fit without scrolling" constraint; once a user
+  // explicitly opens/closes one, that choice persists like the original four panels.
+  ["skywatch", "sports", "flighttracker"].forEach(function(k){
+    if(!(k in railCollapse)) railCollapse[k] = true;
+  });
+
+  function applyPanelCollapse(section){
+    var key = section.getAttribute("data-panel-key");
+    if(!key) return;
+    section.classList.toggle("collapsed", !!railCollapse[key]);
+  }
+
+  function initRailAccordion(){
+    Array.prototype.forEach.call(document.querySelectorAll(".rail-right .panel[data-panel-key]"), function(section){
+      applyPanelCollapse(section);
+      var head = section.querySelector(".panel-head");
+      if(!head) return;
+      head.addEventListener("click", function(e){
+        // let controls inside the head (Edit button, tabs, etc.) work without also toggling
+        if(e.target.closest && e.target.closest("button, a, input, select, .tabs")) return;
+        var key = section.getAttribute("data-panel-key");
+        railCollapse[key] = !railCollapse[key];
+        writeLS(LS.railCollapse, railCollapse);
+        applyPanelCollapse(section);
+      });
+    });
+  }
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  function init(){
+    initRailAccordion();
+    initHomeCitySelect();
+    renderFx();
+    renderLinks();
+    renderTodos();
+    renderLog();
+    renderSkyWatch(null);
+    renderFlightTracker();
+
+    resizeCanvas2();
+    if(window.ResizeObserver){ new ResizeObserver(debounce(resizeCanvas2, 120)).observe(weatherGlobeBody); }
+    window.addEventListener("resize", debounce(resizeCanvas2, 120));
+    requestAnimationFrame(function(){ resizeCanvas2(); });
+    tick2();
+
+    loadQuotes();
+    loadFx();
+    loadHomeWeather();
+    loadStations();
+    loadAllNews();
+    loadWeatherGrid();
+    loadPodcasts();
+    loadAurora();
+    loadBromont();
+    loadSports();
+    loadIss();
+
+    setInterval(loadQuotes, 90000);
+    setInterval(loadFx, 300000);
+    setInterval(loadHomeWeather, 600000);
+    setInterval(loadAllNews, 300000);
+    setInterval(loadStations, 900000);
+    setInterval(loadWeatherGrid, 600000);
+    setInterval(loadPodcasts, 1800000);
+    setInterval(loadAurora, 900000);
+    setInterval(loadBromont, 900000);
+    // loadSports() self-schedules its next poll (fast while something's live, slow otherwise).
+    setInterval(loadIss, 15000);
+    setInterval(function(){ renderSkyWatch(lastAuroraData); }, 600000); // keep moon icon fresh
+    if(!REDUCED_MOTION) setInterval(rotateShipStatus, 9000);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
