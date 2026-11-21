@@ -571,6 +571,16 @@
   .wx-fc td{font-size:12.5px;background:rgba(127,127,127,.07)}
   .wx-chip{display:inline-block;margin:0 6px 6px 0;padding:5px 11px;border:1px solid var(--border);border-radius:999px;font-size:12.5px}
   .wx-note{padding:14px;border:1px dashed var(--border);border-radius:8px;font-size:13px}
+
+  /* ---------- Sidebar nav stack: Travel Tools, Guides, Long Weekend Trips ---------- */
+  .nav-stack .tt-nav-card,.nav-stack .lw-nav-card,.nav-stack .guides-nav-card{margin:10px 12px 0;}
+  .guides-nav-card{display:flex;gap:12px;align-items:center;padding:16px 16px;border-radius:var(--radius-md);cursor:pointer;background:var(--primary);color:#fff;text-decoration:none;box-shadow:var(--shadow-sm);transition:background .1s;}
+  .guides-nav-card:hover{background:var(--primary-hover);}
+  .guides-nav-icon{display:flex;align-items:center;}
+  .guides-nav-icon svg{width:26px;height:26px;}
+  .guides-nav-title{font-weight:800;font-size:15px;color:#fff;}
+  .guides-nav-sub{font-size:11.5px;color:rgba(255,255,255,.85);margin-top:1px;}
+  :root[data-theme="dark"] .guides-nav-card{background:#3b5bdb;}
 </style>
 </head>
 <body>
@@ -586,7 +596,6 @@
     <div class="topbar-spacer"></div>
     <div class="topbar-actions">
       <button class="btn btn-icon btn-ghost" id="shellDarkModeBtn" title="Toggle dark mode" onclick="toggleTheme()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
-      <a class="btn" id="shellGuidesBtn" href="https://docdrew-console.netlify.app/tools/travel-guides/" title="Travel guides (PDF)" style="text-decoration:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4H9a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5h-6A1.5 1.5 0 0 1 2 16Z"/><path d="M22 5.5A1.5 1.5 0 0 0 20.5 4H15a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5h6a1.5 1.5 0 0 0 1.5-1.5Z"/></svg> <span id="shellGuidesText">Guides</span></a>
       <button class="btn" onclick="document.getElementById('importInput').click()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg> <span id="shellImportText">Import</span></button>
       <button class="btn" onclick="exportData()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"/></svg> <span id="shellExportText">Export</span></button>
       <button class="btn btn-primary" onclick="createTrip()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> <span id="shellNewTripText">New Trip</span></button>
@@ -1393,54 +1402,6 @@ const SEED_STATE_EN = {
       ],
       driveMinHours: '1',
       driveMaxHours: '4'
-    },
-    {
-      id: 'id-3oj9rejhsnqy',
-      name: 'Cancun Getaway',
-      destination: 'Cancun, Mexico',
-      startDate: '2027-03-17', endDate: '2027-03-20',
-      travelers: '3',
-      departureAirport: 'DFW',
-      cabinClass: 'economy',
-      notes: 'RESEARCH SUMMARY (edit or delete anything below as you decide):\n\nThese dates are 2027 (March 17-20, 2027 -- a Wed-Sat), and they land almost exactly on Dallas-area spring break: DFW-region districts including Dallas ISD, Frisco ISD, and Plano ISD run spring break March 15-19, 2027, which overlaps the first three of your four days. Expect Cancun to be noticeably busier and pricier than a typical mid-March week, and expect DFW airport itself to be busier too -- book flights, hotel, and the cenote tour as early as possible, and consider shifting a few days later (e.g. March 20-23) if you\'d rather avoid peak spring-break crowds and pricing entirely.\n\nFlights: American Airlines, Frontier, and Sun Country fly nonstop DFW-CUN, ~3h. Frontier has shown fares as low as $175-210 round trip on off-peak dates, but spring-break-week pricing will run well above that -- budgeting ~$900 total for 3 travelers (economy) is a reasonable planning estimate; confirm current fares before booking since dates matter a lot here.\n\nUber does not operate at Cancun airport (blocked by local taxi unions). Options: ADO bus (~$7.30/person), taxi (~$55-100 for a group of 3), or a pre-booked private shuttle (~$44/vehicle each way) -- the private shuttle is the best value for 3 people since it\'s a flat per-vehicle rate, used here.\n\nHotel: mid-range Hotel Zone rates run ~$180-300/night normally, pushed toward the higher end by spring break timing -- using $240/night as a planning estimate. Since you\'re 3 travelers, specifically book a room configured for 3 (2 double beds or a room with a rollaway) rather than a standard 2-max room. North Hotel Zone (near Punta Cancun) has calmer, shallower water; South Hotel Zone (near Punta Nizuc) is quieter and less built-up.\n\nItinerary is scaled to the 3-night length: arrival + Isla Mujeres day + cenote day + departure. Skipped Chichen Itza on purpose -- it\'s a 2.5-3h drive each way and doesn\'t fit comfortably into a 3-night trip; worth its own future trip with an extra day.\n\nCenote tour pricing varies widely by operator ($60-150+/person depending on what\'s included) -- compare 2-3 options closer to booking rather than locking in the first one you see.',
-      days: [
-        { id:'cd1', date:'2027-03-17', label:'Day 1 - Wed', activities:[
-          { id:'ca1', time:'Morning', title:'Depart Dallas (DFW) -> Cancun (CUN)', location:'Nonstop, ~3h (American / Frontier / Sun Country)', estCost:'450', notes:'Half of estimated round-trip flight cost for 3 travelers; other half on Day 4.' },
-          { id:'ca2', time:'Afternoon', title:'Airport transfer + check-in', location:'Private shuttle to Hotel Zone (~35-50 min)', estCost:'44', notes:'Half of round-trip private shuttle; other half on Day 4. Uber not available at CUN airport.' },
-          { id:'ca3', time:'Evening', title:'Beach & sunset', location:'Hotel Zone beach, dinner nearby', notes:'' }
-        ]},
-        { id:'cd2', date:'2027-03-18', label:'Day 2 - Thu', activities:[
-          { id:'ca4', time:'Full day', title:'Isla Mujeres: ferry + golf cart', location:'Playa Norte beach, island loop by golf cart', estCost:'135', notes:'Ferry from Puerto Juarez (~15 min) or a Hotel Zone pier (~25-30 min); one 4-person golf cart rental for the day, split 3 ways.' }
-        ]},
-        { id:'cd3', date:'2027-03-19', label:'Day 3 - Fri', activities:[
-          { id:'ca5', time:'Morning', title:'Cenote tour near Puerto Morelos', location:'Guided half-day tour with transport', estCost:'210', notes:'Book ahead -- spring break week gets busy. Pricing varies widely by operator; compare a couple options.' },
-          { id:'ca6', time:'Afternoon', title:'Beach / pool relax', location:'Hotel', notes:'' }
-        ]},
-        { id:'cd4', date:'2027-03-20', label:'Day 4 - Sat', activities:[
-          { id:'ca7', time:'Morning', title:'Beach / pool, check out', location:'', notes:'' },
-          { id:'ca8', time:'Afternoon', title:'Airport transfer + flight home', location:'Cancun (CUN) -> Dallas (DFW)', estCost:'494', notes:'Other half of round-trip flight ($450) plus other half of shuttle ($44).' }
-        ]}
-      ],
-      bookings: [
-        { id:'cbk1', type:'flight', title:'Round-trip flight, DFW <-> CUN (3 travelers)', confirmation:'', date:'', time:'', provider:'American Airlines / Frontier / Sun Country', link:'', estCost:'0', notes:'Cost captured on the Itinerary tab, Days 1 and 4. Book soon -- these dates overlap Texas spring break.' },
-        { id:'cbk2', type:'hotel', title:'Hotel Zone hotel (3 nights) -- pick from recommendations', confirmation:'', date:'', time:'', provider:'', link:'', estCost:'0', notes:'Cost captured on the Stops tab (3 nights x nightly rate). Book a room configured for 3 guests. North Hotel Zone for calmer water, South for quieter/less built-up.' },
-        { id:'cbk3', type:'other', title:'Airport transfer, private shuttle (round trip)', confirmation:'', date:'', time:'', provider:'', link:'', estCost:'0', notes:'Cost captured on the Itinerary tab, Days 1 and 4. Uber not available at CUN airport.' },
-        { id:'cbk4', type:'activity', title:'Isla Mujeres ferry + golf cart rental', confirmation:'', date:'', time:'', provider:'', link:'', estCost:'0', notes:'Cost captured on the Itinerary tab, Day 2.' },
-        { id:'cbk5', type:'activity', title:'Cenote tour near Puerto Morelos', confirmation:'', date:'', time:'', provider:'', link:'', estCost:'0', notes:'Cost captured on the Itinerary tab, Day 3. Book ahead for spring break week.' }
-      ],
-      transportModes: ['air'],
-      routeType: 'roundtrip',
-      petFriendly: false,
-      flexibleDates: false,
-      lengthMin: '',
-      lengthMax: '',
-      accommodationPrefs: ['hotel'],
-      accessibilityNeeds: [],
-      waypoints: [
-        { id:'cwp1', location:'Cancun Hotel Zone', date:'2027-03-17', nights:'3', estNightlyCost:'240', notes:'Spring-break-adjacent pricing -- book early. Need a room configured for 3 guests (2 double beds or rollaway).' }
-      ],
-      driveMinHours: '',
-      driveMaxHours: ''
     },
     {
       "id": "id-bs7h6nb8sv5s",
@@ -4302,20 +4263,28 @@ function renderSidebar_EN(){
       <div class="lw-nav-title">Long Weekend Trips</div>
       <div class="lw-nav-sub">${lwCount} idea${lwCount!==1?'s':''} to pick from</div>
     </div>
-  </div><div class="lw-sidebar-divider"></div>`;
+  </div>`;
   const ttNav = `<div class="tt-nav-card ${ui.activeSection==='traveltools'?'active':''}" onclick="showTravelTools()">
     <div class="tt-nav-icon">${ICONS.cloud}</div>
     <div>
       <div class="tt-nav-title">Travel Tools</div>
       <div class="tt-nav-sub">Climate &amp; neighborhood lookup</div>
     </div>
-  </div><div class="tt-sidebar-divider"></div>`;
+  </div>`;
+  const guidesNav = `<a class="guides-nav-card" id="shellGuidesBtn" href="https://docdrew-console.netlify.app/tools/travel-guides/?lang=en" target="_blank" rel="noopener" title="Travel guides (PDF)">
+    <div class="guides-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4H9a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5h-6A1.5 1.5 0 0 1 2 16Z"/><path d="M22 5.5A1.5 1.5 0 0 0 20.5 4H15a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5h6a1.5 1.5 0 0 0 1.5-1.5Z"/></svg></div>
+    <div>
+      <div class="guides-nav-title">Travel Guides</div>
+      <div class="guides-nav-sub">Illustrated city guides (PDF)</div>
+    </div>
+  </a>`;
+  const navHtml = `<div class="nav-stack">${ttNav}${guidesNav}${lwNav}</div><div class="lw-sidebar-divider" style="margin-top:12px"></div>`;
   if(state.trips.length===0){
-    list.innerHTML = homeBaseHtml + lwNav + ttNav + `<div class="empty-sidebar">No trips yet.<br>Click <strong>New Trip</strong> above, or ask Claude to plan one for you.</div>`;
+    list.innerHTML = homeBaseHtml + navHtml + `<div class="empty-sidebar">No trips yet.<br>Click <strong>New Trip</strong> above, or ask Claude to plan one for you.</div>`;
     return;
   }
   const sorted = [...state.trips].sort((a,b)=>(a.startDate||'9999').localeCompare(b.startDate||'9999'));
-  list.innerHTML = homeBaseHtml + lwNav + ttNav + sorted.map(t=>{
+  list.innerHTML = homeBaseHtml + navHtml + sorted.map(t=>{
     const st = tripStatus(t);
     return `<div class="trip-card ${ui.selectedTripId===t.id?'active':''}" onclick="selectTrip('${t.id}')">
       <div class="trip-card-top">
@@ -4351,20 +4320,28 @@ function renderSidebar_FR(){
       <div class="lw-nav-title">Escapades de longue fin de semaine</div>
       <div class="lw-nav-sub">${lwCount} idée${lwCount!==1?'s':''} à choisir</div>
     </div>
-  </div><div class="lw-sidebar-divider"></div>`;
+  </div>`;
   const ttNav = `<div class="tt-nav-card ${ui.activeSection==='traveltools'?'active':''}" onclick="showTravelTools()">
     <div class="tt-nav-icon">${ICONS.cloud}</div>
     <div>
       <div class="tt-nav-title">Outils de voyage</div>
       <div class="tt-nav-sub">Climat et quartiers</div>
     </div>
-  </div><div class="tt-sidebar-divider"></div>`;
+  </div>`;
+  const guidesNav = `<a class="guides-nav-card" id="shellGuidesBtn" href="https://docdrew-console.netlify.app/tools/travel-guides/?lang=fr" target="_blank" rel="noopener" title="Guides de voyage (PDF)">
+    <div class="guides-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4H9a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5h-6A1.5 1.5 0 0 1 2 16Z"/><path d="M22 5.5A1.5 1.5 0 0 0 20.5 4H15a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5h6a1.5 1.5 0 0 0 1.5-1.5Z"/></svg></div>
+    <div>
+      <div class="guides-nav-title">Guides de voyage</div>
+      <div class="guides-nav-sub">Guides illustrés des villes (PDF)</div>
+    </div>
+  </a>`;
+  const navHtml = `<div class="nav-stack">${ttNav}${guidesNav}${lwNav}</div><div class="lw-sidebar-divider" style="margin-top:12px"></div>`;
   if(state.trips.length===0){
-    list.innerHTML = homeBaseHtml + lwNav + ttNav + `<div class="empty-sidebar">Aucun voyage pour l'instant.<br>Clique sur <strong>Nouveau voyage</strong> ci-dessus, ou demande à Claude d'en planifier un pour toi.</div>`;
+    list.innerHTML = homeBaseHtml + navHtml + `<div class="empty-sidebar">Aucun voyage pour l'instant.<br>Clique sur <strong>Nouveau voyage</strong> ci-dessus, ou demande à Claude d'en planifier un pour toi.</div>`;
     return;
   }
   const sorted = [...state.trips].sort((a,b)=>(a.startDate||'9999').localeCompare(b.startDate||'9999'));
-  list.innerHTML = homeBaseHtml + lwNav + ttNav + sorted.map(t=>{
+  list.innerHTML = homeBaseHtml + navHtml + sorted.map(t=>{
     const st = tripStatus(t);
     return `<div class="trip-card ${ui.selectedTripId===t.id?'active':''}" onclick="selectTrip('${t.id}')">
       <div class="trip-card-top">
@@ -5964,7 +5941,6 @@ function applyShellText(){
   set('shellTitle', T.title);
   set('shellTagline', T.tagline);
   set('shellImportText', T.importBtn);
-  { const gb = document.getElementById('shellGuidesBtn'); if(gb){ gb.href = 'https://docdrew-console.netlify.app/tools/travel-guides/?lang=' + (LANG==='fr'?'fr':'en'); if(location.hostname!=='docdrew-console.netlify.app'){ gb.target='_blank'; gb.rel='noopener'; } gb.title = LANG==='fr' ? 'Guides de voyage (PDF)' : 'Travel guides (PDF)'; } }
   set('shellExportText', T.exportBtn);
   set('shellNewTripText', T.newTripBtn);
   set('shellTripsHeading', T.tripsHeading);
