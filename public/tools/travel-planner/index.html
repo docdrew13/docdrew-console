@@ -5755,7 +5755,13 @@ function renderLongWeekends(){ return (LANG==='fr' ? renderLongWeekends_FR : ren
 function promoteLongWeekend(){ return (LANG==='fr' ? promoteLongWeekend_FR : promoteLongWeekend_EN).apply(null, arguments); }
 function renderTravelTools(){ return (LANG==='fr' ? renderTravelTools_FR : renderTravelTools_EN).apply(null, arguments); }
 function tripTravelMonths(){ return (LANG==='fr' ? tripTravelMonths_FR : tripTravelMonths_EN).apply(null, arguments); }
-function climateHtml(){ return (LANG==='fr' ? climateHtml_FR : climateHtml_EN).apply(null, arguments); }
+function climateHtml(t){
+  const base=(LANG==='fr' ? climateHtml_FR : climateHtml_EN)(t);
+  if(!t) return base;
+  setTimeout(function(){ wxLoad(t.id); },0);
+  const has=state.travelTools && state.travelTools.climate && state.travelTools.climate[t.id];
+  return wxTabHtml(t) + (has ? '<div class="section-title" style="margin:18px 0 8px">'+wxT('Saved research snapshot (monthly averages)','Relevé de recherche enregistré (moyennes mensuelles)')+'</div>'+base : '');
+}
 function neighborhoodsHtml(){ return (LANG==='fr' ? neighborhoodsHtml_FR : neighborhoodsHtml_EN).apply(null, arguments); }
 function categoryLookupHtml(){ return (LANG==='fr' ? categoryLookupHtml_FR : categoryLookupHtml_EN).apply(null, arguments); }
 function submitOtherLookup(){ return (LANG==='fr' ? submitOtherLookup_FR : submitOtherLookup_EN).apply(null, arguments); }
@@ -5857,11 +5863,11 @@ function wxTabHtml(t){
       <input class="wx-places" placeholder="${esc(wxT('Places (optional, comma-separated). Leave empty to use stops, port days or the destination.','Lieux (facultatif, séparés par des virgules). Laisser vide pour utiliser les étapes, les escales ou la destination.'))}" value="${esc(t.wxPlaces||'')}" oninput="updateTripField('${t.id}','wxPlaces',this.value)" onchange="wxLoad('${t.id}',true)">
       <button class="btn" onclick="wxLoad('${t.id}',true)">${wxT('Refresh','Actualiser')}</button>
     </div>
-    <div id="wxBody"></div>
+    <div id="wxBody" data-trip="${t.id}"></div>
   </div></div>`;
 }
 function wxRender(t,rows,err){
-  const el=document.getElementById('wxBody'); if(!el||ui.activeTab!=='weather'||ui.selectedTripId!==t.id) return;
+  const el=document.getElementById('wxBody'); if(!el||el.getAttribute('data-trip')!==t.id) return;
   const dated=wxHasDates(t);
   if(err){ el.innerHTML='<div class="wx-note">'+err+'</div>'; return; }
   let h='';
