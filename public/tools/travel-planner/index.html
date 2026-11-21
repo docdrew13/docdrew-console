@@ -910,7 +910,7 @@ function toggleAccessibilityNeed(tripId, val){
   render();
 }
 function goHome(){ ui.selectedTripId=null; ui.activeSection='trips'; render(); }
-function selectTrip(id){ ui.selectedTripId=id; ui.activeTab='itinerary'; ui.activeSection='trips'; render(); }
+function selectTrip(id){ ui.selectedTripId=id; ui.activeTab='itinerary'; ui.activeSection='trips'; const t=getTrip(id); ui.filtersCollapsed = !!(t && ((t.days&&t.days.some(d=>d.activities&&d.activities.length)) || (t.bookings&&t.bookings.length))); render(); }
 function setTab(tab){ ui.activeTab=tab; render(); }
 function toggleTripFilters(){ ui.filtersCollapsed = !ui.filtersCollapsed; render(); }
 function showLongWeekends(){ ui.activeSection='longweekends'; ui.selectedTripId=null; if(!ui.lwList) ui.lwList='noDog'; render(); }
