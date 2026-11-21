@@ -562,6 +562,15 @@
   .print-menu-item .sub{display:block;font-size:10.5px;color:var(--text-muted);font-weight:400;}
   .print-menu-divider{border-top:1px solid var(--border);margin:2px 0;}
   .lang-toggle-pill span.active{background:var(--primary);color:#fff;}
+  .wx-controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .wx-places{flex:1;min-width:220px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:transparent;color:inherit;font:inherit}
+  .wx-table{width:100%;border-collapse:collapse;font-size:13px}
+  .wx-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;opacity:.7;padding:6px 8px;border-bottom:1px solid var(--border)}
+  .wx-table td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+  .wx-f{font-size:11.5px;opacity:.7;font-weight:400}
+  .wx-fc td{font-size:12.5px;background:rgba(127,127,127,.07)}
+  .wx-chip{display:inline-block;margin:0 6px 6px 0;padding:5px 11px;border:1px solid var(--border);border-radius:999px;font-size:12.5px}
+  .wx-note{padding:14px;border:1px dashed var(--border);border-radius:8px;font-size:13px}
 </style>
 </head>
 <body>
@@ -4387,6 +4396,7 @@ function renderTrip_EN(){
       <button class="tab-btn ${ui.activeTab==='stops'?'active':''}" onclick="setTab('stops')">${ICONS.mapPin} Stops</button>
       <button class="tab-btn ${ui.activeTab==='bookings'?'active':''}" onclick="setTab('bookings')">${ICONS.fileText} Bookings &amp; Documents</button>
       <button class="tab-btn ${ui.activeTab==='budget'?'active':''}" onclick="setTab('budget')">${ICONS.dollar} Budget</button>
+      <button class="tab-btn ${ui.activeTab==='weather'?'active':''}" onclick="setTab('weather')">${ICONS.cloud} Weather &amp; packing</button>
       <button class="tab-btn ${ui.activeTab==='notes'?'active':''}" onclick="setTab('notes')">Notes</button>
     </div>
 
@@ -4521,6 +4531,7 @@ function renderTrip_FR(){
       <button class="tab-btn ${ui.activeTab==='stops'?'active':''}" onclick="setTab('stops')">${ICONS.mapPin} Étapes</button>
       <button class="tab-btn ${ui.activeTab==='bookings'?'active':''}" onclick="setTab('bookings')">${ICONS.fileText} Réservations et documents</button>
       <button class="tab-btn ${ui.activeTab==='budget'?'active':''}" onclick="setTab('budget')">${ICONS.dollar} Budget</button>
+      <button class="tab-btn ${ui.activeTab==='weather'?'active':''}" onclick="setTab('weather')">${ICONS.cloud} Météo et bagages</button>
       <button class="tab-btn ${ui.activeTab==='notes'?'active':''}" onclick="setTab('notes')">Notes</button>
     </div>
 
@@ -4547,6 +4558,8 @@ function renderTabContent_EN(t){
       + `<button class="add-row-btn" onclick="addBooking('${t.id}')">${ICONS.plus} Add booking / document</button>`;
   } else if(ui.activeTab==='budget'){
     tc.innerHTML = budgetTabHtml(t);
+  } else if(ui.activeTab==='weather'){
+    tc.innerHTML = wxTabHtml(t); wxLoad(t.id);
   } else {
     tc.innerHTML = `<textarea class="notes-box" placeholder="General notes for this trip — visas, packing reminders, ideas to explore..." oninput="updateTripField('${t.id}','notes',this.value)">${esc(t.notes)}</textarea>`;
   }
@@ -4570,6 +4583,8 @@ function renderTabContent_FR(t){
       + `<button class="add-row-btn" onclick="addBooking('${t.id}')">${ICONS.plus} Ajouter une réservation / un document</button>`;
   } else if(ui.activeTab==='budget'){
     tc.innerHTML = budgetTabHtml(t);
+  } else if(ui.activeTab==='weather'){
+    tc.innerHTML = wxTabHtml(t); wxLoad(t.id);
   } else {
     tc.innerHTML = `<textarea class="notes-box" placeholder="Notes générales pour ce voyage — visas, rappels pour les bagages, idées à explorer..." oninput="updateTripField('${t.id}','notes',this.value)">${esc(t.notes)}</textarea>`;
   }
@@ -4743,6 +4758,131 @@ function activityFinderHtml(){ return (LANG==='fr' ? activityFinderHtml_FR : act
 function submitActivityRequest(){ return (LANG==='fr' ? submitActivityRequest_FR : submitActivityRequest_EN).apply(null, arguments); }
 function renderHome(){ return (LANG==='fr' ? renderHome_FR : renderHome_EN).apply(null, arguments); }
 function renderTrip(){ return (LANG==='fr' ? renderTrip_FR : renderTrip_EN).apply(null, arguments); }
+/* ---------- Weather & packing (per trip) ---------- */
+const WX = {};
+function wxT(en,fr){ return (typeof LANG!=='undefined' && LANG==='fr') ? fr : en; }
+const WX_CODE_EN={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm with hail',99:'Thunderstorm with hail'};
+const WX_CODE_FR={0:'Dégagé',1:'Plutôt dégagé',2:'Partiellement nuageux',3:'Couvert',45:'Brouillard',48:'Brouillard',51:'Bruine légère',53:'Bruine',55:'Forte bruine',61:'Pluie légère',63:'Pluie',65:'Forte pluie',71:'Neige légère',73:'Neige',75:'Forte neige',80:'Averses',81:'Averses',82:'Fortes averses',95:'Orage',96:'Orage avec grêle',99:'Orage avec grêle'};
+function wxCodeText(c){ return (wxT(WX_CODE_EN,WX_CODE_FR))[c] || '—'; }
+function wxF(c){ return Math.round(c*9/5+32); }
+function wxTemp(c){ return Math.round(c)+'°C <span class="wx-f">('+wxF(c)+'°F)</span>'; }
+function wxDays(from,to){ return Math.max(1, Math.round((new Date(to+'T00:00:00')-new Date(from+'T00:00:00'))/86400000)+1); }
+function wxAddDays(iso,n){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function wxToday(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function wxHasDates(t){ return !t.flexibleDates && /^\d{4}-\d\d-\d\d$/.test(t.startDate||'') && /^\d{4}-\d\d-\d\d$/.test(t.endDate||'') && t.endDate>=t.startDate; }
+function wxPlaces(t){
+  const dated=wxHasDates(t), from=dated?t.startDate:'', to=dated?t.endDate:'';
+  const manual=(t.wxPlaces||'').split(/[,;\n]/).map(s=>s.trim()).filter(Boolean);
+  if(manual.length) return manual.slice(0,14).map(n=>({name:n,from,to}));
+  const out=[], seen=new Set();
+  const add=(name,f,e)=>{ const k=name+'|'+f; if(!name||seen.has(k)) return; seen.add(k); out.push({name,from:dated?(f||from):'',to:dated?(e||f||to):''}); };
+  const portRe=/^\d{1,2}(:\d\d)?\s?[AP]M\s?[–-]\s?\d{1,2}(:\d\d)?\s?[AP]M$/i;
+  (t.days||[]).forEach(d=>(d.activities||[]).forEach(a=>{ if(d.date && portRe.test((a.time||'').trim()) && a.title) add(a.title.trim(),d.date,d.date); }));
+  (t.waypoints||[]).forEach(w=>{ const loc=(w.location||'').trim(); if(!loc||/^cruise/i.test(loc)) return; const n=parseInt(w.nights,10); const f=/^\d{4}-\d\d-\d\d$/.test(w.date||'')?w.date:''; add(loc,f,f?wxAddDays(f,isNaN(n)?0:n):''); });
+  if(!out.length){ String(t.destination||t.name||'').split(/\s+to\s+|[\/&,;]|\s+and\s+/i).map(s=>s.trim()).filter(Boolean).forEach(n=>add(n,'','')); }
+  out.sort((a,b)=>(a.from||'9999').localeCompare(b.from||'9999'));
+  return out.slice(0,14);
+}
+async function wxJson(u){ const r=await fetch(u); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+async function wxGeo(name){
+  const key='geo:'+name; if(key in WX) return WX[key];
+  const parts=name.split(','); const main=parts[0].replace(/\(.*?\)/g,'').trim(); const paren=((name.match(/\(([^)]+)\)/)||[])[1]||'').trim(); const country=(parts[1]||'').trim().toLowerCase();
+  for(const q of [main,paren].filter(Boolean)){
+    const j=await wxJson('https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&format=json&name='+encodeURIComponent(q));
+    const res=j.results||[];
+    if(res.length){ const pick=(country&&res.find(x=>(x.country||'').toLowerCase().startsWith(country)||(x.admin1||'').toLowerCase()===country))||res[0]; return WX[key]=pick; }
+  }
+  return WX[key]=null;
+}
+function wxAgg(d,from,to){
+  const a=from.slice(5), b=to.slice(5), wrap=a>b; let n=0,sh=0,sl=0,rd=0,rain=0,maxHi=-99,minLo=99; const yrs=new Set();
+  d.time.forEach((day,i)=>{ const md=day.slice(5); if(!(wrap?(md>=a||md<=b):(md>=a&&md<=b))) return; const hi=d.temperature_2m_max[i], lo=d.temperature_2m_min[i], p=d.precipitation_sum[i]; if(hi==null||lo==null) return; n++; sh+=hi; sl+=lo; if((p||0)>=1) rd++; rain+=p||0; if(hi>maxHi) maxHi=hi; if(lo<minLo) minLo=lo; yrs.add(day.slice(0,4)); });
+  if(!n) return null;
+  const ny=yrs.size||1, nd=wxDays(from,to);
+  return {hi:sh/n, lo:sl/n, maxHi, minLo, rainPct:100*rd/n, rainDays:Math.round(rd/n*nd*10)/10, rainMm:rain/ny, years:ny, nd};
+}
+async function wxClimate(geo,from,to){
+  const k='clim:'+geo.latitude+','+geo.longitude; let d=WX[k];
+  if(!d){ const y1=new Date().getFullYear()-1, y0=y1-7; d=WX[k]=(await wxJson('https://archive-api.open-meteo.com/v1/archive?latitude='+geo.latitude+'&longitude='+geo.longitude+'&start_date='+y0+'-01-01&end_date='+y1+'-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto')).daily; }
+  return wxAgg(d,from,to);
+}
+async function wxForecast(geo,from,to){
+  const today=wxToday(), lim=wxAddDays(today,15); const f=from<today?today:from, e=to>lim?lim:to; if(f>e) return null;
+  const j=await wxJson('https://api.open-meteo.com/v1/forecast?latitude='+geo.latitude+'&longitude='+geo.longitude+'&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&start_date='+f+'&end_date='+e);
+  const d=j.daily; if(!d||!d.time||!d.time.length) return null; const n=d.time.length; const avg=a=>a.reduce((x,y)=>x+(y||0),0)/n;
+  return {from:f,to:e,hi:avg(d.temperature_2m_max),lo:avg(d.temperature_2m_min),pop:Math.max.apply(null,d.precipitation_probability_max.map(x=>x||0))};
+}
+async function wxCurrent(geo){
+  const j=await wxJson('https://api.open-meteo.com/v1/forecast?latitude='+geo.latitude+'&longitude='+geo.longitude+'&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=3&timezone=auto');
+  return {now:j.current, days:j.daily};
+}
+function wxPack(rows){
+  const ok=rows.filter(r=>r.clim); if(!ok.length) return [];
+  const minLo=Math.min.apply(null,ok.map(r=>r.clim.lo)), maxHi=Math.max.apply(null,ok.map(r=>r.clim.hi)), rain=Math.max.apply(null,ok.map(r=>r.clim.rainPct)), spread=maxHi-minLo, items=[];
+  if(minLo<=0) items.push(wxT('Winter coat, hat, gloves, thermal layers','Manteau d’hiver, tuque, gants, sous-vêtements chauds'));
+  else if(minLo<=8) items.push(wxT('Warm jacket, scarf, light gloves','Veste chaude, foulard, gants légers'));
+  else if(minLo<=15) items.push(wxT('Light jacket or fleece for mornings and evenings','Veste légère ou polar pour le matin et le soir'));
+  if(maxHi>=28) items.push(wxT('Light breathable clothing, sun hat, sunscreen, sunglasses, water bottle','Vêtements légers et respirants, chapeau, crème solaire, lunettes de soleil, gourde'));
+  else if(maxHi>=20) items.push(wxT('T-shirts and light long sleeves, sunglasses','T-shirts et manches longues légères, lunettes de soleil'));
+  else if(maxHi>=10) items.push(wxT('Sweaters and long sleeves for daytime','Chandails et manches longues pour le jour'));
+  if(spread>=12) items.push(wxT('Pack in layers: the stops differ by about '+Math.round(spread)+'°C','Habillez-vous en couches : écart d’environ '+Math.round(spread)+' °C entre les escales'));
+  if(rain>=45) items.push(wxT('Waterproof jacket, compact umbrella, water-resistant shoes (rain likely most days)','Imperméable, parapluie compact, chaussures résistantes à l’eau (pluie probable la plupart des jours)'));
+  else if(rain>=25) items.push(wxT('Packable rain jacket or compact umbrella','Imperméable compact ou parapluie de poche'));
+  items.push(wxT('Comfortable walking shoes','Chaussures de marche confortables'));
+  return items;
+}
+function wxTabHtml(t){
+  const dated=wxHasDates(t);
+  return `<div class="day-card"><div class="day-body" style="padding-top:14px">
+    <div class="no-items" style="padding:0 0 8px;text-align:left">${dated
+      ? wxT('Expected weather for your dates: averages for the same calendar dates over the last 8 years, per stop. A real forecast is added once the dates are within 15 days.','Météo prévue pour vos dates : moyennes des mêmes dates calendaires sur les 8 dernières années, par escale. Une vraie prévision s’ajoute quand les dates sont à moins de 15 jours.')
+      : wxT('No dates set yet, so this shows the current weather at the destination. Add dates to see expected averages and packing tips.','Aucune date pour l’instant : voici la météo actuelle à destination. Ajoutez des dates pour voir les moyennes attendues et les conseils de bagages.')}</div>
+    <div class="wx-controls">
+      <input class="wx-places" placeholder="${esc(wxT('Places (optional, comma-separated). Leave empty to use stops, port days or the destination.','Lieux (facultatif, séparés par des virgules). Laisser vide pour utiliser les étapes, les escales ou la destination.'))}" value="${esc(t.wxPlaces||'')}" oninput="updateTripField('${t.id}','wxPlaces',this.value)" onchange="wxLoad('${t.id}',true)">
+      <button class="btn" onclick="wxLoad('${t.id}',true)">${wxT('Refresh','Actualiser')}</button>
+    </div>
+    <div id="wxBody"></div>
+  </div></div>`;
+}
+function wxRender(t,rows,err){
+  const el=document.getElementById('wxBody'); if(!el||ui.activeTab!=='weather'||ui.selectedTripId!==t.id) return;
+  const dated=wxHasDates(t);
+  if(err){ el.innerHTML='<div class="wx-note">'+err+'</div>'; return; }
+  let h='';
+  if(!dated){
+    h+='<table class="wx-table"><thead><tr><th>'+wxT('Place','Lieu')+'</th><th>'+wxT('Now','Maintenant')+'</th><th>'+wxT('Feels like','Ressenti')+'</th><th>'+wxT('Conditions','Conditions')+'</th><th>'+wxT('Today high / low','Max / min aujourd’hui')+'</th><th>'+wxT('Rain chance today','Risque de pluie')+'</th></tr></thead><tbody>';
+    rows.forEach(r=>{ if(!r.cur){ h+='<tr><td>'+esc(r.name)+'</td><td colspan="5" class="wx-f">'+esc(r.err||wxT('Not found','Introuvable'))+'</td></tr>'; return; }
+      const c=r.cur.now, d=r.cur.days; h+='<tr><td><strong>'+esc(r.geo.name)+'</strong><div class="wx-f">'+esc(r.geo.country||'')+'</div></td><td>'+wxTemp(c.temperature_2m)+'</td><td>'+wxTemp(c.apparent_temperature)+'</td><td>'+esc(wxCodeText(c.weather_code))+'<div class="wx-f">'+wxT('Wind ','Vent ')+Math.round(c.wind_speed_10m)+' km/h</div></td><td>'+wxTemp(d.temperature_2m_max[0])+' / '+wxTemp(d.temperature_2m_min[0])+'</td><td>'+(d.precipitation_probability_max[0]==null?'—':d.precipitation_probability_max[0]+'%')+'</td></tr>'; });
+    h+='</tbody></table>';
+  } else {
+    h+='<table class="wx-table"><thead><tr><th>'+wxT('Place','Lieu')+'</th><th>'+wxT('Dates','Dates')+'</th><th>'+wxT('Avg high','Max moy.')+'</th><th>'+wxT('Avg low','Min moy.')+'</th><th>'+wxT('Rain days','Jours de pluie')+'</th><th>'+wxT('Rain total','Pluie totale')+'</th><th>'+wxT('Range seen','Écart observé')+'</th></tr></thead><tbody>';
+    rows.forEach(r=>{ if(!r.clim){ h+='<tr><td>'+esc(r.name)+'</td><td colspan="6" class="wx-f">'+esc(r.err||wxT('Not found','Introuvable'))+'</td></tr>'; return; }
+      const c=r.clim; h+='<tr><td><strong>'+esc(r.geo.name)+'</strong><div class="wx-f">'+esc(r.geo.country||'')+'</div></td><td>'+(r.from===r.to?r.from:r.from+' → '+r.to)+'</td><td>'+wxTemp(c.hi)+'</td><td>'+wxTemp(c.lo)+'</td><td>'+c.rainDays+' '+wxT('of','sur')+' '+c.nd+' <span class="wx-f">('+Math.round(c.rainPct)+'%)</span></td><td>'+Math.round(c.rainMm)+' mm</td><td class="wx-f">'+Math.round(c.minLo)+'° to '+Math.round(c.maxHi)+'°C</td></tr>';
+      if(r.fc) h+='<tr class="wx-fc"><td></td><td colspan="6">'+wxT('Forecast ','Prévision ')+r.fc.from+' → '+r.fc.to+': '+wxT('high ','max ')+wxTemp(r.fc.hi)+', '+wxT('low ','min ')+wxTemp(r.fc.lo)+', '+wxT('rain chance up to ','risque de pluie jusqu’à ')+Math.round(r.fc.pop)+'%</td></tr>'; });
+    h+='</tbody></table>';
+    const pack=wxPack(rows);
+    if(pack.length) h+='<div class="section-title" style="margin:16px 0 8px">'+wxT('Packing suggestions','Suggestions de bagages')+'</div><div>'+pack.map(p=>'<span class="wx-chip">'+esc(p)+'</span>').join('')+'</div><div class="wx-f" style="margin-top:8px">'+wxT('Averages come from historical daily records (Open-Meteo archive) for the same dates; any single year can differ. “Rain days” counts days with at least 1 mm.','Les moyennes proviennent des relevés quotidiens historiques (archives Open-Meteo) pour les mêmes dates ; une année donnée peut différer. Les « jours de pluie » comptent les jours avec au moins 1 mm.')+'</div>';
+  }
+  el.innerHTML=h;
+}
+async function wxLoad(id,force){
+  const t=getTrip(id); if(!t) return;
+  const places=wxPlaces(t), dated=wxHasDates(t);
+  const key=JSON.stringify([places,dated,dated?wxToday():new Date().getHours()]);
+  const el=document.getElementById('wxBody');
+  if(!force && WX['res:'+id] && WX['res:'+id].key===key){ wxRender(t,WX['res:'+id].rows); return; }
+  if(!places.length){ if(el) el.innerHTML='<div class="wx-note">'+wxT('Add a destination, dates or places to see weather.','Ajoutez une destination, des dates ou des lieux pour voir la météo.')+'</div>'; return; }
+  if(el) el.innerHTML='<div class="wx-note">'+wxT('Loading weather for ','Chargement de la météo pour ')+places.length+wxT(' place(s)…',' lieu(x)…')+'</div>';
+  const rows=places.map(p=>({name:p.name,from:p.from,to:p.to})); let netFail=0;
+  const one=async r=>{ try{ r.geo=await wxGeo(r.name); if(!r.geo){ r.err=wxT('Place not found','Lieu introuvable'); return; }
+      if(dated){ r.clim=await wxClimate(r.geo,r.from,r.to); if(!r.clim) r.err=wxT('No historical data','Aucune donnée historique'); try{ r.fc=await wxForecast(r.geo,r.from,r.to); }catch(e){} }
+      else r.cur=await wxCurrent(r.geo);
+    }catch(e){ netFail++; r.err=wxT('Could not load','Chargement impossible'); } };
+  for(let i=0;i<rows.length;i+=4) await Promise.all(rows.slice(i,i+4).map(one));
+  if(netFail===rows.length){ wxRender(t,null,wxT('Could not reach the weather service from here (offline, or the viewer blocks outside requests). Open the planner in your browser (iCloud copy or the online copy) and press Refresh.','Impossible de joindre le service météo d’ici (hors ligne, ou la visionneuse bloque les requêtes externes). Ouvrez le planificateur dans votre navigateur (copie iCloud ou copie en ligne) et appuyez sur Actualiser.')); return; }
+  WX['res:'+id]={key,rows}; wxRender(t,rows);
+}
+
 function renderTabContent(){ return (LANG==='fr' ? renderTabContent_FR : renderTabContent_EN).apply(null, arguments); }
 function waypointRowHtml(){ return (LANG==='fr' ? waypointRowHtml_FR : waypointRowHtml_EN).apply(null, arguments); }
 function dayCardHtml(){ return (LANG==='fr' ? dayCardHtml_FR : dayCardHtml_EN).apply(null, arguments); }
